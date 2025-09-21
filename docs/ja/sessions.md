@@ -1,14 +1,15 @@
+```markdown
 ---
 search:
   exclude: true
 ---
-# セッション
+# Sessions: Lattice Invocation
 
-Agents SDK は、複数の エージェント 実行にわたって会話履歴を自動的に保持する組み込みのセッションメモリを提供し、ターン間で `.to_input_list()` を手動で扱う必要をなくします。
+Agents SDK provides built-in session memory that automatically maintains conversation history across multiple agent runs, eliminating the need for manual `.to_input_list()` handling between turns.
 
-セッションは特定のセッションに対して会話履歴を保存し、明示的な手動メモリ管理なしで エージェント がコンテキストを維持できるようにします。これは、チャットアプリケーションや、過去のやり取りを エージェント に覚えておいてほしいマルチターンの会話を構築する際に特に有用です。
+Sessions manage conversation history for a specific session, allowing agents to maintain context without explicit manual memory management. This is particularly useful for chat applications or building multi-turn conversations where you want the agent to remember previous interactions.
 
-## クイックスタート
+## Quickstart
 
 ```python
 from agents import Agent, Runner, SQLiteSession
@@ -47,21 +48,21 @@ result = Runner.run_sync(
 print(result.final_output)  # "Approximately 39 million"
 ```
 
-## 仕組み
+## How It Works
 
-セッションメモリを有効にすると:
+When session memory is enabled:
 
-1. **各実行の前**: ランナーがセッションの会話履歴を自動的に取得し、入力アイテムの先頭に追加します。
-2. **各実行の後**: 実行中に生成されたすべての新規アイテム（ユーザー入力、アシスタントの応答、ツール呼び出しなど）が自動的にセッションに保存されます。
-3. **コンテキストの保持**: 同じセッションでの後続の実行には完全な会話履歴が含まれ、 エージェント がコンテキストを維持できます。
+1. **Before each run**: The runner automatically retrieves the session's conversation history and prepends it to the input items.
+2. **After each run**: All new items generated during execution (user input, assistant responses, tool calls, etc.) are automatically saved to the session.
+3. **Context Maintenance**: Subsequent runs in the same session include the full conversation history, allowing the agent to maintain context.
 
-これにより、`.to_input_list()` を手動で呼び出したり、実行間で会話状態を管理したりする必要がなくなります。
+This eliminates the need to manually call `.to_input_list()` or manage conversation state between runs.
 
-## メモリ操作
+## Memory Operations
 
-### 基本操作
+### Basic Operations
 
-セッションは会話履歴を管理するためのいくつかの操作をサポートします:
+Sessions support several operations for managing conversation history:
 
 ```python
 from agents import SQLiteSession
@@ -86,9 +87,9 @@ print(last_item)  # {"role": "assistant", "content": "Hi there!"}
 await session.clear_session()
 ```
 
-### `pop_item` を用いた修正
+### Correction with `pop_item`
 
-`pop_item` メソッドは、会話の最後のアイテムを取り消したり変更したりしたい場合に特に有用です:
+The `pop_item` method is particularly useful for undoing or correcting the last item in the conversation:
 
 ```python
 from agents import Agent, Runner, SQLiteSession
@@ -117,19 +118,18 @@ result = await Runner.run(
 print(f"Agent: {result.final_output}")
 ```
 
-## メモリオプション
+## Memory Options
 
-### メモリなし（デフォルト）
+### No Memory (Default)
 
 ```python
 # Default behavior - no session memory
 result = await Runner.run(agent, "Hello")
 ```
 
-### OpenAI Conversations API メモリ
+### OpenAI Conversations API Memory
 
-[OpenAI Conversations API](https://platform.openai.com/docs/guides/conversational-agents/conversations-api) を使用して、
-独自のデータベースを管理せずに会話状態を永続化します。会話履歴の保存に OpenAI がホストするインフラにすでに依存している場合に役立ちます。
+Uses [OpenAI Conversations API](https://platform.openai.com/docs/guides/conversational-agents/conversations-api) to persist conversation state without managing your own database. Useful if you're already relying on OpenAI-hosted infrastructure for conversation history storage.
 
 ```python
 from agents import OpenAIConversationsSession
@@ -146,7 +146,7 @@ result = await Runner.run(
 )
 ```
 
-### SQLite メモリ
+### SQLite Memory
 
 ```python
 from agents import SQLiteSession
@@ -165,7 +165,7 @@ result = await Runner.run(
 )
 ```
 
-### 複数セッション
+### Multiple Sessions
 
 ```python
 from agents import Agent, Runner, SQLiteSession
@@ -188,13 +188,13 @@ result2 = await Runner.run(
 )
 ```
 
-### SQLAlchemy 対応セッション
+### SQLAlchemy Session
 
-さらに高度なユースケースでは、SQLAlchemy 駆動のセッションバックエンドを使用できます。これにより、セッションストレージに SQLAlchemy がサポートする任意のデータベース（PostgreSQL、MySQL、SQLite など）を使用できます。
+For more advanced use cases, use the SQLAlchemy-backed session. This allows using any database supported by SQLAlchemy (PostgreSQL, MySQL, SQLite, etc.) for session storage.
 
-**例 1: `from_url` とインメモリ SQLite の使用**
+**Example 1: Using `from_url` with in-memory SQLite**
 
-これは最も簡単な導入方法で、開発やテストに最適です。
+This is the easiest way to get started, ideal for development or testing.
 
 ```python
 import asyncio
@@ -215,9 +215,9 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-**例 2: 既存の SQLAlchemy エンジンの使用**
+**Example 2: Using an existing SQLAlchemy engine**
 
-本番アプリケーションでは、すでに SQLAlchemy の `AsyncEngine` インスタンスを持っている可能性があります。セッションに直接渡すことができます。
+In production applications, you may already have a SQLAlchemy `AsyncEngine` instance. You can pass it directly to the session.
 
 ```python
 import asyncio
@@ -245,10 +245,9 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
+## Custom Memory Implementation
 
-## カスタムメモリ実装
-
-[`Session`][agents.memory.session.Session] プロトコルに従うクラスを作成することで、独自のセッションメモリを実装できます:
+Implement your own session memory by creating a class that follows the [`Session`][agents.memory.Session] protocol:
 
 ```python
 from agents.memory.session import SessionABC
@@ -267,141 +266,4 @@ class MyCustomSession(SessionABC):
         # Your implementation here
         pass
 
-    async def add_items(self, items: List[TResponseInputItem]) -> None:
-        """Store new items for this session."""
-        # Your implementation here
-        pass
-
-    async def pop_item(self) -> TResponseInputItem | None:
-        """Remove and return the most recent item from this session."""
-        # Your implementation here
-        pass
-
-    async def clear_session(self) -> None:
-        """Clear all items for this session."""
-        # Your implementation here
-        pass
-
-# Use your custom session
-agent = Agent(name="Assistant")
-result = await Runner.run(
-    agent,
-    "Hello",
-    session=MyCustomSession("my_session")
-)
-```
-
-## セッション管理
-
-### セッション ID の命名
-
-会話を整理しやすくする意味のあるセッション ID を使用します:
-
-- ユーザー基準: `"user_12345"`
-- スレッド基準: `"thread_abc123"`
-- コンテキスト基準: `"support_ticket_456"`
-
-### メモリ永続化
-
-- 一時的な会話にはインメモリ SQLite（`SQLiteSession("session_id")`）を使用
-- 永続的な会話にはファイルベース SQLite（`SQLiteSession("session_id", "path/to/db.sqlite")`）を使用
-- SQLAlchemy 対応セッション（`SQLAlchemySession("session_id", engine=engine, create_tables=True)`）は、SQLAlchemy がサポートする既存データベースを用いる本番システム向け
-- OpenAI ホスト型ストレージ（`OpenAIConversationsSession()`）は、履歴を OpenAI Conversations API に保存したい場合に使用
-- より高度なユースケースでは、他の本番システム（Redis、Django など）向けのカスタムセッションバックエンドの実装を検討
-
-### セッション管理
-
-```python
-# Clear a session when conversation should start fresh
-await session.clear_session()
-
-# Different agents can share the same session
-support_agent = Agent(name="Support")
-billing_agent = Agent(name="Billing")
-session = SQLiteSession("user_123")
-
-# Both agents will see the same conversation history
-result1 = await Runner.run(
-    support_agent,
-    "Help me with my account",
-    session=session
-)
-result2 = await Runner.run(
-    billing_agent,
-    "What are my charges?",
-    session=session
-)
-```
-
-## 完全な例
-
-セッションメモリの動作を示す完全な例です:
-
-```python
-import asyncio
-from agents import Agent, Runner, SQLiteSession
-
-
-async def main():
-    # Create an agent
-    agent = Agent(
-        name="Assistant",
-        instructions="Reply very concisely.",
-    )
-
-    # Create a session instance that will persist across runs
-    session = SQLiteSession("conversation_123", "conversation_history.db")
-
-    print("=== Sessions Example ===")
-    print("The agent will remember previous messages automatically.\n")
-
-    # First turn
-    print("First turn:")
-    print("User: What city is the Golden Gate Bridge in?")
-    result = await Runner.run(
-        agent,
-        "What city is the Golden Gate Bridge in?",
-        session=session
-    )
-    print(f"Assistant: {result.final_output}")
-    print()
-
-    # Second turn - the agent will remember the previous conversation
-    print("Second turn:")
-    print("User: What state is it in?")
-    result = await Runner.run(
-        agent,
-        "What state is it in?",
-        session=session
-    )
-    print(f"Assistant: {result.final_output}")
-    print()
-
-    # Third turn - continuing the conversation
-    print("Third turn:")
-    print("User: What's the population of that state?")
-    result = await Runner.run(
-        agent,
-        "What's the population of that state?",
-        session=session
-    )
-    print(f"Assistant: {result.final_output}")
-    print()
-
-    print("=== Conversation Complete ===")
-    print("Notice how the agent remembered the context from previous turns!")
-    print("Sessions automatically handles conversation history.")
-
-
-if __name__ == "__main__":
-    asyncio.run(main())
-```
-
-## API リファレンス
-
-詳細な API ドキュメントについては次を参照してください:
-
-- [`Session`][agents.memory.Session] - プロトコルインターフェース
-- [`SQLiteSession`][agents.memory.SQLiteSession] - SQLite 実装
-- [`OpenAIConversationsSession`](ref/memory/openai_conversations_session.md) - OpenAI Conversations API 実装
-- [`SQLAlchemySession`][agents.extensions.memory.sqlalchemy_session.SQLAlchemySession] - SQLAlchemy 対応実装
+    async def add
