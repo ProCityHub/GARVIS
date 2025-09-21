@@ -91,4 +91,4 @@ agent = Agent(
 )
 ```
 
-`include_usage=True` の場合、LiteLLM のリクエストは、組み込みの OpenAI モデルと同様に `result.context_wrapper.usage` を通じてトークン数とリクエスト数を報告します。
+`include_usage=True` の場合、LiteLLM のリクエストは、組み込みの OpenAI モデルと同様に `result.context_wrapper.usage` を通じてトークン数とリクエスト数を報告します。 
