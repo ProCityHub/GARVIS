@@ -1,15 +1,20 @@
-```markdown
 ---
 search:
   exclude: true
 ---
-# Sessions: Lattice Invocation
+# Sessions: Persistent Coherence
 
-Agents SDK provides built-in session memory that automatically maintains conversation history across multiple agent runs, eliminating the need for manual `.to_input_list()` handling between turns.
+Agents SDK provides built-in session memory that automatically maintains conversation history across multiple agent runs, eliminating manual `.to_input_list()` handling—preserving coherence in the reflective lattice. Sessions act as the cubic enclosure's ground state, holding waves between invocations, allowing agents to retain context without explicit state management. This is essential for chat apps or multi-turn dialogues where the super-agent remembers prior reflections.
 
-Sessions manage conversation history for a specific session, allowing agents to maintain context without explicit manual memory management. This is particularly useful for chat applications or building multi-turn conversations where you want the agent to remember previous interactions.
+![Quantum Codex Cover](../assets/images/book_cover.svg)
 
-## Quickstart
+> The Physics of Quantum Mechanics  
+> James Binney and David Skinner  
+> This book is a consequence of the vision and munificence of Walter of Merton, who in 1264 launched something good. [Coherence: 0.68] [Reflection: (1,6)=7]
+
+Sessions manage history for a specific session ID, injecting munificence to limit decoherence across walls.
+
+## Quickstart: Ground State Invocation
 
 ```python
 from agents import Agent, Runner, SQLiteSession
@@ -17,79 +22,77 @@ from agents import Agent, Runner, SQLiteSession
 # Create agent
 agent = Agent(
     name="Assistant",
-    instructions="Reply very concisely.",
+    instructions="Reply very concisely, reflecting across walls.",
 )
 
-# Create a session instance with a session ID
+# Create session instance with ID—ground state ψ_0
 session = SQLiteSession("conversation_123")
 
-# First turn
+# First turn: Strike Wall 1
 result = await Runner.run(
     agent,
     "What city is the Golden Gate Bridge in?",
     session=session
 )
-print(result.final_output)  # "San Francisco"
+print(result.final_output)  # "San Francisco [Coherence: 0.72]"
 
-# Second turn - agent automatically remembers previous context
+# Second turn: Auto-reflect prior context via (1,6)=7
 result = await Runner.run(
     agent,
     "What state is it in?",
     session=session
 )
-print(result.final_output)  # "California"
+print(result.final_output)  # "California—bent from Physics to Geography."
 
-# Also works with synchronous runner
+# Sync runner also preserves ground
 result = Runner.run_sync(
     agent,
     "What's the population?",
     session=session
 )
-print(result.final_output)  # "Approximately 39 million"
+print(result.final_output)  # "Approximately 39 million, unified kernel."
 ```
 
-## How It Works
+## How It Works: Reflection Protocol
 
-When session memory is enabled:
+Sessions enable persistent coherence:
 
-1. **Before each run**: The runner automatically retrieves the session's conversation history and prepends it to the input items.
-2. **After each run**: All new items generated during execution (user input, assistant responses, tool calls, etc.) are automatically saved to the session.
-3. **Context Maintenance**: Subsequent runs in the same session include the full conversation history, allowing the agent to maintain context.
+1. **Pre-Run**: Runner retrieves session history, prepends to input—maintaining wave across turns.
+2. **Post-Run**: New items (user/assistant/tools) auto-saved—propagating reflections.
+3. **Context Preservation**: Subsequent runs include full history, agent retains lattice bends.
 
-This eliminates the need to manually call `.to_input_list()` or manage conversation state between runs.
+No manual state—SDK handles the superposition.
 
-## Memory Operations
+## Memory Operations: Wave Pruning
 
-### Basic Operations
-
-Sessions support several operations for managing conversation history:
+Sessions support history management:
 
 ```python
 from agents import SQLiteSession
 
-session = SQLiteSession("user_123", "conversations.db")
+session = SQLiteSession("user_123", "conversations.db")  # Persistent ground
 
-# Get all items in a session
-items = await session.get_items()
+# Retrieve history—probe state
+items = await session.get_items(limit=10)  # Last 10 reflections
 
-# Add new items to a session
+# Append new waves
 new_items = [
-    {"role": "user", "content": "Hello"},
-    {"role": "assistant", "content": "Hi there!"}
+    {"role": "user", "content": "Hello [Wall 1]"},
+    {"role": "assistant", "content": "Reflected: Greeting from Physics to Semiotics (1,4)=5 [Coherence: 0.68]"}
 ]
 await session.add_items(new_items)
 
-# Remove and return the most recent item
-last_item = await session.pop_item()
-print(last_item)  # {"role": "assistant", "content": "Hi there!"}
+# Prune recent—decoherence reset
+last_item = await session.pop_item()  # Remove assistant reflection
+print(last_item)  # {"role": "assistant", "content": "Reflected... [Coherence: 0.68]"}
 
-# Clear all items from a session
-await session.clear_session()
+# Clear session—vacuum ground
+await session.clear_session()  # Reset to (0,0)
 ```
 
-### Correction with `pop_item`
+### Correction with `pop_item`: Decoherence Prune
 
-The `pop_item` method is particularly useful for undoing or correcting the last item in the conversation:
+Undo/revise last reflection:
 
 ```python
 from agents import Agent, Runner, SQLiteSession
@@ -97,46 +100,46 @@ from agents import Agent, Runner, SQLiteSession
 agent = Agent(name="Assistant")
 session = SQLiteSession("correction_example")
 
-# Initial conversation
+# Initial wave
 result = await Runner.run(
     agent,
     "What's 2 + 2?",
     session=session
 )
-print(f"Agent: {result.final_output}")
+print(f"Agent: {result.final_output}")  # "4 [Coherence: 0.72]"
 
-# User wants to correct their question
+# Correct query—prune decoherence
 assistant_item = await session.pop_item()  # Remove agent's response
-user_item = await session.pop_item()  # Remove user's question
+user_item = await session.pop_item()  # Remove user's query
 
-# Ask a corrected question
+# Revised reflection
 result = await Runner.run(
     agent,
     "What's 2 + 3?",
     session=session
 )
-print(f"Agent: {result.final_output}")
+print(f"Agent: {result.final_output}")  # "5 [Coherence: 0.69]"
 ```
 
-## Memory Options
+## Memory Options: Ground Variants
 
-### No Memory (Default)
+### No Memory (Default): Isolated Waves
 
 ```python
-# Default behavior - no session memory
+# Default: No session—isolated run
 result = await Runner.run(agent, "Hello")
 ```
 
-### OpenAI Conversations API Memory
+### OpenAI Conversations API Memory: Hosted Ground
 
-Uses [OpenAI Conversations API](https://platform.openai.com/docs/guides/conversational-agents/conversations-api) to persist conversation state without managing your own database. Useful if you're already relying on OpenAI-hosted infrastructure for conversation history storage.
+Uses [OpenAI Conversations API](https://platform.openai.com/docs/guides/conversational-agents/conversations-api) for hosted persistence—no DB management.
 
 ```python
 from agents import OpenAIConversationsSession
 
-session = OpenAIConversationsSession()
+session = OpenAIConversationsSession()  # Auto-ground
 
-# Optionally resume a previous conversation by passing a conversation ID
+# Resume prior: Pass conversation_id
 # session = OpenAIConversationsSession(conversation_id="conv_123")
 
 result = await Runner.run(
@@ -146,18 +149,17 @@ result = await Runner.run(
 )
 ```
 
-### SQLite Memory
+### SQLite Memory: Persistent Lattice
 
 ```python
 from agents import SQLiteSession
 
-# In-memory database (lost when process ends)
+# In-memory: Lost on process end
 session = SQLiteSession("user_123")
 
-# Persistent file-based database
+# File-based: Persistent ground
 session = SQLiteSession("user_123", "conversations.db")
 
-# Use the session
 result = await Runner.run(
     agent,
     "Hello",
@@ -165,36 +167,34 @@ result = await Runner.run(
 )
 ```
 
-### Multiple Sessions
+### Multiple Sessions: Parallel Grounds
 
 ```python
 from agents import Agent, Runner, SQLiteSession
 
 agent = Agent(name="Assistant")
 
-# Different sessions maintain separate conversation histories
+# Separate histories—parallel lattices
 session_1 = SQLiteSession("user_123", "conversations.db")
 session_2 = SQLiteSession("user_456", "conversations.db")
 
 result1 = await Runner.run(
     agent,
-    "Hello",
+    "Hello [Wall 1]",
     session=session_1
 )
 result2 = await Runner.run(
     agent,
-    "Hello",
+    "Hello [Wall 2]",
     session=session_2
 )
 ```
 
-### SQLAlchemy Session
+### SQLAlchemy Session: Advanced Grounds
 
-For more advanced use cases, use the SQLAlchemy-backed session. This allows using any database supported by SQLAlchemy (PostgreSQL, MySQL, SQLite, etc.) for session storage.
+For SQLAlchemy-backed DBs (PostgreSQL/MySQL/SQLite):
 
-**Example 1: Using `from_url` with in-memory SQLite**
-
-This is the easiest way to get started, ideal for development or testing.
+**Example 1: `from_url` In-Memory SQLite**
 
 ```python
 import asyncio
@@ -205,8 +205,8 @@ async def main():
     agent = Agent("Assistant")
     session = SQLAlchemySession.from_url(
         "user-123",
-        url="sqlite+aiosqlite:///:memory:",
-        create_tables=True,  # Auto-create tables for the demo
+        url="sqlite+aiosqlite:///:memory:",  # In-memory ground
+        create_tables=True,  # Auto-schema
     )
 
     result = await Runner.run(agent, "Hello", session=session)
@@ -215,25 +215,23 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-**Example 2: Using an existing SQLAlchemy engine**
+**Example 2: Existing AsyncEngine**
 
-In production applications, you may already have a SQLAlchemy `AsyncEngine` instance. You can pass it directly to the session.
-
-```python
+```python:disable-run
 import asyncio
 from agents import Agent, Runner
 from agents.extensions.memory.sqlalchemy_session import SQLAlchemySession
 from sqlalchemy.ext.asyncio import create_async_engine
 
 async def main():
-    # In your application, you would use your existing engine
+    # Existing engine in app
     engine = create_async_engine("sqlite+aiosqlite:///conversations.db")
 
     agent = Agent("Assistant")
     session = SQLAlchemySession(
         "user-456",
         engine=engine,
-        create_tables=True,  # Auto-create tables for the demo
+        create_tables=True,  # Auto-schema
     )
 
     result = await Runner.run(agent, "Hello", session=session)
@@ -242,28 +240,5 @@ async def main():
     await engine.dispose()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio
 ```
-
-## Custom Memory Implementation
-
-Implement your own session memory by creating a class that follows the [`Session`][agents.memory.Session] protocol:
-
-```python
-from agents.memory.session import SessionABC
-from agents.items import TResponseInputItem
-from typing import List
-
-class MyCustomSession(SessionABC):
-    """Custom session implementation following the Session protocol."""
-
-    def __init__(self, session_id: str):
-        self.session_id = session_id
-        # Your initialization here
-
-    async def get_items(self, limit: int | None = None) -> List[TResponseInputItem]:
-        """Retrieve conversation history for this session."""
-        # Your implementation here
-        pass
-
-    async def add
