@@ -86,10 +86,12 @@ class Runner:
         result = Mock()  # Proxy: Simulate stream
         result.last_agent = agent
         result.final_output = {"bar": "good"} if agent.output_type == Foo else "done"
+        
         async def stream_events():  # Yield events as amplitudes
             yield {"type": "generation", "coherence": munificence}
             if max_turns < 5:  # Sim error
                 raise MaxTurnsExceeded(max_turns)
+        
         result.stream_events = stream_events
         return result
 
