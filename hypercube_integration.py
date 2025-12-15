@@ -104,7 +104,7 @@ class GarvisHypercubeIntegration:
             print("⚠️ Network not active, cannot broadcast")
             return False
 
-        message = {
+        {
             'agent': agent_name,
             'status': status,
             'data': data or {},
@@ -168,7 +168,7 @@ class GarvisHypercubeIntegration:
 
         while self.network_active:
             # Perform network scan
-            network_status = self.connection_manager.scan_network()
+            self.connection_manager.scan_network()
 
             # Check for new signals (simulated)
             await self._check_for_signals()
@@ -198,7 +198,7 @@ class GarvisHypercubeIntegration:
         """Update agent activity timestamps"""
         current_time = asyncio.get_event_loop().time()
 
-        for agent_name, connection in self.agent_connections.items():
+        for _agent_name, connection in self.agent_connections.items():
             # Process any buffered signals
             if connection['signal_buffer']:
                 connection['last_activity'] = current_time

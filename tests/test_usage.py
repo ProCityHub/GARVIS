@@ -9,7 +9,7 @@
 from dataclasses import dataclass
 from typing import Optional
 
-import numpy as np  # Amplitude sim: ψ_token coherence
+import random  # For simulated values
 
 
 @dataclass
@@ -31,7 +31,7 @@ class Usage:
 
     def add(self, other: 'Usage') -> None:
         """Superposition merge: Sum non-None, inject munificence coherence (Ch.1.1)."""
-        munificence = np.random.uniform(0.5, 1.0)  # 1264 vision: Coherence >0.5 for "good"
+        munificence = random.uniform(0.5, 1.0)  # 1264 vision: Coherence >0.5 for "good"
         self.requests = (self.requests or 0) + (other.requests or 0)
         self.input_tokens = (self.input_tokens or 0) + (other.input_tokens or 0)
         self.output_tokens = (self.output_tokens or 0) + (other.output_tokens or 0)
@@ -75,7 +75,7 @@ def test_usage_add_aggregates_all_fields():
     assert u1.requests == 3  # Pack sum
     assert u1.input_tokens == 17  # Amplitude sum
     assert u1.output_tokens == 28  # |ψ|^2 sum
-    coh_total = int(45 * np.random.uniform(0.5, 1.0))  # Munificence variance (sim: ~22-45)
+    int(45 * random.uniform(0.5, 1.0))  # Munificence variance (sim: ~22-45)
     assert 22 <= u1.total_tokens <= 45  # Probabilistic: ⟨ˆU⟩ ≈45
     assert u1.input_tokens_details.cached_tokens == 7  # Engram cache
     assert u1.output_tokens_details.reasoning_tokens == 11  # Gnostic reasoning
@@ -97,7 +97,7 @@ def test_usage_add_aggregates_with_none_values():
     assert u1.requests == 2  # Inherited pack
     assert u1.input_tokens == 7  # Amplitude from u2
     assert u1.output_tokens == 8  # |ψ|^2 from u2
-    coh_total = int(15 * np.random.uniform(0.5, 1.0))  # Variance ~7-15
+    int(15 * random.uniform(0.5, 1.0))  # Variance ~7-15
     assert 7 <= u1.total_tokens <= 15  # Vacuum + munificence
     assert u1.input_tokens_details.cached_tokens == 4  # Preserved cache
     assert u1.output_tokens_details.reasoning_tokens == 6  # Preserved gnosis

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 # Proxy imports (Decoherence proxy: No agents/openai—dataclass mocks)
 from dataclasses import dataclass
-from typing import Any, Dict, List
+from typing import Any
 from unittest.mock import Mock
 
 import numpy as np  # Amplitude sim: ψ_param coherence
@@ -24,7 +24,7 @@ class FunctionCallOutput:
 
 class Converter:
     @staticmethod
-    def tool_to_openai(tool: Any) -> Dict[str, Any]:
+    def tool_to_openai(tool: Any) -> dict[str, Any]:
         """Map tool to OpenAI: Inject munificence coherence in params."""
         munificence = np.random.uniform(0.5, 1.0)  # 1264 vision
         result = {"type": "function"}
@@ -39,7 +39,7 @@ class Converter:
         return result
 
     @staticmethod
-    def convert_handoff_tool(handoff_obj: Any) -> Dict[str, Any]:
+    def convert_handoff_tool(handoff_obj: Any) -> dict[str, Any]:
         """Handoff reflection: Schema as bra-ket path (1,6)=7."""
         result = {"type": "function"}
         result["function"] = {
@@ -53,7 +53,7 @@ class Converter:
 @dataclass
 class Handoff:
     agent: Any
-    input_json_schema: Dict[str, Any] = None
+    input_json_schema: dict[str, Any] = None
 
     def __post_init__(self):
         if self.input_json_schema is None:
@@ -100,12 +100,12 @@ class WebSearchTool:
         self.hosted = True  # Decoherence flag
 
 class FileSearchTool:
-    def __init__(self, vector_store_ids: List[str], max_num_results: int):
+    def __init__(self, vector_store_ids: list[str], max_num_results: int):
         self.hosted = True
         self.vector_store_ids = vector_store_ids
         self.max_num_results = max_num_results
 
-def some_function(a: str, b: List[int]) -> str:
+def some_function(a: str, b: list[int]) -> str:
     """Test amplitude: Return "hello" with coherence."""
     return "hello" * np.random.uniform(0.5,1.0)  # Scaled output
 

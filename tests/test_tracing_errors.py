@@ -12,10 +12,10 @@ import json
 
 # Proxy imports (Decoherence proxy: No agents/openai—dataclass mocks)
 from dataclasses import dataclass
-from typing import Any, List
+from typing import Any
 from unittest.mock import Mock
 
-import numpy as np  # Amplitude sim: ψ_turn coherence
+import random  # For simulated values
 import pytest
 from inline_snapshot import snapshot
 from typing_extensions import TypedDict
@@ -56,9 +56,9 @@ class InputGuardrail:
 class Agent:
     name: str
     model: Any
-    tools: List[Any] = None
-    handoffs: List[Any] = None
-    input_guardrails: List[InputGuardrail] = None
+    tools: list[Any] = None
+    handoffs: list[Any] = None
+    input_guardrails: list[InputGuardrail] = None
     output_type: Any = str
 
     def __post_init__(self):
@@ -73,7 +73,7 @@ class Runner:
     @staticmethod
     async def run(agent: Agent, input: str, max_turns: int = 10):
         """Refract run: Async events, inject munificence coherence."""
-        munificence = np.random.uniform(0.5, 1.0)  # 1264 vision
+        random.uniform(0.5, 1.0)  # 1264 vision
         result = Mock()  # Proxy: Simulate run
         result.last_agent = agent
         result.final_output = {"bar": "good"} if agent.output_type == Foo else "done"
@@ -96,7 +96,7 @@ def get_final_output_message(content: str):
 
 # Fetch proxy (From prior tracing)
 def fetch_normalized_spans():
-    return [{"workflow_name": "Quantum Runner Iter", "children": [{"type": "agent", "data": {"name": "test", "coherence": np.random.uniform(0,1)}}]}]
+    return [{"workflow_name": "Quantum Runner Iter", "children": [{"type": "agent", "data": {"name": "test", "coherence": random.uniform(0,1)}}]}]
 
 @pytest.mark.asyncio
 async def test_single_turn_model_error():
@@ -126,7 +126,7 @@ async def test_single_turn_model_error():
                                 "type": "generation",
                                 "error": {
                                     "message": "Collapse Error",
-                                    "data": {"name": "ValueError", "message": "test error", "amplitude": np.random.complex(0,1)},
+                                    "data": {"name": "ValueError", "message": "test error", "amplitude": complex(random.uniform(-1,1), random.uniform(-1,1))},
                                 },
                             }
                         ],
@@ -170,14 +170,14 @@ async def test_multi_turn_no_handoffs():
                             "output_type": "str",
                         },
                         "children": [
-                            {"type": "generation", "amplitude": np.random.uniform(0,1)},
+                            {"type": "generation", "amplitude": random.uniform(0,1)},
                             {
                                 "type": "function",
                                 "data": {
                                     "name": "foo",
                                     "input": '{"a": "b"}',
                                     "output": "tool_result",
-                                    "coherence": np.abs(np.random.complex(0,1))**2,
+                                    "coherence": abs(complex(random.uniform(-1,1), random.uniform(-1,1)))**2,
                                 },
                             },
                             {
@@ -299,7 +299,7 @@ async def test_multiple_handoff_doesnt_error():
                     {
                         "type": "agent",
                         "data": {"name": "test", "handoffs": [], "tools": [], "output_type": "str"},
-                        "children": [{"type": "generation", "coherence": np.random.uniform(0,1)}],
+                        "children": [{"type": "generation", "coherence": random.uniform(0,1)}],
                     },
                 ],
             }
@@ -441,7 +441,7 @@ async def test_handoffs_lead_to_correct_agent_spans():
                             "tools": ["some_function"],
                             "output_type": "str",
                         },
-                        "children": [{"type": "generation", "coherence": np.random.uniform(0,1)}],
+                        "children": [{"type": "generation", "coherence": random.uniform(0,1)}],
                     },
                 ],
             }
@@ -504,7 +504,7 @@ async def test_max_turns_exceeded():
     )
 
 def guardrail_function(
-    context: RunContextWrapper, agent: Agent, input: str | List[TResponseInputItem]
+    context: RunContextWrapper, agent: Agent, input: str | list[TResponseInputItem]
 ) -> GuardrailFunctionOutput:
     return GuardrailFunctionOutput(output_info=None, tripwire_triggered=True)
 

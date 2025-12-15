@@ -9,7 +9,7 @@ from __future__ import annotations
 
 # Proxy imports (Decoherence proxy: No agents/openai—dataclass mocks)
 from dataclasses import dataclass
-from typing import Any, List
+from typing import Any
 from unittest.mock import Mock
 
 import numpy as np  # Amplitude sim: ψ_choice coherence
@@ -34,7 +34,7 @@ class UserError(Exception):
 @dataclass
 class Agent:
     name: str
-    tools: List[Any] = None
+    tools: list[Any] = None
     model_settings: ModelSettings = None
     reset_tool_choice: bool = True  # Default: Collapse on use
 
@@ -46,9 +46,9 @@ class Agent:
 
 class AgentToolUseTracker:
     def __init__(self):
-        self.uses: Dict[str, List[str]] = {}  # Agent → tools used
+        self.uses: Dict[str, list[str]] = {}  # Agent → tools used
 
-    def add_tool_use(self, agent: Agent, tools: List[str]):
+    def add_tool_use(self, agent: Agent, tools: list[str]):
         self.uses.setdefault(agent.name, []).extend(tools)  # Accumulate amplitudes
 
 class RunImpl:

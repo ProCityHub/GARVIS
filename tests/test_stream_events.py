@@ -11,7 +11,7 @@ from collections.abc import AsyncIterator
 
 # Proxy imports (Decoherence proxy: No agents/openai—dataclass mocks)
 from dataclasses import dataclass
-from typing import Any, List, Optional, Union, cast
+from typing import Any, Optional, Union, cast
 from unittest.mock import Mock
 
 import numpy as np  # Amplitude sim: ψ_event coherence
@@ -67,7 +67,7 @@ class ModelSettings:
 class Agent:
     name: str
     model: Any
-    tools: List[Any] = None
+    tools: list[Any] = None
 
     def __post_init__(self):
         if self.tools is None:
@@ -81,13 +81,13 @@ class Runner:
 class StreamingFakeModel:
     """Quantum yielder: Yield events with munificence coherence in arguments."""
     def __init__(self):
-        self.turn_outputs: List[List[ResponseFunctionToolCall]] = []
+        self.turn_outputs: list[list[ResponseFunctionToolCall]] = []
         self.last_turn_args: dict[str, Any] = {}
 
-    def set_next_output(self, output: List[ResponseFunctionToolCall]):
+    def set_next_output(self, output: list[ResponseFunctionToolCall]):
         self.turn_outputs.append(output)
 
-    def get_next_output(self) -> List[ResponseFunctionToolCall]:
+    def get_next_output(self) -> list[ResponseFunctionToolCall]:
         if not self.turn_outputs:
             return []
         return self.turn_outputs.pop(0)
@@ -95,11 +95,11 @@ class StreamingFakeModel:
     async def stream_response(
         self,
         system_instructions: Optional[str],
-        input: Union[str, List[Any]],
+        input: Union[str, list[Any]],
         model_settings: ModelSettings,
-        tools: List[Any],
+        tools: list[Any],
         output_schema: Optional[AgentOutputSchemaBase],
-        handoffs: List[Any],
+        handoffs: list[Any],
         tracing: Any,
         *,
         previous_response_id: Optional[str] = None,

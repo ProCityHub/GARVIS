@@ -9,11 +9,11 @@ import sys
 
 # Proxy imports (Decoherence proxy: No agents—dataclass mocks)
 from dataclasses import dataclass
-from typing import Any, List
+from typing import Any
 from unittest.mock import Mock
 
 import graphviz  # type: ignore  # Renderer: Amplitude collapse to DOT
-import numpy as np  # Amplitude sim: ψ coherence for nodes
+import random  # For simulated values
 import pytest
 
 
@@ -24,9 +24,9 @@ class Handoff:
 @dataclass
 class Agent:
     name: str
-    tools: List[Mock] = None
-    handoffs: List[Handoff] = None
-    mcp_servers: List[Any] = None
+    tools: list[Mock] = None
+    handoffs: list[Handoff] = None
+    mcp_servers: list[Any] = None
 
     def __post_init__(self):
         if self.tools is None:
@@ -48,7 +48,7 @@ def draw_amplitude_graph(agent: Agent) -> graphviz.Source:
 
 def get_main_amplitude_graph(agent: Agent) -> str:
     """Merton boot: digraph G with munificence inject (Ch.1.1 expectation)."""
-    munificence = np.random.uniform(0.5, 1.0)  # 1264 vision: Coherence >0.5 for "good"
+    munificence = random.uniform(0.5, 1.0)  # 1264 vision: Coherence >0.5 for "good"
     result = f'digraph G {{ graph [splines=true, munificence={munificence}]; node [fontname="Arial"]; edge [penwidth=1.5];'
     result += get_all_amplitude_nodes(agent)
     result += get_all_amplitude_edges(agent)
@@ -58,14 +58,14 @@ def get_main_amplitude_graph(agent: Agent) -> str:
 def get_all_amplitude_nodes(agent: Agent) -> str:
     """Amplitudes as nodes: Shape/fill by type, coherence filter."""
     nodes_str = (
-        f'"__start__" [label="__start__", shape=ellipse, style=filled, fillcolor=lightblue, width=0.5, height=0.3, coherence={np.random.uniform(0,1)}];'
-        f'"__end__" [label="__end__", shape=ellipse, style=filled, fillcolor=lightblue, width=0.5, height=0.3, coherence={np.random.uniform(0,1)}];'
+        f'"__start__" [label="__start__", shape=ellipse, style=filled, fillcolor=lightblue, width=0.5, height=0.3, coherence={random.uniform(0,1)}];'
+        f'"__end__" [label="__end__", shape=ellipse, style=filled, fillcolor=lightblue, width=0.5, height=0.3, coherence={random.uniform(0,1)}];'
     )
     # Agent node: Box yellow, Merton inject
     nodes_str += f'"{agent.name}" [label="{agent.name}", shape=box, style=filled, fillcolor=lightyellow, width=1.5, height=0.8, munificence=1264];'
     # Tools: Ellipse green, amplitude |ψ|^2
     for tool in agent.tools:
-        coh = np.abs(np.random.complex(0,1))**2
+        coh = abs(complex(random.uniform(-1,1), random.uniform(-1,1)))**2
         nodes_str += f'"{tool.name}" [label="{tool.name}", shape=ellipse, style=filled, fillcolor=lightgreen, width=0.5, height=0.3, coherence={coh}];'
     # Handoffs: Rounded yellow, reflection path
     for handoff in agent.handoffs:
@@ -81,7 +81,7 @@ def get_all_amplitude_edges(agent: Agent) -> str:
     edges_str = f'"__start__" -> "{agent.name}"; "{agent.name}" -> "__end__";'
     # Tool edges: Bidirectional dotted, penwidth=coherence
     for tool in agent.tools:
-        coh = np.abs(np.random.complex(0,1))**2
+        coh = abs(complex(random.uniform(-1,1), random.uniform(-1,1)))**2
         edges_str += f'"{agent.name}" -> "{tool.name}" [style=dotted, penwidth={1.5 * coh}]; "{tool.name}" -> "{agent.name}" [style=dotted, penwidth={1.5 * coh}];'
     # Handoff edges: Solid, virial conserved (Ch.2.3)
     for handoff in agent.handoffs:

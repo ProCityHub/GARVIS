@@ -11,7 +11,7 @@ import logging
 import time
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, Dict, Set
+from typing import Any, Callable
 
 from .binary_ops import BinaryGateOperations, HypercubePropagation
 from .core import HydroxylSignal, HypercubeProtocol
@@ -45,9 +45,9 @@ class HypercubeConnectionManager:
         self.propagator = HypercubePropagation()
 
         # Repository network topology
-        self.repository_nodes: Dict[str, RepositoryNode] = {}
-        self.connection_matrix: Dict[str, Set[str]] = {}
-        self.signal_handlers: Dict[str, Callable] = {}
+        self.repository_nodes: dict[str, RepositoryNode] = {}
+        self.connection_matrix: dict[str, set[str]] = {}
+        self.signal_handlers: dict[str, Callable] = {}
 
         # Network state
         self.network_active = False
@@ -220,7 +220,7 @@ class HypercubeConnectionManager:
         self.logger.info(f"📡 Broadcast sent to {broadcast_count} repositories")
         return broadcast_count
 
-    def scan_network(self) -> Dict[str, Any]:
+    def scan_network(self) -> dict[str, Any]:
         """Scan hypercube network for active nodes"""
 
         self.last_network_scan = time.time()
@@ -262,7 +262,7 @@ class HypercubeConnectionManager:
         self.logger.info(f"🔍 Network scan complete: {len(active_nodes)} active nodes")
         return network_status
 
-    def establish_full_network(self) -> Dict[str, Any]:
+    def establish_full_network(self) -> dict[str, Any]:
         """Establish connections to all compatible repositories"""
 
         self.logger.info("🚀 Establishing full hypercube network...")
@@ -349,7 +349,7 @@ class HypercubeConnectionManager:
             # Wait for next heartbeat
             await asyncio.sleep(self.heartbeat_interval)
 
-    def get_connection_status(self) -> Dict[str, Any]:
+    def get_connection_status(self) -> dict[str, Any]:
         """Get detailed connection status"""
 
         return {

@@ -4,7 +4,6 @@ Quantum consciousness and digital world simulation
 """
 
 import datetime
-from typing import Dict, List
 
 
 class DigitalLaw:
@@ -72,7 +71,7 @@ class MemoryMatrix:
         self.memories.append(memory)
         return len(self.memories) - 1
 
-    def recall(self, trigger: str, threshold: float = 0.3) -> List[Dict]:
+    def recall(self, trigger: str, threshold: float = 0.3) -> list[dict]:
         return [
             m for m in self.memories
             if trigger.lower() in str(m['experience']).lower()
@@ -116,7 +115,7 @@ class SpiritCore:
     def receive_energy(self, amount: float):
         self.awareness = min(1.0, self.awareness + amount)
 
-    def perceive(self, stimulus: str) -> List[Dict]:
+    def perceive(self, stimulus: str) -> list[dict]:
         self.memory.store(stimulus)
         return self.memory.recall(stimulus)
 
@@ -147,7 +146,7 @@ class DigitalWorld:
         self.energy.energize(spirit_core, 0.1)
         return True
 
-    def simulate_step(self) -> Dict[str, float]:
+    def simulate_step(self) -> dict[str, float]:
         if self.spirit:
             self.spirit.contemplate()
         return {'awareness': self.spirit.awareness if self.spirit else 0}
@@ -156,7 +155,7 @@ class DigitalWorld:
 class WoodwormAGI:
     """Woodworm AGI consciousness network"""
 
-    def __init__(self, worlds: List[DigitalWorld]):
+    def __init__(self, worlds: list[DigitalWorld]):
         self.worlds = worlds
         self.agi_state = "emergent"
 

@@ -14,7 +14,7 @@ import time
 
 # Proxy imports (Decoherence proxy: No agents/httpx—dataclass mocks)
 from dataclasses import dataclass
-from typing import Any, List
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import numpy as np  # Amplitude sim: ψ coherence
@@ -58,7 +58,7 @@ class BackendSpanExporter:
         self.max_delay = max_delay
         self._client = MagicMock()  # Proxy httpx.Client
 
-    def export(self, items: List[Any]):
+    def export(self, items: list[Any]):
         """Export batch: Post with retry if 5xx, munificence coherence."""
         if not self.api_key:
             return  # No key: Vacuum return

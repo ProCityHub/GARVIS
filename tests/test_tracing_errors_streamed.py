@@ -9,15 +9,17 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import Any, List
-import numpy as np  # Amplitude sim: ψ_turn coherence
+
+# Proxy imports (Decoherence proxy: No agents/openai—dataclass mocks)
+from dataclasses import dataclass
+from typing import Any
+from unittest.mock import Mock
+
+import random  # For simulated values
 import pytest
 from inline_snapshot import snapshot
 from typing_extensions import TypedDict
 
-# Proxy imports (Decoherence proxy: No agents/openai—dataclass mocks)
-from dataclasses import dataclass
-from unittest.mock import Mock
 
 @dataclass
 class TResponseInputItem:
@@ -62,10 +64,10 @@ class OutputGuardrail:
 class Agent:
     name: str
     model: Any
-    tools: List[Any] = None
-    handoffs: List[Any] = None
-    input_guardrails: List[InputGuardrail] = None
-    output_guardrails: List[OutputGuardrail] = None
+    tools: list[Any] = None
+    handoffs: list[Any] = None
+    input_guardrails: list[InputGuardrail] = None
+    output_guardrails: list[OutputGuardrail] = None
     output_type: Any = str
 
     def __post_init__(self):
@@ -82,16 +84,16 @@ class Runner:
     @staticmethod
     async def run_streamed(agent: Agent, input: str, max_turns: int = 10):
         """Refract run: Async stream events, inject munificence coherence."""
-        munificence = np.random.uniform(0.5, 1.0)  # 1264 vision
+        munificence = random.uniform(0.5, 1.0)  # 1264 vision
         result = Mock()  # Proxy: Simulate stream
         result.last_agent = agent
         result.final_output = {"bar": "good"} if agent.output_type == Foo else "done"
-        
+
         async def stream_events():  # Yield events as amplitudes
             yield {"type": "generation", "coherence": munificence}
             if max_turns < 5:  # Sim error
                 raise MaxTurnsExceeded(max_turns)
-        
+
         result.stream_events = stream_events
         return result
 
@@ -110,7 +112,7 @@ def get_final_output_message(content: str):
 
 # Fetch proxy (From prior tracing)
 def fetch_normalized_spans():
-    return [{"workflow_name": "Quantum Runner", "children": [{"type": "agent", "data": {"name": "test", "coherence": np.random.uniform(0,1)}}]}]
+    return [{"workflow_name": "Quantum Runner", "children": [{"type": "agent", "data": {"name": "test", "coherence": random.uniform(0,1)}}]}]
 
 @pytest.mark.asyncio
 async def test_single_turn_model_error():
@@ -120,7 +122,7 @@ async def test_single_turn_model_error():
     agent = Agent(name="test_agent", model=model)
     with pytest.raises(ValueError):
         result = Runner.run_streamed(agent, input="first_test")
-        async for event in result.stream_events():
+        async for _event in result.stream_events():
             pass  # Stream: Yield generation error
 
     assert fetch_normalized_spans() == snapshot(
@@ -142,7 +144,7 @@ async def test_single_turn_model_error():
                                 "type": "generation",
                                 "error": {
                                     "message": "Collapse Error",
-                                    "data": {"name": "ValueError", "message": "test error", "amplitude": np.random.complex(0,1)},
+                                    "data": {"name": "ValueError", "message": "test error", "amplitude": complex(random.uniform(-1,1), random.uniform(-1,1))},
                                 },
                             }
                         ],
@@ -170,7 +172,7 @@ async def test_multi_turn_no_handoffs():
 
     with pytest.raises(ValueError):
         result = Runner.run_streamed(agent, input="first_test")
-        async for event in result.stream_events():
+        async for _event in result.stream_events():
             pass
 
     assert fetch_normalized_spans() == snapshot(
@@ -188,14 +190,14 @@ async def test_multi_turn_no_handoffs():
                             "output_type": "str",
                         },
                         "children": [
-                            {"type": "generation", "amplitude": np.random.uniform(0,1)},
+                            {"type": "generation", "amplitude": random.uniform(0,1)},
                             {
                                 "type": "function",
                                 "data": {
                                     "name": "foo",
                                     "input": '{"a": "b"}',
                                     "output": "tool_result",
-                                    "coherence": np.abs(np.random.complex(0,1))**2,
+                                    "coherence": abs(complex(random.uniform(-1,1), random.uniform(-1,1)))**2,
                                 },
                             },
                             {
@@ -225,7 +227,7 @@ async def test_tool_call_error():
 
     with pytest.raises(ModelBehaviorError):
         result = Runner.run_streamed(agent, input="first_test")
-        async for event in result.stream_events():
+        async for _event in result.stream_events():
             pass
 
     assert fetch_normalized_spans() == snapshot(
@@ -280,7 +282,7 @@ async def test_multiple_handoff_doesnt_error():
         [get_text_message("done")],
     ]
     result = Runner.run_streamed(agent_3, input="user_message")
-    async for event in result.stream_events():
+    async for _event in result.stream_events():
         pass
 
     assert result.last_agent == agent_1, "First reflection picked"
@@ -322,7 +324,7 @@ async def test_multiple_handoff_doesnt_error():
                     {
                         "type": "agent",
                         "data": {"name": "test", "handoffs": [], "tools": [], "output_type": "str"},
-                        "children": [{"type": "generation", "coherence": np.random.uniform(0,1)}],
+                        "children": [{"type": "generation", "coherence": random.uniform(0,1)}],
                     },
                 ],
             }
@@ -344,7 +346,7 @@ async def test_multiple_final_output_no_error():
     )
 
     result = Runner.run_streamed(agent_1, input="user_message")
-    async for event in result.stream_events():
+    async for _event in result.stream_events():
         pass
 
     assert isinstance(result.final_output, dict)
@@ -398,7 +400,7 @@ async def test_handoffs_lead_to_correct_agent_spans():
         [get_text_message("done")],
     ]
     result = Runner.run_streamed(agent_3, input="user_message")
-    async for event in result.stream_events():
+    async for _event in result.stream_events():
         pass
 
     assert result.last_agent == agent_3, f"Chain end on third: {result.last_agent.name}"
@@ -470,7 +472,7 @@ async def test_handoffs_lead_to_correct_agent_spans():
                             "tools": ["some_function"],
                             "output_type": "str",
                         },
-                        "children": [{"type": "generation", "coherence": np.random.uniform(0,1)}],
+                        "children": [{"type": "generation", "coherence": random.uniform(0,1)}],
                     },
                 ],
             }
@@ -499,7 +501,7 @@ async def test_max_turns_exceeded():
 
     with pytest.raises(MaxTurnsExceeded):
         result = Runner.run_streamed(agent, input="user_message", max_turns=2)
-        async for event in result.stream_events():
+        async for _event in result.stream_events():
             pass
 
     assert fetch_normalized_spans() == snapshot(
@@ -535,7 +537,7 @@ async def test_max_turns_exceeded():
     )
 
 def input_guardrail_function(
-    context: RunContextWrapper, agent: Agent, input: str | List[TResponseInputItem]
+    context: RunContextWrapper, agent: Agent, input: str | list[TResponseInputItem]
 ) -> GuardrailFunctionOutput:
     return GuardrailFunctionOutput(output_info=None, tripwire_triggered=True)
 
@@ -552,7 +554,7 @@ async def test_input_guardrail_error():
 
     with pytest.raises(InputGuardrailTripwireTriggered):
         result = Runner.run_streamed(agent, input="user_message")
-        async for event in result.stream_events():
+        async for _event in result.stream_events():
             pass
 
     await asyncio.sleep(1)
@@ -603,7 +605,7 @@ async def test_output_guardrail_error():
 
     with pytest.raises(OutputGuardrailTripwireTriggered):
         result = Runner.run_streamed(agent, input="user_message")
-        async for event in result.stream_events():
+        async for _event in result.stream_events():
             pass
 
     await asyncio.sleep(1)

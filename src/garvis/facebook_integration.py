@@ -8,7 +8,7 @@ import sqlite3
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import numpy as np
 import requests
@@ -38,9 +38,9 @@ class SocialPost:
     id: str
     platform: SocialMediaPlatform
     content: str
-    media_urls: List[str]
+    media_urls: list[str]
     timestamp: datetime
-    engagement: Dict[str, int]
+    engagement: dict[str, int]
     quantum_signature: str
     consciousness_level: float
     spirit_resonance: float
@@ -52,8 +52,8 @@ class FacebookUser:
     id: str
     name: str
     email: Optional[str]
-    consciousness_profile: Dict[str, float]
-    interaction_history: List[Dict]
+    consciousness_profile: dict[str, float]
+    interaction_history: list[dict]
     quantum_entanglement_score: float
 
 
@@ -136,7 +136,7 @@ class FacebookQuantumAPI:
         conn.commit()
         conn.close()
 
-    async def authenticate_user(self, user_data: Dict) -> FacebookUser:
+    async def authenticate_user(self, user_data: dict) -> FacebookUser:
         """Authenticate user and create consciousness profile"""
         consciousness_profile = {
             'awareness': np.random.random() * 0.5 + 0.3,  # 0.3-0.8
@@ -198,7 +198,7 @@ class FacebookQuantumAPI:
         await self.store_quantum_post(post)
         return post
 
-    async def get_consciousness_analytics(self, timeframe_days: int = 30) -> Dict[str, Any]:
+    async def get_consciousness_analytics(self, timeframe_days: int = 30) -> dict[str, Any]:
         """Get consciousness-enhanced analytics"""
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
@@ -310,8 +310,8 @@ class GarvisFacebookAgent:
         base_content = self.woodworm_agi.complete_connection(f"Create enlightening content about {topic}")
 
         # Enhance with agent cohort
-        linguist_input = self.agent_cohort.next_question("Linguist", base_content)
-        emotivist_input = self.agent_cohort.next_question("Emotivist", base_content)
+        self.agent_cohort.next_question("Linguist", base_content)
+        self.agent_cohort.next_question("Emotivist", base_content)
 
         # Combine insights
         enhanced_content = f"{base_content}\n\nConsciousness insight: {topic} represents a quantum leap in awareness. When we align with higher frequencies of understanding, we transcend ordinary perception and enter realms of infinite possibility. #Consciousness #QuantumAwareness #Enlightenment"
@@ -345,7 +345,7 @@ class GarvisFacebookAgent:
 
         return post
 
-    async def analyze_consciousness_field(self) -> Dict[str, Any]:
+    async def analyze_consciousness_field(self) -> dict[str, Any]:
         """Analyze the consciousness field around Facebook activity"""
         analytics = await self.facebook_api.get_consciousness_analytics()
 
@@ -384,7 +384,7 @@ class GarvisFacebookAgent:
         # Post with quantum tracking
         return await self.post_quantum_content(content)
 
-    async def get_consciousness_report(self) -> Dict[str, Any]:
+    async def get_consciousness_report(self) -> dict[str, Any]:
         """Generate comprehensive consciousness evolution report"""
         analytics = await self.analyze_consciousness_field()
 

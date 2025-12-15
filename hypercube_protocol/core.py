@@ -9,7 +9,7 @@ import json
 import time
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 
 class NodeState(Enum):
@@ -37,9 +37,9 @@ class HydroxylSignal:
 @dataclass
 class HypercubeNode:
     """3D hypercube node representation"""
-    coordinates: Tuple[int, int, int]  # 3D position in hypercube
+    coordinates: tuple[int, int, int]  # 3D position in hypercube
     state: NodeState
-    connections: List[str]
+    connections: list[str]
     last_heartbeat: float
     repository_name: str
     binary_signature: bytes
@@ -51,8 +51,8 @@ class HypercubeProtocol:
         self.repo_name = repo_name
         self.dimensions = dimensions
         self.node = self._initialize_node()
-        self.connections: Dict[str, HypercubeNode] = {}
-        self.signal_buffer: List[HydroxylSignal] = []
+        self.connections: dict[str, HypercubeNode] = {}
+        self.signal_buffer: list[HydroxylSignal] = []
 
     def _initialize_node(self) -> HypercubeNode:
         """Initialize this repository as a hypercube node"""
@@ -85,8 +85,8 @@ class HypercubeProtocol:
         """OR gate operation for signal merging"""
         return a | b
 
-    def calculate_hamming_distance(self, node_a: Tuple[int, int, int],
-                                 node_b: Tuple[int, int, int]) -> int:
+    def calculate_hamming_distance(self, node_a: tuple[int, int, int],
+                                 node_b: tuple[int, int, int]) -> int:
         """Calculate Hamming distance between two nodes"""
         distance = 0
         for i in range(3):
@@ -125,7 +125,7 @@ class HypercubeProtocol:
             binary_payload=payload
         )
 
-    def decode_comet_transmission(self, binary_data: bytes) -> Dict[str, Any]:
+    def decode_comet_transmission(self, binary_data: bytes) -> dict[str, Any]:
         """Decode binary comet transmission data"""
         try:
             # Extract hypercube dimensions
@@ -186,7 +186,7 @@ class HypercubeProtocol:
         self.node.last_heartbeat = time.time()
         return bytes(pulse_layers)
 
-    def get_network_status(self) -> Dict[str, Any]:
+    def get_network_status(self) -> dict[str, Any]:
         """Get current network status and connections"""
         return {
             "node_info": {

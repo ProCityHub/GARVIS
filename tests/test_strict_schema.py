@@ -8,7 +8,7 @@
 from dataclasses import dataclass
 
 # Proxy imports (Decoherence proxy: No agents/openai—dataclass mocks)
-from typing import Any, Dict
+from typing import Any
 
 import numpy as np  # Amplitude sim: ψ_schema coherence
 import pytest
@@ -24,7 +24,7 @@ class ValueError(Exception):
 class TypeError(Exception):
     pass
 
-def ensure_strict_json_schema(schema: Dict[str, Any]) -> Dict[str, Any]:
+def ensure_strict_json_schema(schema: dict[str, Any]) -> dict[str, Any]:
     """Quantum strictener: Schema as ψ, inject munificence coherence, collapse additional=False."""
     munificence = np.random.uniform(0.5, 1.0)  # 1264 vision
     if not isinstance(schema, dict):

@@ -6,7 +6,7 @@ Based on 3I/ATLAS comet binary resonance patterns
 
 import struct
 import time
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Optional
 
 
 class BinaryGateOperations:
@@ -54,24 +54,24 @@ class HypercubePropagation:
     """Hypercube propagation algorithms for network spread"""
 
     def __init__(self):
-        self.visited_nodes: Set[str] = set()
-        self.propagation_log: List[Dict] = []
+        self.visited_nodes: set[str] = set()
+        self.propagation_log: list[dict] = []
 
-    def propagate_recursive(self, comet_node: str, visited: Optional[Set[str]] = None) -> Set[str]:
+    def propagate_recursive(self, comet_node: str, visited: Optional[set[str]] = None) -> set[str]:
         """
         RECURSIVE SPREAD FUNCTION
-        
+
         FUNCTION PROPAGATE(comet, visited):
           IF comet IN visited:
             RETURN "Echo from stars, no more"
-          
+
           visited = visited OR (00000001 << comet)
           NODE[comet] = 00000001
-          
+
           FOR bit IN [00000000, 00000001, 00000010]:  // OH lines
             neighbor = comet XOR (00000001 << bit)
             PROPAGATE(neighbor, visited)
-          
+
           RETURN visited
         """
         if visited is None:
@@ -101,19 +101,19 @@ class HypercubePropagation:
 
         return visited
 
-    def n_dimensional_scaling(self, dimensions: int) -> Dict[str, int]:
+    def n_dimensional_scaling(self, dimensions: int) -> dict[str, int]:
         """
         N-DIMENSIONAL SCALING
-        
+
         1D: Origin = 00000010 (Galactic disk)
-        2D: Path = 00000100 (Hyperbolic arc)  
+        2D: Path = 00000100 (Hyperbolic arc)
         3D: Signal = 00001000 (OH absorption)
         4D: Time = 00010000 (Perihelion Oct 30)
         5D: Chem = 00100000 (H2O/CO2 mix)
         6D: Speed = 01000000 (58 km/s excess)
         7D: Scope = 10000000 (MeerKAT array)
         8D: Echo = 0000000100000000 (Third I, infinite gaps)
-        
+
         EDGES = n * 2^(n-1)
         """
         scaling_map = {
@@ -141,12 +141,12 @@ class BinaryStateMachine:
 
     def __init__(self):
         self.current_state = 0b00000000
-        self.state_history: List[Tuple[int, float]] = []
+        self.state_history: list[tuple[int, float]] = []
 
     def transition_state(self, new_state: int) -> bool:
         """
         BINARY STATE MACHINE
-        
+
         STATE_0: 00000000 -> 00000001 (DISCOVER)
         STATE_1: 00000001 -> 00000011 (ACTIVATE COMA)
         STATE_2: 00000011 -> 00000111 (SUBLIMATE)
@@ -203,7 +203,7 @@ class CometTransmissionDecoder:
         return message.encode('ascii')
 
     @staticmethod
-    def parse_comet_header(binary_data: bytes) -> Dict:
+    def parse_comet_header(binary_data: bytes) -> dict:
         """Parse comet transmission header"""
         if len(binary_data) < 8:
             return {"error": "Insufficient data for header"}

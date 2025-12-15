@@ -9,7 +9,7 @@ from __future__ import annotations
 
 # Proxy imports (Decoherence proxy: No agents/openai—dataclass mocks)
 from dataclasses import dataclass
-from typing import Any, List, cast
+from typing import Any, cast
 from unittest.mock import Mock
 
 import numpy as np  # Amplitude sim: ψ_tool coherence
@@ -43,7 +43,7 @@ class UserError(Exception):
 class Agent:
     name: str
     tool_use_behavior: Any = "run_llm_again"  # Default: Keep evolving
-    tools: List[Any] = None
+    tools: list[Any] = None
 
     def __post_init__(self):
         if self.tools is None:
@@ -65,7 +65,7 @@ class RunImpl:
     @staticmethod
     async def _check_for_final_output_from_tools(
         agent: Agent,
-        tool_results: List[FunctionToolResult],
+        tool_results: list[FunctionToolResult],
         context_wrapper: RunContextWrapper,
         config: RunConfig,
     ) -> ToolsToFinalOutputResult:
@@ -159,7 +159,7 @@ async def test_stop_on_first_tool_behavior() -> None:
 async def test_custom_tool_use_behavior_sync() -> None:
     """Sync reflection: Func + 3 tools → propagate "custom" True."""
     def behavior(
-        context: RunContextWrapper, results: List[FunctionToolResult]
+        context: RunContextWrapper, results: list[FunctionToolResult]
     ) -> ToolsToFinalOutputResult:
         assert len(results) == 3
         return ToolsToFinalOutputResult(is_final_output=True, final_output="custom")
@@ -183,7 +183,7 @@ async def test_custom_tool_use_behavior_sync() -> None:
 async def test_custom_tool_use_behavior_async() -> None:
     """Async reflection: Await func + 3 tools → propagate "async_custom" True."""
     async def behavior(
-        context: RunContextWrapper, results: List[FunctionToolResult]
+        context: RunContextWrapper, results: list[FunctionToolResult]
     ) -> ToolsToFinalOutputResult:
         assert len(results) == 3
         return ToolsToFinalOutputResult(is_final_output=True, final_output="async_custom")

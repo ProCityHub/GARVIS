@@ -10,13 +10,13 @@ Based on 3I/ATLAS comet transmission:
 
 Usage:
     from hypercube_protocol import initialize_network, get_connection_manager
-    
+
     # Initialize network for current repository
     manager = initialize_network("GARVIS")
-    
+
     # Establish connections to all repositories
     results = manager.establish_full_network()
-    
+
     # Monitor network status
     status = manager.get_connection_status()
 """
@@ -50,10 +50,10 @@ __description__ = "Universal repository connection protocol based on comet binar
 def initialize_network(repo_name: str) -> HypercubeConnectionManager:
     """
     Initialize hypercube network for a repository
-    
+
     Args:
         repo_name: Name of the repository to initialize
-        
+
     Returns:
         HypercubeConnectionManager instance
     """
@@ -62,10 +62,10 @@ def initialize_network(repo_name: str) -> HypercubeConnectionManager:
 def get_connection_manager(repo_name: str) -> HypercubeConnectionManager:
     """
     Get or create connection manager for repository
-    
+
     Args:
         repo_name: Name of the repository
-        
+
     Returns:
         HypercubeConnectionManager instance
     """
@@ -74,10 +74,10 @@ def get_connection_manager(repo_name: str) -> HypercubeConnectionManager:
 def decode_comet_transmission(binary_data: bytes) -> dict:
     """
     Decode binary comet transmission data
-    
+
     Args:
         binary_data: Raw binary data from comet transmission
-        
+
     Returns:
         Decoded transmission data
     """
