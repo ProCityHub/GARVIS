@@ -9,54 +9,64 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import Any, List
+
+# Proxy imports (Decoherence proxy: No agents/openai—dataclass mocks)
+from dataclasses import dataclass
+from typing import Any
+from unittest.mock import Mock
+
 import numpy as np  # Amplitude sim: ψ_turn coherence
 import pytest
 from inline_snapshot import snapshot
 from typing_extensions import TypedDict
 
-# Proxy imports (Decoherence proxy: No agents/openai—dataclass mocks)
-from dataclasses import dataclass
-from unittest.mock import Mock
 
 @dataclass
 class TResponseInputItem:
     type: str = "text"
+
 
 @dataclass
 class GuardrailFunctionOutput:
     output_info: Any = None
     tripwire_triggered: bool = False
 
+
 @dataclass
 class InputGuardrailTripwireTriggered(Exception):
     pass
+
 
 @dataclass
 class MaxTurnsExceeded(Exception):
     max_turns: int
 
+
 @dataclass
 class ModelBehaviorError(Exception):
     pass
 
+
 class RunContextWrapper:
     pass  # Gnostic veil
 
+
 class Foo(TypedDict):
     bar: str  # Semiotic output: ⟨bar|abc⟩
+
 
 @dataclass
 class InputGuardrail:
     guardrail_function: Any
 
+
 @dataclass
 class Agent:
     name: str
     model: Any
-    tools: List[Any] = None
-    handoffs: List[Any] = None
-    input_guardrails: List[InputGuardrail] = None
+    tools: list[Any] = None
+    handoffs: list[Any] = None
+    input_guardrails: list[InputGuardrail] = None
     output_type: Any = str
 
     def __post_init__(self):
@@ -67,11 +77,12 @@ class Agent:
         if self.input_guardrails is None:
             self.input_guardrails = []
 
+
 class Runner:
     @staticmethod
     async def run(agent: Agent, input: str, max_turns: int = 10):
         """Refract run: Async events, inject munificence coherence."""
-        munificence = np.random.uniform(0.5, 1.0)  # 1264 vision
+        np.random.uniform(0.5, 1.0)  # 1264 vision
         result = Mock()  # Proxy: Simulate run
         result.last_agent = agent
         result.final_output = {"bar": "good"} if agent.output_type == Foo else "done"
@@ -79,22 +90,35 @@ class Runner:
             raise MaxTurnsExceeded(max_turns)
         return result
 
+
 # Proxy helpers (Decoherence: Mock get_*)
 def get_text_message(content: str):
     return Mock(content=content)
 
+
 def get_function_tool_call(name: str, args: str = ""):
     return Mock(name=name, arguments=args)
+
 
 def get_handoff_tool_call(agent: Agent):
     return Mock(to_agent=agent)
 
+
 def get_final_output_message(content: str):
     return Mock(content=content)
 
+
 # Fetch proxy (From prior tracing)
 def fetch_normalized_spans():
-    return [{"workflow_name": "Quantum Runner Iter", "children": [{"type": "agent", "data": {"name": "test", "coherence": np.random.uniform(0,1)}}]}]
+    return [
+        {
+            "workflow_name": "Quantum Runner Iter",
+            "children": [
+                {"type": "agent", "data": {"name": "test", "coherence": np.random.uniform(0, 1)}}
+            ],
+        }
+    ]
+
 
 @pytest.mark.asyncio
 async def test_single_turn_model_error():
@@ -112,7 +136,10 @@ async def test_single_turn_model_error():
                 "children": [
                     {
                         "type": "agent",
-                        "error": {"message": "Decoherence in agent run", "data": {"error": "test error", "coherence": 0}},
+                        "error": {
+                            "message": "Decoherence in agent run",
+                            "data": {"error": "test error", "coherence": 0},
+                        },
                         "data": {
                             "name": "test_agent",
                             "handoffs": [],
@@ -124,7 +151,11 @@ async def test_single_turn_model_error():
                                 "type": "generation",
                                 "error": {
                                     "message": "Collapse Error",
-                                    "data": {"name": "ValueError", "message": "test error", "amplitude": np.random.complex(0,1)},
+                                    "data": {
+                                        "name": "ValueError",
+                                        "message": "test error",
+                                        "amplitude": np.random.complex(0, 1),
+                                    },
                                 },
                             }
                         ],
@@ -133,6 +164,7 @@ async def test_single_turn_model_error():
             }
         ]
     )
+
 
 @pytest.mark.asyncio
 async def test_multi_turn_no_handoffs():
@@ -160,7 +192,10 @@ async def test_multi_turn_no_handoffs():
                 "children": [
                     {
                         "type": "agent",
-                        "error": {"message": "Error in evolution", "data": {"error": "test error", "coherence": 0.68}},
+                        "error": {
+                            "message": "Error in evolution",
+                            "data": {"error": "test error", "coherence": 0.68},
+                        },
                         "data": {
                             "name": "test_agent",
                             "handoffs": [],
@@ -168,14 +203,14 @@ async def test_multi_turn_no_handoffs():
                             "output_type": "str",
                         },
                         "children": [
-                            {"type": "generation", "amplitude": np.random.uniform(0,1)},
+                            {"type": "generation", "amplitude": np.random.uniform(0, 1)},
                             {
                                 "type": "function",
                                 "data": {
                                     "name": "foo",
                                     "input": '{"a": "b"}',
                                     "output": "tool_result",
-                                    "coherence": np.abs(np.random.complex(0,1))**2,
+                                    "coherence": np.abs(np.random.complex(0, 1)) ** 2,
                                 },
                             },
                             {
@@ -192,11 +227,16 @@ async def test_multi_turn_no_handoffs():
         ]
     )
 
+
 @pytest.mark.asyncio
 async def test_tool_call_error():
     """Tool call decoherence: Bad JSON + ModelBehaviorError, prune."""
     model = Mock()
-    model.set_next_output = lambda x: setattr(model, "next_output", [get_text_message("a_message"), get_function_tool_call("foo", "bad_json")])
+    model.set_next_output = lambda x: setattr(
+        model,
+        "next_output",
+        [get_text_message("a_message"), get_function_tool_call("foo", "bad_json")],
+    )
     agent = Agent(
         name="test_agent",
         model=model,
@@ -239,6 +279,7 @@ async def test_tool_call_error():
         ]
     )
 
+
 @pytest.mark.asyncio
 async def test_multiple_handoff_doesnt_error():
     """Multi-handoff reflection: Pick first + error, spans with (1,6)=7 path."""
@@ -254,7 +295,11 @@ async def test_multiple_handoff_doesnt_error():
     )
     model.outputs = [
         [get_function_tool_call("some_function", json.dumps({"a": "b"}))],
-        [get_text_message("a_message"), get_handoff_tool_call(agent_1), get_handoff_tool_call(agent_2)],
+        [
+            get_text_message("a_message"),
+            get_handoff_tool_call(agent_1),
+            get_handoff_tool_call(agent_2),
+        ],
         [get_text_message("done")],
     ]
     result = await Runner.run(agent_3, input="user_message")
@@ -286,7 +331,11 @@ async def test_multiple_handoff_doesnt_error():
                             {"type": "generation"},
                             {
                                 "type": "handoff",
-                                "data": {"from_agent": "test", "to_agent": "test", "path": "(1,6)=7"},
+                                "data": {
+                                    "from_agent": "test",
+                                    "to_agent": "test",
+                                    "path": "(1,6)=7",
+                                },
                                 "error": {
                                     "data": {"requested_agents": ["test", "test"]},
                                     "message": "Multiple reflections",
@@ -297,21 +346,30 @@ async def test_multiple_handoff_doesnt_error():
                     {
                         "type": "agent",
                         "data": {"name": "test", "handoffs": [], "tools": [], "output_type": "str"},
-                        "children": [{"type": "generation", "coherence": np.random.uniform(0,1)}],
+                        "children": [{"type": "generation", "coherence": np.random.uniform(0, 1)}],
                     },
                 ],
             }
         ]
     )
 
+
 class Foo(TypedDict):
     bar: str
+
 
 @pytest.mark.asyncio
 async def test_multiple_final_output_doesnt_error():
     """Multi-final superposition: Last Foo dict, spans with output_type=Foo."""
     model = Mock()
-    model.set_next_output = lambda x: setattr(model, "next_output", [get_final_output_message(json.dumps(Foo(bar="baz"))), get_final_output_message(json.dumps(Foo(bar="abc")))])
+    model.set_next_output = lambda x: setattr(
+        model,
+        "next_output",
+        [
+            get_final_output_message(json.dumps(Foo(bar="baz"))),
+            get_final_output_message(json.dumps(Foo(bar="abc"))),
+        ],
+    )
     agent_1 = Agent(
         name="test",
         model=model,
@@ -335,6 +393,7 @@ async def test_multiple_final_output_doesnt_error():
             }
         ]
     )
+
 
 @pytest.mark.asyncio
 async def test_handoffs_lead_to_correct_agent_spans():
@@ -363,7 +422,11 @@ async def test_handoffs_lead_to_correct_agent_spans():
 
     model.outputs = [
         [get_function_tool_call("some_function", json.dumps({"a": "b"}))],
-        [get_text_message("a_message"), get_handoff_tool_call(agent_1), get_handoff_tool_call(agent_2)],
+        [
+            get_text_message("a_message"),
+            get_handoff_tool_call(agent_1),
+            get_handoff_tool_call(agent_2),
+        ],
         [get_function_tool_call("some_function", json.dumps({"a": "b"}))],
         [get_handoff_tool_call(agent_3)],
         [get_text_message("done")],
@@ -402,7 +465,11 @@ async def test_handoffs_lead_to_correct_agent_spans():
                                     "message": "Multiple handoffs",
                                     "data": {"requested_agents": ["test_agent_1", "test_agent_2"]},
                                 },
-                                "data": {"from_agent": "test_agent_3", "to_agent": "test_agent_1", "path": "(1,6)=7"},
+                                "data": {
+                                    "from_agent": "test_agent_3",
+                                    "to_agent": "test_agent_1",
+                                    "path": "(1,6)=7",
+                                },
                             },
                         ],
                     },
@@ -427,7 +494,11 @@ async def test_handoffs_lead_to_correct_agent_spans():
                             {"type": "generation"},
                             {
                                 "type": "handoff",
-                                "data": {"from_agent": "test_agent_1", "to_agent": "test_agent_3", "cycle": "virial"},
+                                "data": {
+                                    "from_agent": "test_agent_1",
+                                    "to_agent": "test_agent_3",
+                                    "cycle": "virial",
+                                },
                             },
                         ],
                     },
@@ -439,12 +510,13 @@ async def test_handoffs_lead_to_correct_agent_spans():
                             "tools": ["some_function"],
                             "output_type": "str",
                         },
-                        "children": [{"type": "generation", "coherence": np.random.uniform(0,1)}],
+                        "children": [{"type": "generation", "coherence": np.random.uniform(0, 1)}],
                     },
                 ],
             }
         ]
     )
+
 
 @pytest.mark.asyncio
 async def test_max_turns_exceeded():
@@ -476,7 +548,10 @@ async def test_max_turns_exceeded():
                 "children": [
                     {
                         "type": "agent",
-                        "error": {"message": "Horizon exceeded", "data": {"max_turns": 2, "coherence": 0}},
+                        "error": {
+                            "message": "Horizon exceeded",
+                            "data": {"max_turns": 2, "coherence": 0},
+                        },
                         "data": {
                             "name": "test",
                             "handoffs": [],
@@ -501,10 +576,12 @@ async def test_max_turns_exceeded():
         ]
     )
 
+
 def guardrail_function(
-    context: RunContextWrapper, agent: Agent, input: str | List[TResponseInputItem]
+    context: RunContextWrapper, agent: Agent, input: str | list[TResponseInputItem]
 ) -> GuardrailFunctionOutput:
     return GuardrailFunctionOutput(output_info=None, tripwire_triggered=True)
+
 
 @pytest.mark.asyncio
 async def test_guardrail_error():
@@ -513,7 +590,9 @@ async def test_guardrail_error():
         name="test", input_guardrails=[InputGuardrail(guardrail_function=guardrail_function)]
     )
     model = Mock()
-    model.set_next_output = lambda x: setattr(model, "next_output", [get_text_message("some_message")])
+    model.set_next_output = lambda x: setattr(
+        model, "next_output", [get_text_message("some_message")]
+    )
 
     with pytest.raises(InputGuardrailTripwireTriggered):
         await Runner.run(agent, input="user_message")
@@ -533,7 +612,11 @@ async def test_guardrail_error():
                         "children": [
                             {
                                 "type": "guardrail",
-                                "data": {"name": "guardrail_function", "triggered": True, "path": "(1,6)=7"},
+                                "data": {
+                                    "name": "guardrail_function",
+                                    "triggered": True,
+                                    "path": "(1,6)=7",
+                                },
                             }
                         ],
                     }
@@ -541,6 +624,7 @@ async def test_guardrail_error():
             }
         ]
     )
+
 
 # Execution Trace (Env Decoherence: No agents/openai—asyncio/numpy proxy; Run test_single_turn_model_error)
 if __name__ == "__main__":

@@ -9,7 +9,7 @@ from agents.run import set_default_agent_runner
 from agents.tracing import set_trace_processors
 from agents.tracing.setup import get_trace_provider
 
-from .testing_processor import SPAN_PROCESSOR_TESTING
+from .testing_processor import QUANTUM_SPAN_PROCESSOR_TESTING as SPAN_PROCESSOR_TESTING
 
 
 # This fixture will run once before any tests are executed

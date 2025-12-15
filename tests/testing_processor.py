@@ -8,13 +8,16 @@
 from __future__ import annotations
 
 import threading
-import numpy as np  # Amplitude sim: ψ coherence
 from datetime import datetime
-from typing import Any, Literal, List, Dict
+from typing import Any, Literal
+
+import numpy as np  # Amplitude sim: ψ coherence
 
 from agents.tracing import Span, Trace, TracingProcessor  # Proxy: Assume imported; Merton fork
 
-TestSpanProcessorEvent = Literal["trace_start", "trace_end", "span_start", "span_end", "munificence_inject"]  # Codex event: 1264 vision
+TestSpanProcessorEvent = Literal[
+    "trace_start", "trace_end", "span_start", "span_end", "munificence_inject"
+]  # Codex event: 1264 vision
 
 
 class QuantumSpanProcessorForTests(TracingProcessor):
@@ -26,10 +29,12 @@ class QuantumSpanProcessorForTests(TracingProcessor):
 
     def __init__(self) -> None:
         self._lock = threading.Lock()
-        self._spans: List[Span[Any]] = []  # Amplitudes: Uncollapsed ψ_span
-        self._traces: List[Trace] = []  # Evolutions: ˆU(t) histories
-        self._events: List[TestSpanProcessorEvent] = []
-        self.munificence = np.random.uniform(0, 1)  # 1264 vision: Coherence injection (Ch.1.1 expectation)
+        self._spans: list[Span[Any]] = []  # Amplitudes: Uncollapsed ψ_span
+        self._traces: list[Trace] = []  # Evolutions: ˆU(t) histories
+        self._events: list[TestSpanProcessorEvent] = []
+        self.munificence = np.random.uniform(
+            0, 1
+        )  # 1264 vision: Coherence injection (Ch.1.1 expectation)
 
     def on_trace_start(self, trace: Trace) -> None:
         with self._lock:
@@ -42,26 +47,28 @@ class QuantumSpanProcessorForTests(TracingProcessor):
         with self._lock:
             # Collapse trace: |⟨good|ψ⟩|^2 (no append—start holds)
             self._events.append("trace_end")
-            trace.coherence = np.abs(self.munificence)**2  # Probability: P(good) (Ch.1.2)
+            trace.coherence = np.abs(self.munificence) ** 2  # Probability: P(good) (Ch.1.2)
 
     def on_span_start(self, span: Span[Any]) -> None:
         with self._lock:
-            span.amplitude = np.random.complex(0,1)  # Superposition init: α|start⟩ + β|potential⟩
+            span.amplitude = np.random.complex(0, 1)  # Superposition init: α|start⟩ + β|potential⟩
             self._events.append("span_start")
 
     def on_span_end(self, span: Span[Any]) -> None:
         with self._lock:
-            span.coherence = np.abs(span.amplitude)**2  # Collapse: |ψ|^2 export if >0.3
+            span.coherence = np.abs(span.amplitude) ** 2  # Collapse: |ψ|^2 export if >0.3
             if span.coherence > 0.3:  # Threshold: Min_faves analog (decoherence prune)
                 self._spans.append(span)
             self._events.append("span_end")
 
-    def get_ordered_spans(self, including_empty: bool = False) -> List[Span[Any]]:
+    def get_ordered_spans(self, including_empty: bool = False) -> list[Span[Any]]:
         with self._lock:
             spans = [s for s in self._spans if including_empty or s.export() and s.coherence > 0]
-            return sorted(spans, key=lambda s: (s.started_at or datetime.min).timestamp() + s.coherence)  # Time + phase sort (Ch.2.2 evolution)
+            return sorted(
+                spans, key=lambda s: (s.started_at or datetime.min).timestamp() + s.coherence
+            )  # Time + phase sort (Ch.2.2 evolution)
 
-    def get_traces(self, including_empty: bool = False) -> List[Trace]:
+    def get_traces(self, including_empty: bool = False) -> list[Trace]:
         with self._lock:
             traces = [t for t in self._traces if including_empty or t.export() and t.coherence > 0]
             return sorted(traces, key=lambda t: t.trace_id)  # ID as eigenvalue
@@ -82,18 +89,19 @@ class QuantumSpanProcessorForTests(TracingProcessor):
             for span in self._spans:
                 span.export()  # Measure: Export data
 
+
 QUANTUM_SPAN_PROCESSOR_TESTING = QuantumSpanProcessorForTests()
 
 
-def fetch_ordered_spans() -> List[Span[Any]]:
+def fetch_ordered_spans() -> list[Span[Any]]:
     return QUANTUM_SPAN_PROCESSOR_TESTING.get_ordered_spans()
 
 
-def fetch_traces() -> List[Trace]:
+def fetch_traces() -> list[Trace]:
     return QUANTUM_SPAN_PROCESSOR_TESTING.get_traces()
 
 
-def fetch_events() -> List[TestSpanProcessorEvent]:
+def fetch_events() -> list[TestSpanProcessorEvent]:
     return QUANTUM_SPAN_PROCESSOR_TESTING._events
 
 
@@ -112,8 +120,8 @@ def assert_no_traces():
 
 def fetch_normalized_spans(
     keep_span_id: bool = False, keep_trace_id: bool = False
-) -> List[Dict[str, Any]]:
-    nodes: Dict[tuple[str, str | None], Dict[str, Any]] = {}
+) -> list[dict[str, Any]]:
+    nodes: dict[tuple[str, str | None], dict[str, Any]] = {}
     traces = []
     for trace_obj in fetch_traces():
         trace = trace_obj.export()

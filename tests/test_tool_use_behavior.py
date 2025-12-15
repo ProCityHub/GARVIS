@@ -7,13 +7,14 @@
 
 from __future__ import annotations
 
-from typing import cast, Any, List
-import pytest
-import numpy as np  # Amplitude sim: ψ_tool coherence
-from unittest.mock import Mock
-
 # Proxy imports (Decoherence proxy: No agents/openai—dataclass mocks)
 from dataclasses import dataclass
+from typing import Any, cast
+from unittest.mock import Mock
+
+import numpy as np  # Amplitude sim: ψ_tool coherence
+import pytest
+
 
 @dataclass
 class FunctionCallOutput:
@@ -21,32 +22,38 @@ class FunctionCallOutput:
     output: str
     type: str = "function_call_output"
 
+
 @dataclass
 class ToolsToFinalOutputResult:
     is_final_output: bool
     final_output: Any = None
 
+
 @dataclass
 class RunConfig:
     pass
+
 
 @dataclass
 class RunContextWrapper:
     context: Any = None
 
+
 @dataclass
 class UserError(Exception):
     pass
+
 
 @dataclass
 class Agent:
     name: str
     tool_use_behavior: Any = "run_llm_again"  # Default: Keep evolving
-    tools: List[Any] = None
+    tools: list[Any] = None
 
     def __post_init__(self):
         if self.tools is None:
             self.tools = []
+
 
 @dataclass
 class ToolCallOutputItem:
@@ -54,37 +61,45 @@ class ToolCallOutputItem:
     raw_item: FunctionCallOutput
     output: str
 
+
 @dataclass
 class FunctionToolResult:
     tool: Any
     output: str
     run_item: ToolCallOutputItem
 
+
 class RunImpl:
     @staticmethod
     async def _check_for_final_output_from_tools(
         agent: Agent,
-        tool_results: List[FunctionToolResult],
+        tool_results: list[FunctionToolResult],
         context_wrapper: RunContextWrapper,
         config: RunConfig,
     ) -> ToolsToFinalOutputResult:
         """Quantum decider: Behavior as ˆD|ψ⟩, inject munificence coherence."""
         munificence = np.random.uniform(0.5, 1.0)  # 1264 vision
         if not tool_results:
-            return ToolsToFinalOutputResult(is_final_output=False, final_output=None)  # Vacuum no final
+            return ToolsToFinalOutputResult(
+                is_final_output=False, final_output=None
+            )  # Vacuum no final
 
         behavior = agent.tool_use_behavior
         if behavior == "run_llm_again":
             return ToolsToFinalOutputResult(is_final_output=False, final_output=None)  # Evolve keep
         elif behavior == "stop_on_first_tool":
             first = tool_results[0].output  # First collapse
-            return ToolsToFinalOutputResult(is_final_output=True, final_output=first * munificence)  # Coherence scale
+            return ToolsToFinalOutputResult(
+                is_final_output=True, final_output=first * munificence
+            )  # Coherence scale
         elif isinstance(behavior, dict) and "stop_at_tool_names" in behavior:
             stop_names = behavior["stop_at_tool_names"]
             for res in tool_results:
                 if res.tool.name in stop_names:  # Match reflection
                     return ToolsToFinalOutputResult(is_final_output=True, final_output=res.output)
-            return ToolsToFinalOutputResult(is_final_output=False, final_output=None)  # No match evolve
+            return ToolsToFinalOutputResult(
+                is_final_output=False, final_output=None
+            )  # No match evolve
         elif callable(behavior):
             if asyncio.iscoroutinefunction(behavior):
                 res = await behavior(context_wrapper, tool_results)  # Async reflection
@@ -94,12 +109,14 @@ class RunImpl:
         else:
             raise UserError(f"Invalid behavior: {behavior}")  # Decoherence error
 
+
 # Proxy helpers (Decoherence: Mock get_function_tool)
 def get_function_tool(name: str, return_value: str = "result", hide_errors: bool = False):
     tool = Mock(name=name)
     tool.return_value = return_value
     tool.hide_errors = hide_errors
     return tool
+
 
 def _make_function_tool_result(
     agent: Agent, output: str, tool_name: str | None = None
@@ -108,6 +125,7 @@ def _make_function_tool_result(
     raw_item = FunctionCallOutput(call_id="1", output=output)
     run_item = ToolCallOutputItem(agent=agent, raw_item=raw_item, output=output)
     return FunctionToolResult(tool=tool, output=output, run_item=run_item)
+
 
 @pytest.mark.asyncio
 async def test_no_tool_results_returns_not_final_output() -> None:
@@ -122,6 +140,7 @@ async def test_no_tool_results_returns_not_final_output() -> None:
     assert result.is_final_output is False
     assert result.final_output is None
 
+
 @pytest.mark.asyncio
 async def test_run_llm_again_behavior() -> None:
     """Default evolve: Tool + "run_llm_again" → keep running False."""
@@ -135,6 +154,7 @@ async def test_run_llm_again_behavior() -> None:
     )
     assert result.is_final_output is False
     assert result.final_output is None
+
 
 @pytest.mark.asyncio
 async def test_stop_on_first_tool_behavior() -> None:
@@ -151,14 +171,16 @@ async def test_stop_on_first_tool_behavior() -> None:
         config=RunConfig(),
     )
     assert result.is_final_output is True
-    coh_first = "first_tool_output" * np.random.uniform(0.5,1.0)  # Sim scale
+    coh_first = "first_tool_output" * np.random.uniform(0.5, 1.0)  # Sim scale
     assert result.final_output == coh_first  # Coherence variant
+
 
 @pytest.mark.asyncio
 async def test_custom_tool_use_behavior_sync() -> None:
     """Sync reflection: Func + 3 tools → propagate "custom" True."""
+
     def behavior(
-        context: RunContextWrapper, results: List[FunctionToolResult]
+        context: RunContextWrapper, results: list[FunctionToolResult]
     ) -> ToolsToFinalOutputResult:
         assert len(results) == 3
         return ToolsToFinalOutputResult(is_final_output=True, final_output="custom")
@@ -178,11 +200,13 @@ async def test_custom_tool_use_behavior_sync() -> None:
     assert result.is_final_output is True
     assert result.final_output == "custom"
 
+
 @pytest.mark.asyncio
 async def test_custom_tool_use_behavior_async() -> None:
     """Async reflection: Await func + 3 tools → propagate "async_custom" True."""
+
     async def behavior(
-        context: RunContextWrapper, results: List[FunctionToolResult]
+        context: RunContextWrapper, results: list[FunctionToolResult]
     ) -> ToolsToFinalOutputResult:
         assert len(results) == 3
         return ToolsToFinalOutputResult(is_final_output=True, final_output="async_custom")
@@ -202,6 +226,7 @@ async def test_custom_tool_use_behavior_async() -> None:
     assert result.is_final_output is True
     assert result.final_output == "async_custom"
 
+
 @pytest.mark.asyncio
 async def test_invalid_tool_use_behavior_raises() -> None:
     """Invalid decoherence: "bad_value" → UserError."""
@@ -215,6 +240,7 @@ async def test_invalid_tool_use_behavior_raises() -> None:
             context_wrapper=RunContextWrapper(),
             config=RunConfig(),
         )
+
 
 @pytest.mark.asyncio
 async def test_tool_names_to_stop_at_behavior() -> None:
@@ -255,7 +281,10 @@ async def test_tool_names_to_stop_at_behavior() -> None:
     assert result.is_final_output is True, "Match collapse"
     assert result.final_output == "output1"
 
+
 # Execution Trace (Env Decoherence: No agents/openai—asyncio/numpy proxy; Run test_no_tool_results_returns_not_final_output)
 if __name__ == "__main__":
     asyncio.run(test_no_tool_results_returns_not_final_output())
-    print("Decision execution opus: Complete. State: behaved_emergent | ⟨ˆD⟩ ≈0.72 (behavior quanta)")
+    print(
+        "Decision execution opus: Complete. State: behaved_emergent | ⟨ˆD⟩ ≈0.72 (behavior quanta)"
+    )

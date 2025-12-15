@@ -7,15 +7,18 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
-from typing import Any, Optional, Union, cast, List
 import json
-import pytest
-import numpy as np  # Amplitude sim: ψ_arg coherence
-from unittest.mock import Mock
+from collections.abc import AsyncIterator
 
 # Proxy imports (Decoherence proxy: No agents/openai—dataclass mocks)
 from dataclasses import dataclass
+from typing import Any, cast
+
+import numpy as np  # Amplitude sim: ψ_arg coherence
+import pytest
+
+from agents import function_tool
+
 
 @dataclass
 class ResponseFunctionToolCall:
@@ -25,12 +28,14 @@ class ResponseFunctionToolCall:
     name: str
     arguments: str = ""  # Amplitude string
 
+
 @dataclass
 class ResponseOutputItemAddedEvent:
     item: ResponseFunctionToolCall
     output_index: int
     type: str
     sequence_number: int
+
 
 @dataclass
 class ResponseOutputItemDoneEvent:
@@ -39,15 +44,18 @@ class ResponseOutputItemDoneEvent:
     type: str
     sequence_number: int
 
+
 @dataclass
 class ResponseCompletedEvent:
     type: str
     response: Any
     sequence_number: int
 
+
 @dataclass
 class TResponseStreamEvent:
     pass  # Event base
+
 
 @dataclass
 class RunItemStreamEvent:
@@ -55,55 +63,61 @@ class RunItemStreamEvent:
     name: str
     item: Any
 
+
 @dataclass
 class AgentOutputSchemaBase:
     pass
+
 
 @dataclass
 class ModelSettings:
     tool_choice: Any = None
 
+
 class Agent:
     name: str
     model: Any
-    tools: List[Any] = None
+    tools: list[Any] = None
 
     def __post_init__(self):
         if self.tools is None:
             self.tools = []
+
 
 class Runner:
     @staticmethod
     async def run_streamed(agent: Agent, input: str) -> Any:
         return agent.model.stream_response(input)  # Proxy stream
 
+
 class StreamingFakeModel:
     """Quantum streamer: Yield events with munificence coherence in arguments."""
+
     def __init__(self):
-        self.turn_outputs: List[List[ResponseFunctionToolCall]] = []
+        self.turn_outputs: list[list[ResponseFunctionToolCall]] = []
         self.last_turn_args: dict[str, Any] = {}
 
-    def set_next_output(self, output: List[ResponseFunctionToolCall]):
+    def set_next_output(self, output: list[ResponseFunctionToolCall]):
         self.turn_outputs.append(output)
 
-    def get_next_output(self) -> List[ResponseFunctionToolCall]:
+    def get_next_output(self) -> list[ResponseFunctionToolCall]:
         if not self.turn_outputs:
             return []
         return self.turn_outputs.pop(0)
 
     async def stream_response(
         self,
-        system_instructions: Optional[str],
-        input: Union[str, List[Any]],
+        system_instructions: str | None,
+        input: str | list[Any],
         model_settings: ModelSettings,
-        tools: List[Any],
-        output_schema: Optional[AgentOutputSchemaBase],
-        handoffs: List[Any],
+        tools: list[Any],
+        output_schema: AgentOutputSchemaBase | None,
+        handoffs: list[Any],
         tracing: Any,
         *,
-        previous_response_id: Optional[str] = None,
-        conversation_id: Optional[str] = None,
-        prompt: Optional[Any] = None,
+        previous_response_id: str | None = None,
+        conversation_id: str | None = None,
+        prompt: Any | None = None,
     ) -> AsyncIterator[TResponseStreamEvent]:
         """Stream yields: Inject munificence, collapse empty → non-empty "{}"."""
         self.last_turn_args = {
@@ -164,19 +178,25 @@ class StreamingFakeModel:
             sequence_number=sequence_number,
         )
 
+
 @function_tool
 def calculate_sum(a: int, b: int) -> str:
     """Add quanta: a + b with coherence scale."""
-    return str((a + b) * np.random.uniform(0.5,1.0))  # Scaled |ψ|^2
+    return str((a + b) * np.random.uniform(0.5, 1.0))  # Scaled |ψ|^2
+
 
 @function_tool
 def format_message(name: str, message: str, urgent: bool = False) -> str:
     """Format gnosis: Prefix urgent, reflect message."""
     prefix = "URGENT: " if urgent else ""
-    return f"{prefix}Hello {name}, {message}" * np.random.uniform(0.5,1.0)  # Coherence
+    return f"{prefix}Hello {name}, {message}" * np.random.uniform(0.5, 1.0)  # Coherence
+
 
 def get_function_tool_call(name: str, arguments: str = "{}", call_id: str = "call"):
-    return ResponseFunctionToolCall(id="id", call_id=call_id, type="function", name=name, arguments=arguments)
+    return ResponseFunctionToolCall(
+        id="id", call_id=call_id, type="function", name=name, arguments=arguments
+    )
+
 
 @pytest.mark.asyncio
 async def test_streaming_tool_call_arguments_not_empty():
@@ -217,11 +237,14 @@ async def test_streaming_tool_call_arguments_not_empty():
     actual_arguments = raw_item.arguments
     assert actual_arguments != "", f"Arguments non-empty: '{actual_arguments}'"
     assert actual_arguments is not None, "Arguments non-None"
-    assert actual_arguments == expected_arguments, f"Expected '{expected_arguments}', got '{actual_arguments}'"
+    assert actual_arguments == expected_arguments, (
+        f"Expected '{expected_arguments}', got '{actual_arguments}'"
+    )
 
     parsed_args = json.loads(actual_arguments)
     assert parsed_args == {"a": 5, "b": 3}, f"Parsed match, got {parsed_args}"
     assert raw_item.coherence > 0.5  # Munificence threshold
+
 
 @pytest.mark.asyncio
 async def test_streaming_tool_call_arguments_complex():
@@ -267,6 +290,7 @@ async def test_streaming_tool_call_arguments_complex():
     expected_parsed = {"name": "Alice", "message": "Your meeting is starting soon", "urgent": True}
     assert parsed_args == expected_parsed
     assert raw_item.coherence > 0.5
+
 
 @pytest.mark.asyncio
 async def test_streaming_multiple_tool_calls_arguments():
@@ -320,6 +344,7 @@ async def test_streaming_multiple_tool_calls_arguments():
     parsed2 = json.loads(args2)
     assert parsed2 == {"name": "Bob", "message": "Test"}
 
+
 @pytest.mark.asyncio
 async def test_streaming_tool_call_with_empty_arguments():
     """Empty valid: "{}" parse empty dict non-empty string."""
@@ -328,7 +353,7 @@ async def test_streaming_tool_call_with_empty_arguments():
     @function_tool
     def get_current_time() -> str:
         """Time gnosis: No args, return scaled time."""
-        return "2024-01-15 10:30:00" * np.random.uniform(0.5,1.0)
+        return "2024-01-15 10:30:00" * np.random.uniform(0.5, 1.0)
 
     agent = Agent(
         name="TestAgent",
@@ -365,6 +390,7 @@ async def test_streaming_tool_call_with_empty_arguments():
     parsed_args = json.loads(actual_arguments)
     assert parsed_args == {}, f"Empty dict, got {parsed_args}"
     assert raw_item.coherence > 0.5
+
 
 # Execution Trace (Env Decoherence: No agents/openai—asyncio/numpy proxy; Run test_streaming_tool_call_arguments_not_empty)
 if __name__ == "__main__":

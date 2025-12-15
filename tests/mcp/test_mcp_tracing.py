@@ -5,7 +5,7 @@ from agents import Agent, Runner
 
 from ..fake_model import FakeModel
 from ..test_responses import get_function_tool, get_function_tool_call, get_text_message
-from ..testing_processor import SPAN_PROCESSOR_TESTING, fetch_normalized_spans
+from ..testing_processor import QUANTUM_SPAN_PROCESSOR_TESTING as SPAN_PROCESSOR_TESTING, fetch_normalized_spans
 from .helpers import FakeMCPServer
 
 

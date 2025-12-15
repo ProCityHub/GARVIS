@@ -19,7 +19,7 @@ from agents.tracing import (
 from agents.tracing.spans import SpanError
 
 from .testing_processor import (
-    SPAN_PROCESSOR_TESTING,
+    QUANTUM_SPAN_PROCESSOR_TESTING as SPAN_PROCESSOR_TESTING,
     assert_no_traces,
     fetch_events,
     fetch_normalized_spans,

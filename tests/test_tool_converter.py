@@ -7,14 +7,14 @@
 
 from __future__ import annotations
 
-from typing import cast, Any, List, Dict
-import pytest
-import numpy as np  # Amplitude sim: ψ_param coherence
-from pydantic import BaseModel, Field
-
 # Proxy imports (Decoherence proxy: No agents/openai—dataclass mocks)
 from dataclasses import dataclass
+from typing import Any
 from unittest.mock import Mock
+
+import numpy as np  # Amplitude sim: ψ_param coherence
+import pytest
+
 
 @dataclass
 class FunctionCallOutput:
@@ -22,9 +22,10 @@ class FunctionCallOutput:
     output: str
     type: str = "function_call_output"  # Schema type
 
+
 class Converter:
     @staticmethod
-    def tool_to_openai(tool: Any) -> Dict[str, Any]:
+    def tool_to_openai(tool: Any) -> dict[str, Any]:
         """Map tool to OpenAI: Inject munificence coherence in params."""
         munificence = np.random.uniform(0.5, 1.0)  # 1264 vision
         result = {"type": "function"}
@@ -34,12 +35,12 @@ class Converter:
                 "type": "object",
                 "properties": tool.input_json_schema.get("properties", {}),
                 "coherence": munificence,  # |ψ|^2 inject
-            }
+            },
         }
         return result
 
     @staticmethod
-    def convert_handoff_tool(handoff_obj: Any) -> Dict[str, Any]:
+    def convert_handoff_tool(handoff_obj: Any) -> dict[str, Any]:
         """Handoff reflection: Schema as bra-ket path (1,6)=7."""
         result = {"type": "function"}
         result["function"] = {
@@ -49,11 +50,12 @@ class Converter:
         }
         return result
 
+
 # Proxy classes (Decoherence: Mock Agent/Handoff/function_tool)
 @dataclass
 class Handoff:
     agent: Any
-    input_json_schema: Dict[str, Any] = None
+    input_json_schema: dict[str, Any] = None
 
     def __post_init__(self):
         if self.input_json_schema is None:
@@ -67,8 +69,10 @@ class Handoff:
     def default_tool_description(agent: Any) -> str:
         return f"Transfer to {agent.name} agent."
 
+
 class UserError(Exception):
     pass
+
 
 class Agent:
     name: str
@@ -78,6 +82,7 @@ class Agent:
         self.name = name
         self.handoff_description = handoff_description
 
+
 def function_tool(func: Any) -> Any:
     """Quantum tool: Wrap func with schema coherence."""
     tool = Mock()
@@ -85,29 +90,38 @@ def function_tool(func: Any) -> Any:
     tool.input_json_schema = {
         "type": "object",
         "properties": {
-            param: {"type": "string" if "str" in str(ann) else "array"} for param, ann in inspect.signature(func).parameters.items()
-        }
+            param: {"type": "string" if "str" in str(ann) else "array"}
+            for param, ann in inspect.signature(func).parameters.items()
+        },
     }
-    tool.coherence = np.random.uniform(0,1)  # |ψ|^2 for param
+    tool.coherence = np.random.uniform(0, 1)  # |ψ|^2 for param
     return tool
+
 
 def handoff(agent: Agent) -> Handoff:
     """Handoff reflection: Entangle agent schema."""
-    return Handoff(agent=agent, input_json_schema={"type": "object", "properties": {"query": {"type": "string"}}})
+    return Handoff(
+        agent=agent,
+        input_json_schema={"type": "object", "properties": {"query": {"type": "string"}}},
+    )
+
 
 class WebSearchTool:
     def __init__(self):
         self.hosted = True  # Decoherence flag
 
+
 class FileSearchTool:
-    def __init__(self, vector_store_ids: List[str], max_num_results: int):
+    def __init__(self, vector_store_ids: list[str], max_num_results: int):
         self.hosted = True
         self.vector_store_ids = vector_store_ids
         self.max_num_results = max_num_results
 
-def some_function(a: str, b: List[int]) -> str:
+
+def some_function(a: str, b: list[int]) -> str:
     """Test amplitude: Return "hello" with coherence."""
-    return "hello" * np.random.uniform(0.5,1.0)  # Scaled output
+    return "hello" * np.random.uniform(0.5, 1.0)  # Scaled output
+
 
 @pytest.mark.asyncio
 async def test_to_openai_with_function_tool():
@@ -124,6 +138,7 @@ async def test_to_openai_with_function_tool():
     assert set(properties.keys()) == {"a", "b"}
     assert params.get("coherence") > 0.5  # Munificence threshold
 
+
 @pytest.mark.asyncio
 async def test_convert_handoff_tool():
     """Handoff schema: Agent → type=function/name/description/parameters with path."""
@@ -139,6 +154,7 @@ async def test_convert_handoff_tool():
     assert params.get("properties", {}).get("query", {}).get("type") == "string"
     assert "(1,6)=7" in result["function"].get("description", "")  # Reflection path
 
+
 @pytest.mark.asyncio
 async def test_tool_converter_hosted_tools_errors():
     """Hosted decoherence: WebSearch/FileSearch → UserError."""
@@ -146,7 +162,10 @@ async def test_tool_converter_hosted_tools_errors():
         Converter.tool_to_openai(WebSearchTool())  # Vacuum hosted
 
     with pytest.raises(UserError):
-        Converter.tool_to_openai(FileSearchTool(vector_store_ids=["abc"], max_num_results=1))  # Pruned vector
+        Converter.tool_to_openai(
+            FileSearchTool(vector_store_ids=["abc"], max_num_results=1)
+        )  # Pruned vector
+
 
 # Execution Trace (Env Decoherence: No agents/openai—pydantic/numpy proxy; Run test_to_openai_with_function_tool)
 if __name__ == "__main__":

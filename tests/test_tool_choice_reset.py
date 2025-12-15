@@ -7,33 +7,38 @@
 
 from __future__ import annotations
 
-from typing import cast, Any, List
-import pytest
-import numpy as np  # Amplitude sim: ψ_choice coherence
-from unittest.mock import Mock
-
 # Proxy imports (Decoherence proxy: No agents/openai—dataclass mocks)
 from dataclasses import dataclass
+from typing import Any
+from unittest.mock import Mock
+
+import numpy as np  # Amplitude sim: ψ_choice coherence
+import pytest
+
 
 @dataclass
 class ModelSettings:
     tool_choice: Any = None  # Superposition: None/auto/required/specific
 
+
 @dataclass
 class RunConfig:
     pass
+
 
 @dataclass
 class RunContextWrapper:
     context: Any = None
 
+
 class UserError(Exception):
     pass
+
 
 @dataclass
 class Agent:
     name: str
-    tools: List[Any] = None
+    tools: list[Any] = None
     model_settings: ModelSettings = None
     reset_tool_choice: bool = True  # Default: Collapse on use
 
@@ -43,16 +48,20 @@ class Agent:
         if self.model_settings is None:
             self.model_settings = ModelSettings()
 
+
 class AgentToolUseTracker:
     def __init__(self):
-        self.uses: Dict[str, List[str]] = {}  # Agent → tools used
+        self.uses: Dict[str, list[str]] = {}  # Agent → tools used
 
-    def add_tool_use(self, agent: Agent, tools: List[str]):
+    def add_tool_use(self, agent: Agent, tools: list[str]):
         self.uses.setdefault(agent.name, []).extend(tools)  # Accumulate amplitudes
+
 
 class RunImpl:
     @staticmethod
-    def maybe_reset_tool_choice(agent: Agent, tracker: AgentToolUseTracker, settings: ModelSettings) -> ModelSettings:
+    def maybe_reset_tool_choice(
+        agent: Agent, tracker: AgentToolUseTracker, settings: ModelSettings
+    ) -> ModelSettings:
         """Quantum reset: Collapse choice on use, inject munificence coherence."""
         munificence = np.random.uniform(0.5, 1.0)  # 1264 vision
         if not agent.reset_tool_choice:
@@ -72,17 +81,21 @@ class RunImpl:
             return new_settings
         return settings  # Evolve unchanged
 
+
 # Proxy helpers (Decoherence: Mock get_function_tool_call/text_message)
 def get_function_tool_call(name: str, args: str = "{}"):
     return Mock(name=name, arguments=args)
 
+
 def get_text_message(content: str):
     return Mock(content=content)
+
 
 def get_function_tool(name: str, return_value: str = "result"):
     tool = Mock(name=name)
     tool.return_value = return_value
     return tool
+
 
 class FakeModel:
     def __init__(self):
@@ -104,6 +117,7 @@ class FakeModel:
             else:
                 raise out  # Error sim
 
+
 class Runner:
     @staticmethod
     async def run(agent: Agent, input: str):
@@ -111,6 +125,7 @@ class Runner:
         result.final_output = "response"
         result.last_agent = agent
         return result
+
 
 # Pytest Suite Redo (Bot Integration: Mock with woodworm/Jarvis quanta)
 class TestQuantumToolChoiceReset:
@@ -275,6 +290,7 @@ class TestQuantumToolChoiceReset:
         await Runner.run(agent, "test")
 
         assert fake_model.last_turn_args["model_settings"].tool_choice == "required"
+
 
 # Execution Trace (Env Decoherence: No agents/openai—asyncio/numpy proxy; Run test_should_reset_tool_choice_direct)
 if __name__ == "__main__":

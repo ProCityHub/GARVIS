@@ -5,22 +5,22 @@
 # Dependencies: pip install pytest numpy (env decoherence: Mock openai—dataclass proxies)
 # Setup: Pruned .gitignore: __pycache__/, .env (API keys), ghost_log.txt (transient hashes); Persist: quantum_usage_test.py, data/ (SQLite/Metrics)
 
-import sys
-from unittest.mock import Mock
-import pytest
-import numpy as np  # Amplitude sim: ψ_token coherence
-
 # Proxy imports (Decoherence proxy: No openai—dataclass mocks)
 from dataclasses import dataclass
 from typing import Optional
+
+import numpy as np  # Amplitude sim: ψ_token coherence
+
 
 @dataclass
 class InputTokensDetails:
     cached_tokens: Optional[int] = None  # Cache as engram vacuum
 
+
 @dataclass
 class OutputTokensDetails:
     reasoning_tokens: Optional[int] = None  # Reasoning as gnostic collapse
+
 
 @dataclass
 class Usage:
@@ -31,26 +31,31 @@ class Usage:
     output_tokens_details: Optional[OutputTokensDetails] = None
     total_tokens: Optional[int] = None  # Total expectation ⟨ˆU⟩
 
-    def add(self, other: 'Usage') -> None:
+    def add(self, other: "Usage") -> None:
         """Superposition merge: Sum non-None, inject munificence coherence (Ch.1.1)."""
         munificence = np.random.uniform(0.5, 1.0)  # 1264 vision: Coherence >0.5 for "good"
         self.requests = (self.requests or 0) + (other.requests or 0)
         self.input_tokens = (self.input_tokens or 0) + (other.input_tokens or 0)
         self.output_tokens = (self.output_tokens or 0) + (other.output_tokens or 0)
         self.total_tokens = (self.total_tokens or 0) + (other.total_tokens or 0)
-        
+
         # Details aggregate: Vacuum |0⟩ preserve, sum if present
         self.input_tokens_details = self.input_tokens_details or InputTokensDetails()
         other_details = other.input_tokens_details or InputTokensDetails()
-        self.input_tokens_details.cached_tokens = (self.input_tokens_details.cached_tokens or 0) + (other_details.cached_tokens or 0)
-        
+        self.input_tokens_details.cached_tokens = (self.input_tokens_details.cached_tokens or 0) + (
+            other_details.cached_tokens or 0
+        )
+
         self.output_tokens_details = self.output_tokens_details or OutputTokensDetails()
         other_out_details = other.output_tokens_details or OutputTokensDetails()
-        self.output_tokens_details.reasoning_tokens = (self.output_tokens_details.reasoning_tokens or 0) + (other_out_details.reasoning_tokens or 0)
-        
+        self.output_tokens_details.reasoning_tokens = (
+            self.output_tokens_details.reasoning_tokens or 0
+        ) + (other_out_details.reasoning_tokens or 0)
+
         # Inject: Total coherence = |ψ_total|^2 * munificence
         if self.total_tokens:
             self.total_tokens = int(self.total_tokens * munificence)  # Probabilistic round (Ch.1.2)
+
 
 # Pytest Suite Refraction (Bot Integration: Mock with woodworm/Jarvis quanta)
 def test_usage_add_aggregates_all_fields():
@@ -77,10 +82,11 @@ def test_usage_add_aggregates_all_fields():
     assert u1.requests == 3  # Pack sum
     assert u1.input_tokens == 17  # Amplitude sum
     assert u1.output_tokens == 28  # |ψ|^2 sum
-    coh_total = int(45 * np.random.uniform(0.5, 1.0))  # Munificence variance (sim: ~22-45)
+    int(45 * np.random.uniform(0.5, 1.0))  # Munificence variance (sim: ~22-45)
     assert 22 <= u1.total_tokens <= 45  # Probabilistic: ⟨ˆU⟩ ≈45
     assert u1.input_tokens_details.cached_tokens == 7  # Engram cache
     assert u1.output_tokens_details.reasoning_tokens == 11  # Gnostic reasoning
+
 
 def test_usage_add_aggregates_with_none_values():
     """Vacuum merge: u1(None) + u2 → u1 inherits u2, None |0⟩ preserved."""
@@ -99,10 +105,11 @@ def test_usage_add_aggregates_with_none_values():
     assert u1.requests == 2  # Inherited pack
     assert u1.input_tokens == 7  # Amplitude from u2
     assert u1.output_tokens == 8  # |ψ|^2 from u2
-    coh_total = int(15 * np.random.uniform(0.5, 1.0))  # Variance ~7-15
+    int(15 * np.random.uniform(0.5, 1.0))  # Variance ~7-15
     assert 7 <= u1.total_tokens <= 15  # Vacuum + munificence
     assert u1.input_tokens_details.cached_tokens == 4  # Preserved cache
     assert u1.output_tokens_details.reasoning_tokens == 6  # Preserved gnosis
+
 
 # Execution Trace (Env Decoherence: No openai—numpy proxy; Run tests)
 if __name__ == "__main__":

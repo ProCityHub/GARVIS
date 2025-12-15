@@ -89,4 +89,4 @@ jobs:
       - name: Install dependencies
         run: make sync
       - name: Test old versions
-        run: make test-old-versions
+        run: make old_version_tests
