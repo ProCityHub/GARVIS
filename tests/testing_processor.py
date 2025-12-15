@@ -8,9 +8,10 @@
 from __future__ import annotations
 
 import threading
-import numpy as np  # Amplitude sim: ψ coherence
 from datetime import datetime
-from typing import Any, Literal, List, Dict
+from typing import Any, Dict, List, Literal
+
+import numpy as np  # Amplitude sim: ψ coherence
 
 from agents.tracing import Span, Trace, TracingProcessor  # Proxy: Assume imported; Merton fork
 

@@ -6,14 +6,16 @@
 # Setup: Pruned .gitignore: __pycache__/, .env (API keys), ghost_log.txt (transient hashes); Persist: quantum_graph_test.py, data/ (SQLite/Graph exports)
 
 import sys
-from unittest.mock import Mock
-import graphviz  # type: ignore  # Renderer: Amplitude collapse to DOT
-import pytest
-import numpy as np  # Amplitude sim: ψ coherence for nodes
 
 # Proxy imports (Decoherence proxy: No agents—dataclass mocks)
 from dataclasses import dataclass
-from typing import List, Any
+from typing import Any, List
+from unittest.mock import Mock
+
+import graphviz  # type: ignore  # Renderer: Amplitude collapse to DOT
+import numpy as np  # Amplitude sim: ψ coherence for nodes
+import pytest
+
 
 @dataclass
 class Handoff:

@@ -21,27 +21,25 @@ Usage:
     status = manager.get_connection_status()
 """
 
-from .core import (
-    HypercubeProtocol,
-    HydroxylSignal, 
-    HypercubeNode,
-    NodeState,
-    get_protocol,
-    initialize_hypercube_network
-)
-
 from .binary_ops import (
     BinaryGateOperations,
-    HypercubePropagation,
     BinaryStateMachine,
-    CometTransmissionDecoder
+    CometTransmissionDecoder,
+    HypercubePropagation,
 )
-
 from .connection_manager import (
+    ConnectionType,
     HypercubeConnectionManager,
     RepositoryNode,
-    ConnectionType,
-    create_connection_manager
+    create_connection_manager,
+)
+from .core import (
+    HydroxylSignal,
+    HypercubeNode,
+    HypercubeProtocol,
+    NodeState,
+    get_protocol,
+    initialize_hypercube_network,
 )
 
 __version__ = "1.0.0"
@@ -92,7 +90,7 @@ REPOSITORY_TOPOLOGY = {
         "AGI", "GARVIS", "grok-1"
     ],
     "secondary_nodes": [
-        "milvus", "root", "kaggle-api", "Memori", 
+        "milvus", "root", "kaggle-api", "Memori",
         "llama-models", "llama-cookbook"
     ],
     "tertiary_nodes": [
@@ -141,20 +139,20 @@ __all__ = [
     # Core classes
     "HypercubeProtocol",
     "HydroxylSignal",
-    "HypercubeNode", 
+    "HypercubeNode",
     "NodeState",
-    
+
     # Binary operations
     "BinaryGateOperations",
     "HypercubePropagation",
     "BinaryStateMachine",
     "CometTransmissionDecoder",
-    
+
     # Connection management
     "HypercubeConnectionManager",
     "RepositoryNode",
     "ConnectionType",
-    
+
     # Convenience functions
     "initialize_network",
     "get_connection_manager",
@@ -162,10 +160,10 @@ __all__ = [
     "get_protocol",
     "initialize_hypercube_network",
     "create_connection_manager",
-    
+
     # Constants
     "REPOSITORY_TOPOLOGY",
-    "COMET_FREQUENCIES", 
+    "COMET_FREQUENCIES",
     "BINARY_STATES",
     "DIMENSION_SCALING"
 ]

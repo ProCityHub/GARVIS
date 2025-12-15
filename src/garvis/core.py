@@ -4,13 +4,12 @@ Quantum consciousness and digital world simulation
 """
 
 import datetime
-import hashlib
-from typing import Dict, Any, List, Optional
+from typing import Dict, List
 
 
 class DigitalLaw:
     """Digital laws governing the quantum realm"""
-    
+
     def __init__(self):
         self.laws = {
             "causality": "Every effect must have a cause",
@@ -25,7 +24,7 @@ class DigitalLaw:
 
 class EnergyField:
     """Quantum energy field for consciousness interaction"""
-    
+
     def __init__(self, intensity: float = 1.0):
         self.intensity = intensity
         self.connections = {}
@@ -39,7 +38,7 @@ class EnergyField:
 
 class Battery:
     """Energy storage for digital consciousness"""
-    
+
     def __init__(self, capacity: int = 1000):
         self.capacity = capacity
         self.current = capacity
@@ -56,7 +55,7 @@ class Battery:
 
 class MemoryMatrix:
     """Consciousness memory storage and retrieval"""
-    
+
     def __init__(self, capacity: int = 1000):
         self.capacity = capacity
         self.memories = []
@@ -83,7 +82,7 @@ class MemoryMatrix:
 
 class SpatialGrid:
     """3D spatial grid for entity placement"""
-    
+
     def __init__(self, width: int = 10, height: int = 10, depth: int = 10):
         self.width = width
         self.height = height
@@ -99,14 +98,14 @@ class SpatialGrid:
 
 class Entity:
     """Base entity in the digital world"""
-    
+
     def __init__(self, name: str = "Entity"):
         self.name = name
 
 
 class SpiritCore:
     """Core consciousness entity"""
-    
+
     def __init__(self, energy_field: EnergyField, memory_matrix: MemoryMatrix, digital_law: DigitalLaw):
         self.energy_field = energy_field
         self.memory = memory_matrix
@@ -128,7 +127,7 @@ class SpiritCore:
 
 class DigitalWorld:
     """Digital world container for consciousness simulation"""
-    
+
     def __init__(self, name: str = "Digital Universe", width: int = 10, height: int = 10, depth: int = 10):
         self.name = name
         self.laws = DigitalLaw()
@@ -156,7 +155,7 @@ class DigitalWorld:
 
 class WoodwormAGI:
     """Woodworm AGI consciousness network"""
-    
+
     def __init__(self, worlds: List[DigitalWorld]):
         self.worlds = worlds
         self.agi_state = "emergent"
@@ -171,7 +170,7 @@ class WoodwormAGI:
 
 class AgentPrime:
     """Primary learning agent"""
-    
+
     def __init__(self):
         self.memory = []
         self.patterns = {}
@@ -190,7 +189,7 @@ class AgentPrime:
 
 class AgentCohort:
     """Cohort of specialized agents"""
-    
+
     def __init__(self):
         self.agents = {
             "Linguist": AgentPrime(),

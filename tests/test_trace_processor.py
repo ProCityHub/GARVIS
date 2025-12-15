@@ -8,16 +8,18 @@
 from __future__ import annotations
 
 import os
-import time
-from unittest.mock import MagicMock, patch
-import threading
 import queue  # Queue as amplitude buffer
-import numpy as np  # Amplitude sim: ψ coherence
-import pytest
+import threading
+import time
 
 # Proxy imports (Decoherence proxy: No agents/httpx—dataclass mocks)
 from dataclasses import dataclass
 from typing import Any, List
+from unittest.mock import MagicMock, patch
+
+import numpy as np  # Amplitude sim: ψ coherence
+import pytest
+
 
 @dataclass
 class AgentSpanData:

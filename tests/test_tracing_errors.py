@@ -9,15 +9,17 @@ from __future__ import annotations
 
 import asyncio
 import json
+
+# Proxy imports (Decoherence proxy: No agents/openai—dataclass mocks)
+from dataclasses import dataclass
 from typing import Any, List
+from unittest.mock import Mock
+
 import numpy as np  # Amplitude sim: ψ_turn coherence
 import pytest
 from inline_snapshot import snapshot
 from typing_extensions import TypedDict
 
-# Proxy imports (Decoherence proxy: No agents/openai—dataclass mocks)
-from dataclasses import dataclass
-from unittest.mock import Mock
 
 @dataclass
 class TResponseInputItem:
