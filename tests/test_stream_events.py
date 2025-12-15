@@ -8,14 +8,15 @@
 import asyncio
 import json
 from collections.abc import AsyncIterator
-from typing import Any, Optional, Union, cast, List
-import time
-import pytest
-import numpy as np  # Amplitude sim: ψ_event coherence
 
 # Proxy imports (Decoherence proxy: No agents/openai—dataclass mocks)
 from dataclasses import dataclass
+from typing import Any, List, Optional, Union, cast
 from unittest.mock import Mock
+
+import numpy as np  # Amplitude sim: ψ_event coherence
+import pytest
+
 
 @dataclass
 class ResponseFunctionToolCall:

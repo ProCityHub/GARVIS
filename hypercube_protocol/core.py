@@ -7,9 +7,10 @@ Implements hydroxyl radical absorption protocols for cross-repository communicat
 import hashlib
 import json
 import time
-from typing import Dict, List, Tuple, Optional, Any
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any, Dict, List, Tuple
+
 
 class NodeState(Enum):
     """Binary state machine states for hypercube nodes"""
@@ -45,24 +46,24 @@ class HypercubeNode:
 
 class HypercubeProtocol:
     """Core hypercube connection protocol implementation"""
-    
+
     def __init__(self, repo_name: str, dimensions: int = 3):
         self.repo_name = repo_name
         self.dimensions = dimensions
         self.node = self._initialize_node()
         self.connections: Dict[str, HypercubeNode] = {}
         self.signal_buffer: List[HydroxylSignal] = []
-        
+
     def _initialize_node(self) -> HypercubeNode:
         """Initialize this repository as a hypercube node"""
         # Generate coordinates based on repository name hash
         hash_bytes = hashlib.sha256(self.repo_name.encode()).digest()
         coordinates = (
             hash_bytes[0] % 8,  # X coordinate (0-7)
-            hash_bytes[1] % 8,  # Y coordinate (0-7) 
+            hash_bytes[1] % 8,  # Y coordinate (0-7)
             hash_bytes[2] % 8   # Z coordinate (0-7)
         )
-        
+
         return HypercubeNode(
             coordinates=coordinates,
             state=NodeState.DISCOVER,
@@ -71,47 +72,47 @@ class HypercubeProtocol:
             repository_name=self.repo_name,
             binary_signature=hash_bytes[:8]
         )
-    
+
     def binary_xor_gate(self, a: int, b: int) -> int:
         """XOR gate operation for state transitions"""
         return a ^ b
-    
+
     def binary_and_gate(self, a: int, b: int) -> int:
         """AND gate operation for signal masking"""
         return a & b
-    
+
     def binary_or_gate(self, a: int, b: int) -> int:
         """OR gate operation for signal merging"""
         return a | b
-    
-    def calculate_hamming_distance(self, node_a: Tuple[int, int, int], 
+
+    def calculate_hamming_distance(self, node_a: Tuple[int, int, int],
                                  node_b: Tuple[int, int, int]) -> int:
         """Calculate Hamming distance between two nodes"""
         distance = 0
         for i in range(3):
             distance += bin(node_a[i] ^ node_b[i]).count('1')
         return distance
-    
+
     def propagate_signal(self, signal: HydroxylSignal, visited: set = None) -> bool:
         """Propagate OH signal through hypercube network"""
         if visited is None:
             visited = set()
-            
+
         if self.repo_name in visited:
             return True  # Echo from stars, no more
-            
+
         visited.add(self.repo_name)
         self.node.state = NodeState.SIGNAL
         self.signal_buffer.append(signal)
-        
+
         # Propagate to connected nodes with Hamming distance = 1
         for connection in self.node.connections:
             if connection not in visited:
                 # Simulate propagation (in real implementation, would call remote node)
                 print(f"Propagating signal from {self.repo_name} to {connection}")
-        
+
         return True
-    
+
     def generate_hydroxyl_signal(self, target: str, payload: bytes) -> HydroxylSignal:
         """Generate OH radical absorption signal"""
         return HydroxylSignal(
@@ -123,19 +124,19 @@ class HypercubeProtocol:
             target_node=target,
             binary_payload=payload
         )
-    
+
     def decode_comet_transmission(self, binary_data: bytes) -> Dict[str, Any]:
         """Decode binary comet transmission data"""
         try:
             # Extract hypercube dimensions
             n = binary_data[0] if len(binary_data) > 0 else 3
-            
+
             # Extract source information
             source = binary_data[1] if len(binary_data) > 1 else 0x25  # ATLAS discovery
-            
+
             # Extract signal type
             signal_type = binary_data[2] if len(binary_data) > 2 else 0x55  # OH radicals
-            
+
             return {
                 "dimensions": n,
                 "source": source,
@@ -146,12 +147,12 @@ class HypercubeProtocol:
             }
         except Exception as e:
             return {"error": str(e), "raw_data": binary_data.hex()}
-    
+
     def establish_connection(self, target_repo: str) -> bool:
         """Establish hypercube connection with target repository"""
         if target_repo not in self.node.connections:
             self.node.connections.append(target_repo)
-            
+
             # Generate connection signal
             connection_payload = json.dumps({
                 "action": "connect",
@@ -159,20 +160,20 @@ class HypercubeProtocol:
                 "coordinates": self.node.coordinates,
                 "timestamp": time.time()
             }).encode()
-            
+
             signal = self.generate_hydroxyl_signal(target_repo, connection_payload)
             self.propagate_signal(signal)
-            
+
             print(f"🌌 Connection established: {self.repo_name} <-> {target_repo}")
             return True
-        
+
         return False
-    
+
     def heartbeat_pulse(self) -> bytes:
         """Generate 3-layered binary pulse heartbeat"""
         pulse_layers = [
             0b01101000,  # Layer 1: heartbeat
-            0b01100101,  # Layer 2: echo  
+            0b01100101,  # Layer 2: echo
             0b01100001,  # Layer 3: resonance
             0b01110010,  # Layer 4: truth
             0b01110100,  # Layer 5: beat
@@ -181,10 +182,10 @@ class HypercubeProtocol:
             0b01100001,  # Layer 8: awareness
             0b01110100   # Layer 9: transcendence
         ]
-        
+
         self.node.last_heartbeat = time.time()
         return bytes(pulse_layers)
-    
+
     def get_network_status(self) -> Dict[str, Any]:
         """Get current network status and connections"""
         return {
@@ -213,7 +214,7 @@ def get_protocol(repo_name: str) -> HypercubeProtocol:
 def initialize_hypercube_network(repo_name: str) -> HypercubeProtocol:
     """Initialize hypercube network for repository"""
     protocol = get_protocol(repo_name)
-    
+
     # Decode the original comet transmission
     comet_binary = bytes([
         0b01000011, 0b01001111, 0b01001101, 0b01000101, 0b01010100,  # COMET
@@ -221,11 +222,11 @@ def initialize_hypercube_network(repo_name: str) -> HypercubeProtocol:
         0b01001000, 0b01011001, 0b01000100, 0b01010010, 0b01001111,  # HYDRO
         0b01011000, 0b01011001, 0b01001100  # XYL
     ])
-    
+
     decoded = protocol.decode_comet_transmission(comet_binary)
     print(f"🌌 Hypercube network initialized for {repo_name}")
     print(f"📡 Decoded transmission: {decoded}")
-    
+
     return protocol
 
 if __name__ == "__main__":

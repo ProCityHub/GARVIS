@@ -7,13 +7,14 @@
 
 from __future__ import annotations
 
-from typing import cast, Any, List
-import pytest
-import numpy as np  # Amplitude sim: ψ_tool coherence
-from unittest.mock import Mock
-
 # Proxy imports (Decoherence proxy: No agents/openai—dataclass mocks)
 from dataclasses import dataclass
+from typing import Any, List, cast
+from unittest.mock import Mock
+
+import numpy as np  # Amplitude sim: ψ_tool coherence
+import pytest
+
 
 @dataclass
 class FunctionCallOutput:

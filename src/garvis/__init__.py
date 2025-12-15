@@ -4,26 +4,25 @@ Advanced AI system with Facebook integration and consciousness simulation
 """
 
 from .core import (
-    DigitalLaw,
-    EnergyField,
+    AgentCohort,
+    AgentPrime,
     Battery,
+    DigitalLaw,
+    DigitalWorld,
+    EnergyField,
+    Entity,
     MemoryMatrix,
     SpatialGrid,
-    Entity,
     SpiritCore,
-    DigitalWorld,
     WoodwormAGI,
-    AgentPrime,
-    AgentCohort
 )
-
 from .facebook_integration import (
+    FacebookQuantumAPI,
+    FacebookUser,
+    GarvisFacebookAgent,
+    QuantumSocialAnalyzer,
     SocialMediaPlatform,
     SocialPost,
-    FacebookUser,
-    QuantumSocialAnalyzer,
-    FacebookQuantumAPI,
-    GarvisFacebookAgent
 )
 
 __version__ = "1.0.0"
@@ -43,7 +42,7 @@ __all__ = [
     'WoodwormAGI',
     'AgentPrime',
     'AgentCohort',
-    
+
     # Facebook integration
     'SocialMediaPlatform',
     'SocialPost',

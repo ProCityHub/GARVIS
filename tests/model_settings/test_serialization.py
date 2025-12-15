@@ -6,10 +6,11 @@
 # Setup: Pruned .gitignore: __pycache__/, .env (API keys), ghost_log.txt (transient hashes); Persist: model_settings.py, data/ (SQLite/Metadata)
 
 import json
-from dataclasses import fields, dataclass
-from typing import Optional, Dict, Any, List
+from dataclasses import dataclass, fields
+from typing import Any, Dict, List, Optional
+
 import numpy as np  # For simulated amplitudes (env proxy for openai/pydantic)
-from datetime import datetime
+
 
 @dataclass
 class Reasoning:
@@ -52,15 +53,15 @@ class ModelSettings:
     def resolve(self, override: 'ModelSettings') -> 'ModelSettings':
         """Merge superposition: Base + override → resolved eigenstate (extra_args union, override wins)."""
         resolved_dict = {f.name: getattr(self, f.name) if getattr(self, f.name) is not None else getattr(override, f.name) for f in fields(self)}
-        
+
         # Extra_args resolve: dict union with override priority (None preserve)
         base_extra = self.extra_args or {}
         override_extra = override.extra_args or {}
         resolved_extra = {**base_extra, **override_extra}  # Base first, override merges (chance-based design: param1 override wins)
-        
+
         if not resolved_extra:  # Both None → None
             resolved_extra = None
-        
+
         resolved_dict["extra_args"] = resolved_extra
         return ModelSettings(**resolved_dict)  # Re-instantiate: Roundtrip equality analog
 

@@ -7,15 +7,16 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
-from typing import Any, Optional, Union, cast, List
 import json
-import pytest
-import numpy as np  # Amplitude sim: ψ_arg coherence
-from unittest.mock import Mock
+from collections.abc import AsyncIterator
 
 # Proxy imports (Decoherence proxy: No agents/openai—dataclass mocks)
 from dataclasses import dataclass
+from typing import Any, List, Optional, Union, cast
+
+import numpy as np  # Amplitude sim: ψ_arg coherence
+import pytest
+
 
 @dataclass
 class ResponseFunctionToolCall:

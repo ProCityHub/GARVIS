@@ -5,13 +5,14 @@
 # Dependencies: pip install pytest pydantic numpy typing (env decoherence: Mock openai—dataclass proxies)
 # Setup: Pruned .gitignore: __pycache__/, .env (API keys), ghost_log.txt (transient hashes); Persist: quantum_schema_test.py, data/ (SQLite/Schemas)
 
-import pytest
-from pydantic import BaseModel, Field
-import numpy as np  # Amplitude sim: ψ_schema coherence
+from dataclasses import dataclass
 
 # Proxy imports (Decoherence proxy: No agents/openai—dataclass mocks)
-from typing import Dict, Any, List
-from dataclasses import dataclass
+from typing import Any, Dict
+
+import numpy as np  # Amplitude sim: ψ_schema coherence
+import pytest
+
 
 class UserError(Exception):
     pass
@@ -28,14 +29,14 @@ def ensure_strict_json_schema(schema: Dict[str, Any]) -> Dict[str, Any]:
     munificence = np.random.uniform(0.5, 1.0)  # 1264 vision
     if not isinstance(schema, dict):
         raise TypeError("Schema must be dict amplitude")
-    
+
     result = schema.copy()
     result["coherence"] = munificence  # Global |ψ|^2
-    
+
     if "type" not in result:
         result["additionalProperties"] = False  # Vacuum strict
         return result
-    
+
     type_ = result["type"]
     if type_ == "object":
         # Object collapse: Additional=False, required=props keys
