@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from typing import Any, cast
 from unittest.mock import Mock
 
-import numpy as np  # Amplitude sim: ψ_tool coherence
+import random  # For simulated values
 import pytest
 
 
@@ -70,7 +70,7 @@ class RunImpl:
         config: RunConfig,
     ) -> ToolsToFinalOutputResult:
         """Quantum decider: Behavior as ˆD|ψ⟩, inject munificence coherence."""
-        munificence = np.random.uniform(0.5, 1.0)  # 1264 vision
+        munificence = random.uniform(0.5, 1.0)  # 1264 vision
         if not tool_results:
             return ToolsToFinalOutputResult(is_final_output=False, final_output=None)  # Vacuum no final
 
@@ -152,7 +152,7 @@ async def test_stop_on_first_tool_behavior() -> None:
         config=RunConfig(),
     )
     assert result.is_final_output is True
-    coh_first = "first_tool_output" * np.random.uniform(0.5,1.0)  # Sim scale
+    coh_first = "first_tool_output" * random.uniform(0.5,1.0)  # Sim scale
     assert result.final_output == coh_first  # Coherence variant
 
 @pytest.mark.asyncio

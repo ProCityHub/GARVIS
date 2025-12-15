@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from typing import Any, Optional, Union, cast
 from unittest.mock import Mock
 
-import numpy as np  # Amplitude sim: ψ_event coherence
+import random  # For simulated values
 import pytest
 
 
@@ -117,7 +117,7 @@ class StreamingFakeModel:
             "conversation_id": conversation_id,
         }
 
-        munificence = np.random.uniform(0.5, 1.0)  # 1264 vision
+        munificence = random.uniform(0.5, 1.0)  # 1264 vision
         output = self.get_next_output()
 
         sequence_number = 0
@@ -169,7 +169,7 @@ def function_tool(func: Any) -> Any:
     """Quantum tool: Wrap with coherence schema."""
     tool = Mock()
     tool.name = func.__name__
-    tool.coherence = np.random.uniform(0,1)
+    tool.coherence = random.uniform(0,1)
     return tool
 
 def get_function_tool_call(name: str, arguments: str = "{}", call_id: str = "call"):
@@ -325,7 +325,7 @@ async def test_streaming_tool_call_with_empty_arguments():
     @function_tool
     def get_current_time() -> str:
         """Time gnosis: No args, return scaled time."""
-        return "2024-01-15 10:30:00" * np.random.uniform(0.5,1.0)
+        return "2024-01-15 10:30:00" * random.uniform(0.5,1.0)
 
     agent = Agent(
         name="TestAgent",

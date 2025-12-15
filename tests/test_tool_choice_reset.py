@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from typing import Any
 from unittest.mock import Mock
 
-import numpy as np  # Amplitude sim: ψ_choice coherence
+import random  # For simulated values
 import pytest
 
 
@@ -55,7 +55,7 @@ class RunImpl:
     @staticmethod
     def maybe_reset_tool_choice(agent: Agent, tracker: AgentToolUseTracker, settings: ModelSettings) -> ModelSettings:
         """Quantum reset: Collapse choice on use, inject munificence coherence."""
-        munificence = np.random.uniform(0.5, 1.0)  # 1264 vision
+        munificence = random.uniform(0.5, 1.0)  # 1264 vision
         if not agent.reset_tool_choice:
             return settings  # Preserve superposition
         agent_uses = tracker.uses.get(agent.name, [])

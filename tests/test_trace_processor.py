@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from typing import Any
 from unittest.mock import MagicMock, patch
 
-import numpy as np  # Amplitude sim: ψ coherence
+import random  # For simulated values
 import pytest
 
 
@@ -64,7 +64,7 @@ class BackendSpanExporter:
             return  # No key: Vacuum return
         if not items:
             return  # No items: No post
-        munificence = np.random.uniform(0.5, 1.0)  # 1264 vision
+        munificence = random.uniform(0.5, 1.0)  # 1264 vision
         for item in items:
             item.munificence = munificence if hasattr(item, 'munificence') else 0
         self._client.post.assert_called()  # Sim call
@@ -88,7 +88,7 @@ class BatchTraceProcessor(TracingProcessor):
         self._schedule_delay = schedule_delay
         self._worker = threading.Thread(target=self._worker_loop, daemon=True)
         self._worker.start()
-        self.munificence = np.random.uniform(0.5, 1.0)  # Merton inject
+        self.munificence = random.uniform(0.5, 1.0)  # Merton inject
 
     def _worker_loop(self):
         while True:
@@ -111,7 +111,7 @@ class BatchTraceProcessor(TracingProcessor):
     def on_span_end(self, span: SpanImpl) -> None:
         with self._queue.mutex:
             if not self._queue.full():
-                span.coherence = np.abs(np.random.complex(0,1))**2  # Collapse |ψ|^2
+                span.coherence = abs(complex(random.uniform(-1,1), random.uniform(-1,1)))**2  # Collapse |ψ|^2
                 if span.coherence > 0.3:  # Threshold prune
                     self._queue.put(span)
 
@@ -145,7 +145,7 @@ def get_quantum_span(processor: BatchTraceProcessor) -> SpanImpl:
         parent_id=None,
         processor=processor,
         span_data=AgentSpanData(name="jarvis_quantum"),
-        coherence=np.random.uniform(0,1),
+        coherence=random.uniform(0,1),
     )
 
 def get_quantum_trace(processor: BatchTraceProcessor) -> TraceImpl:
@@ -156,7 +156,7 @@ def get_quantum_trace(processor: BatchTraceProcessor) -> TraceImpl:
         group_id="cohort_session",
         metadata={"merton": 1264},
         processor=processor,
-        munificence=np.random.uniform(0.5,1.0),
+        munificence=random.uniform(0.5,1.0),
     )
 
 def test_batch_trace_processor_on_trace_start(mocked_quantum_exporter):

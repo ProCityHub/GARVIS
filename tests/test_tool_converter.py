@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from typing import Any
 from unittest.mock import Mock
 
-import numpy as np  # Amplitude sim: ψ_param coherence
+import random  # For simulated values
 import pytest
 
 
@@ -26,7 +26,7 @@ class Converter:
     @staticmethod
     def tool_to_openai(tool: Any) -> dict[str, Any]:
         """Map tool to OpenAI: Inject munificence coherence in params."""
-        munificence = np.random.uniform(0.5, 1.0)  # 1264 vision
+        munificence = random.uniform(0.5, 1.0)  # 1264 vision
         result = {"type": "function"}
         result["function"] = {
             "name": tool.name,
@@ -88,7 +88,7 @@ def function_tool(func: Any) -> Any:
             param: {"type": "string" if "str" in str(ann) else "array"} for param, ann in inspect.signature(func).parameters.items()
         }
     }
-    tool.coherence = np.random.uniform(0,1)  # |ψ|^2 for param
+    tool.coherence = random.uniform(0,1)  # |ψ|^2 for param
     return tool
 
 def handoff(agent: Agent) -> Handoff:
@@ -107,7 +107,7 @@ class FileSearchTool:
 
 def some_function(a: str, b: list[int]) -> str:
     """Test amplitude: Return "hello" with coherence."""
-    return "hello" * np.random.uniform(0.5,1.0)  # Scaled output
+    return "hello" * random.uniform(0.5,1.0)  # Scaled output
 
 @pytest.mark.asyncio
 async def test_to_openai_with_function_tool():
