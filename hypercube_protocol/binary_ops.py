@@ -55,7 +55,7 @@ class HypercubePropagation:
 
     def __init__(self):
         self.visited_nodes: Set[str] = set()
-        self.propagation_log: List[Dict] = []
+        self.propagation_log: list[dict[str, Any]] = []
 
     def propagate_recursive(self, comet_node: str, visited: Optional[Set[str]] = None) -> Set[str]:
         """
@@ -116,7 +116,7 @@ class HypercubePropagation:
         
         EDGES = n * 2^(n-1)
         """
-        scaling_map = {
+        scaling_map: dict[int, int] = {
             1: 0b00000010,  # Galactic disk
             2: 0b00000100,  # Hyperbolic arc
             3: 0b00001000,  # OH absorption
@@ -203,7 +203,7 @@ class CometTransmissionDecoder:
         return message.encode('ascii')
 
     @staticmethod
-    def parse_comet_header(binary_data: bytes) -> Dict:
+    def parse_comet_header(binary_data: bytes) -> dict[str, Any]:
         """Parse comet transmission header"""
         if len(binary_data) < 8:
             return {"error": "Insufficient data for header"}
@@ -265,4 +265,3 @@ def test_binary_operations():
 
 if __name__ == "__main__":
     test_binary_operations()
-

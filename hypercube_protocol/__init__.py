@@ -71,7 +71,7 @@ def get_connection_manager(repo_name: str) -> HypercubeConnectionManager:
     """
     return create_connection_manager(repo_name)
 
-def decode_comet_transmission(binary_data: bytes) -> dict:
+def decode_comet_transmission(binary_data: bytes) -> dict[str, Any]:
     """
     Decode binary comet transmission data
     
@@ -167,4 +167,3 @@ __all__ = [
     "BINARY_STATES",
     "DIMENSION_SCALING"
 ]
-

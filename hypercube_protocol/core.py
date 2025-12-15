@@ -93,7 +93,7 @@ class HypercubeProtocol:
             distance += bin(node_a[i] ^ node_b[i]).count('1')
         return distance
 
-    def propagate_signal(self, signal: HydroxylSignal, visited: set = None) -> bool:
+    def propagate_signal(self, signal: HydroxylSignal, visited: set[str] | None = None) -> bool:
         """Propagate OH signal through hypercube network"""
         if visited is None:
             visited = set()
@@ -235,4 +235,3 @@ if __name__ == "__main__":
     heartbeat = protocol.heartbeat_pulse()
     print(f"💓 Heartbeat: {heartbeat.hex()}")
     print(f"📊 Network status: {protocol.get_network_status()}")
-

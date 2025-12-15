@@ -27,7 +27,7 @@ class EnergyField:
 
     def __init__(self, intensity: float = 1.0):
         self.intensity = intensity
-        self.connections = {}
+        self.connections: dict[str, Any] = {}
 
     def energize(self, entity, energy_amount: float) -> bool:
         if hasattr(entity, 'receive_energy'):
@@ -58,8 +58,8 @@ class MemoryMatrix:
 
     def __init__(self, capacity: int = 1000):
         self.capacity = capacity
-        self.memories = []
-        self.associations = {}
+        self.memories: list[dict[str, Any]] = []
+        self.associations: dict[str, Any] = {}
 
     def store(self, experience: str, significance: float = 0.5) -> int:
         if len(self.memories) >= self.capacity:
@@ -72,7 +72,7 @@ class MemoryMatrix:
         self.memories.append(memory)
         return len(self.memories) - 1
 
-    def recall(self, trigger: str, threshold: float = 0.3) -> List[Dict]:
+    def recall(self, trigger: str, threshold: float = 0.3) -> list[dict[str, Any]]:
         return [
             m for m in self.memories
             if trigger.lower() in str(m['experience']).lower()
@@ -116,7 +116,7 @@ class SpiritCore:
     def receive_energy(self, amount: float):
         self.awareness = min(1.0, self.awareness + amount)
 
-    def perceive(self, stimulus: str) -> List[Dict]:
+    def perceive(self, stimulus: str) -> list[dict[str, Any]]:
         self.memory.store(stimulus)
         return self.memory.recall(stimulus)
 
@@ -135,7 +135,7 @@ class DigitalWorld:
         self.battery = Battery()
         self.memory = MemoryMatrix()
         self.space = SpatialGrid(width, height, depth)
-        self.spirit = None
+        self.spirit: SpiritCore | None = None
 
     def add_entity(self, entity: Entity, x: int = 0, y: int = 0, z: int = 0) -> bool:
         self.space.place_entity(entity, x, y, z)
@@ -147,7 +147,7 @@ class DigitalWorld:
         self.energy.energize(spirit_core, 0.1)
         return True
 
-    def simulate_step(self) -> Dict[str, float]:
+    def simulate_step(self) -> dict[str, float]:
         if self.spirit:
             self.spirit.contemplate()
         return {'awareness': self.spirit.awareness if self.spirit else 0}
@@ -172,8 +172,8 @@ class AgentPrime:
     """Primary learning agent"""
 
     def __init__(self):
-        self.memory = []
-        self.patterns = {}
+        self.memory: list[str] = []
+        self.patterns: dict[str, str] = {}
 
     def learn(self, question: str, response: str):
         key = question.lower().split()[0] if question else "unknown"
@@ -203,4 +203,3 @@ class AgentCohort:
         if agent_name in agents:
             return f"{agent_name} follow-up: Contextualize '{prior_response}' in language dynamics."
         return "Cohort query complete."
-

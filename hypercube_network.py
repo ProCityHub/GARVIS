@@ -56,7 +56,7 @@ class HypercubeNetwork:
                 # Flip bit to get neighbor
                 neighbor = i ^ (1 << bit)  # XOR with bit mask
                 if neighbor < self.num_nodes:
-                    edge = tuple(sorted([i, neighbor]))
+                    edge = (min(i, neighbor), max(i, neighbor))
                     if edge not in self.edges:
                         self.edges.append(edge)
 
@@ -299,12 +299,12 @@ class HypercubeScaling:
     @staticmethod
     def calculate_nodes(dimensions: int) -> int:
         """Calculate number of nodes: 2^n"""
-        return 2 ** dimensions
+        return int(2 ** dimensions)
 
     @staticmethod
     def calculate_edges(dimensions: int) -> int:
         """Calculate number of edges: n * 2^(n-1)"""
-        return dimensions * (2 ** (dimensions - 1))
+        return int(dimensions * (2 ** (dimensions - 1)))
 
     @staticmethod
     def scaling_table(max_dimensions: int = 8) -> None:

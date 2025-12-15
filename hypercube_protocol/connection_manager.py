@@ -29,7 +29,7 @@ class RepositoryNode:
     """Repository node in hypercube network"""
     name: str
     connection_type: ConnectionType
-    coordinates: tuple
+    coordinates: tuple[int, ...]
     active: bool = False
     last_ping: float = 0.0
     signal_strength: float = 0.0
@@ -47,7 +47,7 @@ class HypercubeConnectionManager:
         # Repository network topology
         self.repository_nodes: Dict[str, RepositoryNode] = {}
         self.connection_matrix: Dict[str, Set[str]] = {}
-        self.signal_handlers: Dict[str, Callable] = {}
+        self.signal_handlers: dict[str, Callable[..., Any]] = {}
 
         # Network state
         self.network_active = False
@@ -108,7 +108,7 @@ class HypercubeConnectionManager:
             # Initialize connection matrix
             self.connection_matrix[repo_name] = set()
 
-    def _calculate_coordinates(self, repo_name: str) -> tuple:
+    def _calculate_coordinates(self, repo_name: str) -> tuple[int, ...]:
         """Calculate 8D hypercube coordinates for repository"""
         hash_bytes = hashlib.sha256(repo_name.encode()).digest()
 
@@ -267,7 +267,7 @@ class HypercubeConnectionManager:
 
         self.logger.info("🚀 Establishing full hypercube network...")
 
-        connection_results = {
+        connection_results: dict[str, Any] = {
             "successful_connections": [],
             "failed_connections": [],
             "total_attempts": 0
@@ -397,4 +397,3 @@ async def test_connection_manager():
 
 if __name__ == "__main__":
     asyncio.run(test_connection_manager())
-
