@@ -43,6 +43,9 @@ old_version_tests:
 	UV_PROJECT_ENVIRONMENT=.venv_39 uv sync --python 3.9 --all-extras --all-packages --group dev
 	UV_PROJECT_ENVIRONMENT=.venv_39 uv run --python 3.9 -m pytest
 
+.PHONY: test-old-versions
+test-old-versions: old_version_tests
+
 .PHONY: build-docs
 build-docs:
 	uv run docs/scripts/generate_ref_files.py
