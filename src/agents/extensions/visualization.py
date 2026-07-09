@@ -81,14 +81,14 @@ def get_all_nodes(
         if isinstance(handoff, Handoff):
             parts.append(
                 f'"{handoff.agent_name}" [label="{handoff.agent_name}", '
-                f"shape=box, style=filled, style=rounded, "
+                f'shape=box, style="filled,rounded", '
                 f"fillcolor=lightyellow, width=1.5, height=0.8];"
             )
         if isinstance(handoff, Agent):
             if handoff.name not in visited:
                 parts.append(
                     f'"{handoff.name}" [label="{handoff.name}", '
-                    f"shape=box, style=filled, style=rounded, "
+                    f'shape=box, style="filled,rounded", '
                     f"fillcolor=lightyellow, width=1.5, height=0.8];"
                 )
             parts.append(get_all_nodes(handoff, agent, visited))

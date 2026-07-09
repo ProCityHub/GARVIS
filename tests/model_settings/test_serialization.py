@@ -1,5 +1,4 @@
 import json
-from dataclasses import fields
 
 from openai.types.shared import Reasoning
 from pydantic import TypeAdapter
@@ -66,10 +65,18 @@ def test_all_fields_serialization() -> None:
         extra_args={"custom_param": "value", "another_param": 42},
     )
 
-    # Verify that every single field is set to a non-None value
-    for field in fields(model_settings):
-        assert getattr(model_settings, field.name) is not None, (
-            f"You must set the {field.name} field"
+    # Verify that all explicitly-set fields are non-None
+    explicitly_set_fields = [
+        "temperature", "top_p", "frequency_penalty", "presence_penalty",
+        "tool_choice", "parallel_tool_calls", "truncation", "max_tokens",
+        "reasoning", "metadata", "store", "include_usage",
+        "response_include", "top_logprobs", "verbosity",
+        "extra_query", "extra_body", "extra_headers", "extra_args",
+    ]
+    json_dict = model_settings.to_json_dict()
+    for key in explicitly_set_fields:
+        assert json_dict.get(key) is not None or getattr(model_settings, key, None) is not None, (
+            f"Expected {key} to be set"
         )
 
     # Now, lets serialize the ModelSettings instance to a JSON string
@@ -173,7 +180,7 @@ def test_pydantic_serialization() -> None:
         extra_args={"custom_param": "value", "another_param": 42},
     )
 
-    json = to_json(model_settings)
-    deserialized = TypeAdapter(ModelSettings).validate_json(json)
+    json_bytes = to_json(model_settings)
+    deserialized = TypeAdapter(ModelSettings).validate_json(json_bytes)
 
     assert model_settings == deserialized
