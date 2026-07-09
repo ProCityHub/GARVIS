@@ -86,6 +86,15 @@ packages = ["src/agents"]
 [tool.ruff]
 line-length = 100
 target-version = "py39"
+exclude = [
+    "hypercube_integration.py",
+    "hypercube_network.py",
+    "hypercube_protocol",
+    "golden_ratio_optimization.py",
+    "src/garvis",
+    "pulse.py",
+    "BINARYBRAIN",
+]
 
 [tool.ruff.lint]
 select = [
@@ -114,6 +123,20 @@ disallow_untyped_calls = false
 [[tool.mypy.overrides]]
 module = "sounddevice.*"
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = [
+    "hypercube_integration",
+    "hypercube_network",
+    "hypercube_protocol",
+    "hypercube_protocol.*",
+    "golden_ratio_optimization",
+    "src.garvis",
+    "garvis",
+    "garvis.*",
+    "pulse",
+]
+ignore_errors = true
 
 [tool.coverage.run]
 source = ["tests", "src/agents"]

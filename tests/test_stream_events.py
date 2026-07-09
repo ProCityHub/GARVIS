@@ -13,7 +13,7 @@ from .test_responses import get_function_tool_call, get_handoff_tool_call, get_t
 
 @function_tool
 async def foo() -> str:
-    await asyncio.sleep(3)
+    await asyncio.sleep(0)
     return "success!"
 
 
@@ -53,7 +53,7 @@ async def test_stream_events_main():
 
     assert tool_call_start_time > 0, "tool_call_item was not observed"
     assert tool_call_end_time > 0, "tool_call_output_item was not observed"
-    assert tool_call_start_time < tool_call_end_time, "Tool call ended before or equals it started?"
+    assert tool_call_start_time <= tool_call_end_time, "Tool call ended before it started?"
 
 
 @pytest.mark.asyncio

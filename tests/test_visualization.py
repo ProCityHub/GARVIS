@@ -67,7 +67,7 @@ def test_get_main_graph(mock_agent):
         "fillcolor=lightgreen, width=0.5, height=0.3];" in result
     )
     assert (
-        '"Handoff1" [label="Handoff1", shape=box, style=filled, style=rounded, '
+        '"Handoff1" [label="Handoff1", shape=box, style="filled,rounded", '
         "fillcolor=lightyellow, width=1.5, height=0.8];" in result
     )
     _assert_mcp_nodes(result)
@@ -96,7 +96,7 @@ def test_get_all_nodes(mock_agent):
         "fillcolor=lightgreen, width=0.5, height=0.3];" in result
     )
     assert (
-        '"Handoff1" [label="Handoff1", shape=box, style=filled, style=rounded, '
+        '"Handoff1" [label="Handoff1", shape=box, style="filled,rounded", '
         "fillcolor=lightyellow, width=1.5, height=0.8];" in result
     )
     _assert_mcp_nodes(result)
@@ -105,13 +105,20 @@ def test_get_all_nodes(mock_agent):
 def test_get_all_edges(mock_agent):
     result = get_all_edges(mock_agent)
     assert '"__start__" -> "Agent1";' in result
-    assert '"Agent1" -> "__end__";'
     assert '"Agent1" -> "Tool1" [style=dotted, penwidth=1.5];' in result
     assert '"Tool1" -> "Agent1" [style=dotted, penwidth=1.5];' in result
     assert '"Agent1" -> "Tool2" [style=dotted, penwidth=1.5];' in result
     assert '"Tool2" -> "Agent1" [style=dotted, penwidth=1.5];' in result
     assert '"Agent1" -> "Handoff1";' in result
     _assert_mcp_edges(result)
+
+
+def test_get_all_edges_end_node():
+    """Agent with no handoffs must connect to __end__."""
+    agent = Agent(name="Agent1")
+    result = get_all_edges(agent)
+    assert '"__start__" -> "Agent1";' in result
+    assert '"Agent1" -> "__end__";' in result
 
 
 def test_draw_graph(mock_agent):
@@ -142,7 +149,7 @@ def test_draw_graph(mock_agent):
         "fillcolor=lightgreen, width=0.5, height=0.3];" in graph.source
     )
     assert (
-        '"Handoff1" [label="Handoff1", shape=box, style=filled, style=rounded, '
+        '"Handoff1" [label="Handoff1", shape=box, style="filled,rounded", '
         "fillcolor=lightyellow, width=1.5, height=0.8];" in graph.source
     )
     _assert_mcp_nodes(graph.source)
