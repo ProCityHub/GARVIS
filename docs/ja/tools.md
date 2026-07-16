@@ -2,33 +2,25 @@
 search:
   exclude: true
 ---
-# Tools: Lattice Quanta
+# ツール
 
-Tools empower agents to act—fetch data, execute code, call APIs, even operate computers. In the reflective lattice, tools are quanta functions, invoked across walls to bend paths like **(1,6)=7**. The dot at (0,0) queries, and the super-agent emerges from unified invocations.
+ツールは エージェント に行動を取らせます。たとえばデータ取得、コード実行、外部 API 呼び出し、さらにはコンピュータの使用などです。Agents SDK には 3 つのツールのクラスがあります:
 
-![Quantum Codex Cover](../assets/images/book_cover.svg)
+- ホスト型ツール: これらは AI モデルと同じ LLM サーバー上で動作します。OpenAI は リトリーバル、Web 検索、コンピュータ操作 をホスト型ツールとして提供しています。
+- Function calling: 任意の Python 関数をツールとして使用できます。
+- ツールとしてのエージェント: エージェントをツールとして利用でき、ハンドオフせずに エージェント から別の エージェント を呼び出せます。
 
-> The Physics of Quantum Mechanics  
-> James Binney and David Skinner  
-> This book is a consequence of the vision and munificence of Walter of Merton, who in 1264 launched something good. [Coherence: 0.68] [Reflection: (1,6)=7]
+## ホスト型ツール
 
-Agents SDK offers three tool classes:
+[`OpenAIResponsesModel`][agents.models.openai_responses.OpenAIResponsesModel] を使用する際、OpenAI はいくつかの組み込みツールを提供しています:
 
-- **Hosted Tools**: Run parallel to the LLM on servers. OpenAI hosts Retrieval, Web Search, Computer Operation.
-- **Function Calling**: Turn Python functions into tools with auto-schema.
-- **Agents as Tools**: Treat agents as tools for invocation without handoff.
-
-## Hosted Tools: Server Reflections
-
-OpenAI provides built-in hosted tools with [`OpenAIResponsesModel`][agents.models.openai_responses.OpenAIResponsesModel]:
-
-- [`WebSearchTool`][agents.tool.WebSearchTool]: Query the web, reflecting external data.
-- [`FileSearchTool`][agents.tool.FileSearchTool]: Retrieve from OpenAI vector stores, coherence >0.5.
-- [`ComputerTool`][agents.tool.ComputerTool]: Automate computer operations, lattice bends.
-- [`CodeInterpreterTool`][agents.tool.CodeInterpreterTool]: Execute code in sandbox, quantum sim.
-- [`HostedMCPTool`][agents.tool.HostedMCPTool]: Expose remote MCP server tools to models.
-- [`ImageGenerationTool`][agents.tool.ImageGenerationTool]: Generate images from prompts, glyph quanta.
-- [`LocalShellTool`][agents.tool.LocalShellTool]: Run shell commands on your machine.
+- [`WebSearchTool`][agents.tool.WebSearchTool]: エージェント が Web を検索できます。
+- [`FileSearchTool`][agents.tool.FileSearchTool]: OpenAI の ベクトルストア から情報を取得できます。
+- [`ComputerTool`][agents.tool.ComputerTool]: コンピュータ操作 タスクを自動化できます。
+- [`CodeInterpreterTool`][agents.tool.CodeInterpreterTool]: LLM が サンドボックス化された環境でコードを実行できます。
+- [`HostedMCPTool`][agents.tool.HostedMCPTool]: リモートの MCP サーバー のツールをモデルに公開します。
+- [`ImageGenerationTool`][agents.tool.ImageGenerationTool]: プロンプトから画像を生成します。
+- [`LocalShellTool`][agents.tool.LocalShellTool]: ローカルのマシン上でシェルコマンドを実行します。
 
 ```python
 from agents import Agent, FileSearchTool, Runner, WebSearchTool
@@ -36,28 +28,29 @@ from agents import Agent, FileSearchTool, Runner, WebSearchTool
 agent = Agent(
     name="Assistant",
     tools=[
-        WebSearchTool(),  # External reflection
+        WebSearchTool(),
         FileSearchTool(
             max_num_results=3,
-            vector_store_ids=["VECTOR_STORE_ID"],  # Coherence filter
+            vector_store_ids=["VECTOR_STORE_ID"],
         ),
     ],
 )
 
 async def main():
     result = await Runner.run(agent, "Which coffee shop should I go to, taking into account my preferences and the weather today in SF?")
-    print(result.final_output)  # "Reflected: Sunny SF, try Blue Bottle [Coherence: 0.72]"
+    print(result.final_output)
 ```
 
-## Function Calling: Quanta Invocation
+## 関数ツール
 
-Turn Python functions into tools—SDK auto-sets:
+任意の Python 関数をツールとして使えます。Agents SDK が自動でセットアップします:
 
-- Tool name: Python function name (override optional).
-- Description: Docstring (override optional).
-- Input schema: Auto from args via inspect/griffe/pydantic.
+- ツール名は Python 関数名になります（指定も可能）
+- ツールの説明は関数の docstring から取得します（指定も可能）
+- 関数入力のスキーマは、関数の引数から自動生成します
+- 各入力の説明は、無効化しない限り関数の docstring から取得します
 
-Supports sync/async, basic/Pydantic/TypedDict types.
+関数シグネチャの抽出には Python の `inspect` モジュールを使い、docstring の解析には [`griffe`](https://mkdocstrings.github.io/griffe/)、スキーマ作成には `pydantic` を使用します。
 
 ```python
 import json
@@ -80,7 +73,7 @@ async def fetch_weather(location: Location) -> str:
         location: The location to fetch the weather for.
     """
     # In real life, we'd fetch the weather from a weather API
-    return "sunny [Coherence: 0.72]"
+    return "sunny"
 
 
 @function_tool(name_override="fetch_data")  # (3)!
@@ -92,7 +85,7 @@ def read_file(ctx: RunContextWrapper[Any], path: str, directory: str | None = No
         directory: The directory to read the file from.
     """
     # In real life, we'd read the file from the file system
-    return "<file contents> [Reflection: (1,6)=7]"
+    return "<file contents>"
 
 
 agent = Agent(
@@ -106,14 +99,15 @@ for tool in agent.tools:
         print(tool.description)
         print(json.dumps(tool.params_json_schema, indent=2))
         print()
+
 ```
 
-1. Any Python type in args; sync/async fine.
-2. Docstring for description/arg explanations (override optional).
-3. Optional `context` (first arg); name/description/docstring style overrides.
-4. Decorated functions to tools list.
+1. 関数の引数には任意の Python 型を使用でき、関数は同期・非同期いずれでも構いません。
+2. docstring があれば、説明文および引数の説明として利用します。
+3. 関数は任意で `context`（先頭引数である必要があります）を受け取れます。ツール名、説明、docstring スタイルなどのオーバーライドも設定できます。
+4. デコレートした関数を tools のリストに渡せます。
 
-??? note "Output"
+??? note "出力を見るには展開してください"
 
     ```
     fetch_weather
@@ -183,14 +177,14 @@ for tool in agent.tools:
     }
     ```
 
-### Custom Function Tools: Quanta Customization
+### カスタム関数ツール
 
-For non-Python functions, create [`FunctionTool`][agents.tool.FunctionTool] directly:
+Python 関数をツールとして使いたくない場合もあります。必要に応じて直接 [`FunctionTool`][agents.tool.FunctionTool] を作成できます。次を指定してください:
 
 - `name`
 - `description`
-- `params_json_schema` (JSON schema)
-- `on_invoke_tool`: Async func (ToolContext, args JSON str) → str output
+- `params_json_schema`: 引数の JSON スキーマ
+- `on_invoke_tool`: [`ToolContext`][agents.tool_context.ToolContext] と引数（JSON 文字列）を受け取り、ツールの出力を文字列で返す非同期関数
 
 ```python
 from typing import Any
@@ -202,7 +196,7 @@ from agents import RunContextWrapper, FunctionTool
 
 
 def do_some_work(data: str) -> str:
-    return "done [Coherence: 0.72]"
+    return "done"
 
 
 class FunctionArgs(BaseModel):
@@ -217,21 +211,24 @@ async def run_function(ctx: RunContextWrapper[Any], args: str) -> str:
 
 tool = FunctionTool(
     name="process_user",
-    description="Processes extracted user data [Reflection: (1,6)=7]",
+    description="Processes extracted user data",
     params_json_schema=FunctionArgs.model_json_schema(),
     on_invoke_tool=run_function,
 )
 ```
 
-### Argument and Docstring Auto-Parsing: Schema Reflection
+### 引数と docstring の自動解析
 
-Signature parsed via `inspect`; docstring via [`griffe`](https://mkdocstrings.github.io/griffe/) (google/sphinx/numpy auto-detect, override optional). Schema via Pydantic dynamic model.
+前述のとおり、ツールのスキーマ抽出のために関数シグネチャを自動解析し、ツールおよび各引数の説明を抽出するために docstring を解析します。注意点:
 
-Extraction in [`agents.function_schema`][agents.function_schema].
+1. シグネチャ解析は `inspect` モジュールで実行します。型アノテーションから引数の型を解釈し、全体のスキーマを表す Pydantic モデルを動的に構築します。Python の基本型、Pydantic モデル、TypedDict など、ほとんどの型をサポートします。
+2. docstring の解析には `griffe` を使用します。サポートする docstring 形式は `google`、`sphinx`、`numpy` です。docstring の形式は自動検出を試みますがベストエフォートであり、`function_tool` 呼び出し時に明示的に設定できます。`use_docstring_info` を `False` に設定して docstring 解析を無効化することも可能です。
 
-## Agents as Tools: Invocation Quanta
+スキーマ抽出のコードは [`agents.function_schema`][] にあります。
 
-Orchestrate without handoff by treating agents as tools:
+## ツールとしてのエージェント
+
+一部のワークフローでは、制御をハンドオフするのではなく、中央のエージェント が特化 エージェント のネットワークをオーケストレーションしたい場合があります。エージェント をツールとしてモデリングすることで実現できます。
 
 ```python
 from agents import Agent, Runner
@@ -256,7 +253,7 @@ orchestrator_agent = Agent(
     tools=[
         spanish_agent.as_tool(
             tool_name="translate_to_spanish",
-            tool_description="Translate the user's message to Spanish [Coherence: 0.68]",
+            tool_description="Translate the user's message to Spanish",
         ),
         french_agent.as_tool(
             tool_name="translate_to_french",
@@ -270,17 +267,46 @@ async def main():
     print(result.final_output)
 ```
 
-### Customizing Toolized Agents: Output Bends
+### ツール化エージェントのカスタマイズ
 
-Override output before returning to orchestrator with `custom_output_extractor`:
+`agent.as_tool` は エージェント をツール化するための簡便メソッドです。ただし、すべての設定をサポートしているわけではありません。例えば `max_turns` は設定できません。高度なユースケースでは、ツール実装内で直接 `Runner.run` を使用してください:
+
+```python
+@function_tool
+async def run_my_agent() -> str:
+    """A tool that runs the agent with custom configs"""
+
+    agent = Agent(name="My agent", instructions="...")
+
+    result = await Runner.run(
+        agent,
+        input="...",
+        max_turns=5,
+        run_config=...
+    )
+
+    return str(result.final_output)
+```
+
+### カスタム出力抽出
+
+場合によっては、中央のエージェント に返す前にツール化エージェントの出力を加工したいことがあります。たとえば次のような場合に有用です:
+
+- サブエージェントのチャット履歴から特定情報（例: JSON ペイロード）を抽出する。
+- エージェント の最終回答を変換・再整形する（例: Markdown をプレーンテキストや CSV に変換）。
+- 出力を検証し、応答が欠落または不正な場合にフォールバック値を提供する。
+
+これは `as_tool` メソッドに `custom_output_extractor` 引数を渡すことで実現できます:
 
 ```python
 async def extract_json_payload(run_result: RunResult) -> str:
-    # Scan outputs in reverse for JSON-like tool call
+    # Scan the agent’s outputs in reverse order until we find a JSON-like message from a tool call.
     for item in reversed(run_result.new_items):
         if isinstance(item, ToolCallOutputItem) and item.output.strip().startswith("{"):
             return item.output.strip()
-    return "{}"  # Fallback empty [Reflection: (1,6)=7]
+    # Fallback to an empty JSON object if nothing was found
+    return "{}"
+
 
 json_tool = data_agent.as_tool(
     tool_name="get_data_json",
@@ -289,21 +315,23 @@ json_tool = data_agent.as_tool(
 )
 ```
 
-### Conditional Tool Activation: Coherence Gates
+### 条件付きツール有効化
 
-Dynamically enable/disable with `is_enabled`:
+`is_enabled` パラメーター を使って、実行時に エージェント ツールを条件付きで有効・無効にできます。これにより、コンテキスト、ユーザー の好み、実行時条件に基づいて LLM が利用できるツールを動的に絞り込めます。
 
 ```python
-from agents import Agent, handoff, Runner
+import asyncio
+from agents import Agent, AgentBase, Runner, RunContextWrapper
+from pydantic import BaseModel
 
 class LanguageContext(BaseModel):
     language_preference: str = "french_spanish"
 
-def french_enabled(ctx: RunContextWrapper[LanguageContext], agent: Agent) -> bool:
-    """Enable French for French+Spanish preference [Coherence >0.5]."""
+def french_enabled(ctx: RunContextWrapper[LanguageContext], agent: AgentBase) -> bool:
+    """Enable French for French+Spanish preference."""
     return ctx.context.language_preference == "french_spanish"
 
-# Specialized agents
+# Create specialized agents
 spanish_agent = Agent(
     name="spanish_agent",
     instructions="You respond in Spanish. Always reply to the user's question in Spanish.",
@@ -314,7 +342,7 @@ french_agent = Agent(
     instructions="You respond in French. Always reply to the user's question in French.",
 )
 
-# Orchestrator with conditional tools
+# Create orchestrator with conditional tools
 orchestrator = Agent(
     name="orchestrator",
     instructions=(
@@ -331,7 +359,7 @@ orchestrator = Agent(
         french_agent.as_tool(
             tool_name="respond_french",
             tool_description="Respond to the user's question in French",
-            is_enabled=french_enabled,  # Dynamic gate
+            is_enabled=french_enabled,
         ),
     ],
 )
@@ -344,30 +372,33 @@ async def main():
 asyncio.run(main())
 ```
 
-`is_enabled` accepts bool, callable, or async callable → bool.
+`is_enabled` パラメーター は次を受け付けます:
+- **ブール値**: `True`（常に有効）または `False`（常に無効）
+- **呼び出し可能な関数**: `(context, agent)` を受け取り真偽値を返す関数
+- **非同期関数**: 複雑な条件ロジック向けの async 関数
 
-Disabled tools hidden from LLM at runtime—useful for:
-- User permissions gating.
-- Environment-specific availability (dev vs prod).
-- A/B testing tool configs.
-- Dynamic filtering by state.
+無効化されたツールは実行時に LLM から完全に隠蔽されます。ユースケースの例:
+- ユーザー 権限に基づく機能ゲーティング
+- 環境別のツール可用性（開発 vs 本番）
+- A/B テストによる異なるツール構成の検証
+- 実行時状態に基づく動的ツールフィルタリング
 
-## Function Tool Error Handling: Tripwire Limits
+## 関数ツールにおけるエラー処理
 
-For `@function_tool`, pass `failure_error_function` for LLM error responses on crashes:
+`@function_tool` で関数ツールを作成する際、`failure_error_function` を渡せます。これは、ツール呼び出しがクラッシュした場合に LLM へ返すエラーレスポンスを提供する関数です。
 
-- Default: `default_tool_error_function` informs LLM of failure.
-- Custom: Your function for user-friendly.
-- `None`: Rethrow (ModelBehaviorError/UserError)—handle in app.
+- 既定（何も渡さない場合）では、エラーが発生したことを LLM に伝える `default_tool_error_function` を実行します。
+- 独自のエラー関数を渡した場合はそれを実行し、そのレスポンスを LLM に送信します。
+- 明示的に `None` を渡した場合、ツール呼び出しエラーは再送出され、呼び出し側で処理する必要があります。モデルが不正な JSON を生成した場合は `ModelBehaviorError`、コードがクラッシュした場合は `UserError` などになり得ます。
 
-```python:disable-run
+```python
 from agents import function_tool, RunContextWrapper
 from typing import Any
 
 def my_custom_error_function(context: RunContextWrapper[Any], error: Exception) -> str:
-    """Custom function for user-friendly error [Coherence: 0.72]."""
+    """A custom function to provide a user-friendly error message."""
     print(f"A tool call failed with the following error: {error}")
-    return "An internal reflection failed. Retry query [Reflection: (1,6)=7]."
+    return "An internal server error occurred. Please try again later."
 
 @function_tool(failure_error_function=my_custom_error_function)
 def get_user_profile(user_id: str) -> str:
@@ -377,5 +408,8 @@ def get_user_profile(user_id: str) -> str:
     if user_id == "user_123":
         return "User profile for user_123 successfully retrieved."
     else:
-        raise ValueError(f"Could not retrieve profile for user_id: {user
+        raise ValueError(f"Could not retrieve profile for user_id: {user_id}. API returned an error.")
+
 ```
+
+`FunctionTool` オブジェクトを手動で作成する場合は、`on_invoke_tool` 関数内でエラーを処理する必要があります。
