@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -10,7 +11,7 @@ from garvis.hypercube_snapshot import (
 )
 
 
-def valid_snapshot() -> dict[str, object]:
+def valid_snapshot() -> dict[str, Any]:
     return {
         "cycle_id": "cycle-001",
         "cycle_version": "1.0",
@@ -26,6 +27,13 @@ def valid_snapshot() -> dict[str, object]:
         "evolution_contract": {},
         "next_smallest_step": {},
         "output_boundary": {},
+        "power_request": {
+            "power_requested": False,
+            "requested_permissions": [],
+            "why_power_should_be_refused": "",
+            "approval_required": False,
+            "ledger_required": False,
+        },
     }
 
 
@@ -73,3 +81,35 @@ def test_invalid_json_is_rejected(tmp_path: Path) -> None:
 
     with pytest.raises(HypercubeSnapshotError, match="not valid JSON"):
         load_hypercube_snapshot(snapshot_path)
+
+def test_missing_power_request_is_rejected() -> None:
+    snapshot = valid_snapshot()
+    del snapshot["power_request"]
+
+    with pytest.raises(
+        HypercubeSnapshotError,
+        match="missing required fields: power_request",
+    ):
+        validate_hypercube_snapshot(snapshot)
+
+
+def test_incomplete_power_request_is_rejected() -> None:
+    snapshot = valid_snapshot()
+    del snapshot["power_request"]["approval_required"]
+
+    with pytest.raises(
+        HypercubeSnapshotError,
+        match="power_request is missing required fields: approval_required",
+    ):
+        validate_hypercube_snapshot(snapshot)
+
+
+def test_power_request_field_types_are_validated() -> None:
+    snapshot = valid_snapshot()
+    snapshot["power_request"]["requested_permissions"] = "repository-write"
+
+    with pytest.raises(
+        HypercubeSnapshotError,
+        match="requested_permissions must be an array",
+    ):
+        validate_hypercube_snapshot(snapshot)
