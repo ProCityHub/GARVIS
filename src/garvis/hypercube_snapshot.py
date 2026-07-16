@@ -23,6 +23,7 @@ REQUIRED_CYCLE_FIELDS = frozenset(
         "evolution_contract",
         "next_smallest_step",
         "output_boundary",
+        "power_request",
     }
 )
 
@@ -60,11 +61,53 @@ def validate_hypercube_snapshot(snapshot: Mapping[str, Any]) -> dict[str, Any]:
         "evolution_contract",
         "next_smallest_step",
         "output_boundary",
+        "power_request",
     ):
         if not isinstance(snapshot[field], dict):
             raise HypercubeSnapshotError(
                 f"Hypercube snapshot {field} must be an object"
             )
+
+    power_request = snapshot["power_request"]
+    required_power_fields = {
+        "power_requested",
+        "requested_permissions",
+        "why_power_should_be_refused",
+        "approval_required",
+        "ledger_required",
+    }
+    missing_power_fields = sorted(required_power_fields.difference(power_request))
+    if missing_power_fields:
+        raise HypercubeSnapshotError(
+            "Hypercube snapshot power_request is missing required fields: "
+            + ", ".join(missing_power_fields)
+        )
+
+    if not isinstance(power_request["power_requested"], bool):
+        raise HypercubeSnapshotError(
+            "Hypercube snapshot power_request.power_requested must be a boolean"
+        )
+
+    if not isinstance(power_request["requested_permissions"], list):
+        raise HypercubeSnapshotError(
+            "Hypercube snapshot power_request.requested_permissions must be an array"
+        )
+
+    if not isinstance(power_request["why_power_should_be_refused"], str):
+        raise HypercubeSnapshotError(
+            "Hypercube snapshot power_request.why_power_should_be_refused "
+            "must be a string"
+        )
+
+    if not isinstance(power_request["approval_required"], bool):
+        raise HypercubeSnapshotError(
+            "Hypercube snapshot power_request.approval_required must be a boolean"
+        )
+
+    if not isinstance(power_request["ledger_required"], bool):
+        raise HypercubeSnapshotError(
+            "Hypercube snapshot power_request.ledger_required must be a boolean"
+        )
 
     return dict(snapshot)
 
