@@ -16,7 +16,7 @@ from typing import Any, Awaitable, Callable, Dict, Optional
 
 from agents import Agent, Runner, SQLiteSession
 
-DEFAULT_MODEL = "gpt-5.6-luna"
+DEFAULT_MODEL = "gpt-4.1-mini"
 DEFAULT_MAX_TURNS = 8
 
 GARVIS_INSTRUCTIONS = """
