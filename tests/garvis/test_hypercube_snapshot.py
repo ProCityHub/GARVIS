@@ -10,7 +10,7 @@ from garvis.hypercube_snapshot import (
 )
 
 
-def valid_snapshot() -> dict:
+def valid_snapshot() -> dict[str, object]:
     return {
         "cycle_id": "cycle-001",
         "cycle_version": "1.0",
