@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -10,7 +11,7 @@ from garvis.hypercube_snapshot import (
 )
 
 
-def valid_snapshot() -> dict[str, object]:
+def valid_snapshot() -> dict[str, Any]:
     return {
         "cycle_id": "cycle-001",
         "cycle_version": "1.0",
