@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import get_args
+
 import graphviz  # type: ignore
 
 from agents import Agent
@@ -139,7 +141,7 @@ def get_all_edges(
             "{agent.name}" -> "{handoff.name}";""")
             parts.append(get_all_edges(handoff, agent, visited))
 
-    if not agent.handoffs and not isinstance(agent, Tool):  # type: ignore
+    if not agent.handoffs and not isinstance(agent, get_args(Tool)):
         parts.append(f'"{agent.name}" -> "__end__";')
 
     return "".join(parts)
