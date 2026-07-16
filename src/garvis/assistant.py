@@ -16,6 +16,8 @@ from typing import Any, Awaitable, Callable, Dict, Optional
 
 from agents import Agent, Runner, SQLiteSession
 
+from .repository_context import ground_message, should_ground_repository
+
 DEFAULT_MODEL = "gpt-4.1-mini"
 DEFAULT_MAX_TURNS = 8
 
@@ -178,6 +180,7 @@ class GarvisAssistant:
         session_db: Optional[Path] = None,
         runner: Optional[RunCallable] = None,
         session_factory: Optional[SessionFactory] = None,
+        repository_root: Optional[Path] = None,
     ) -> None:
         if max_turns < 1:
             raise ValueError("max_turns must be at least 1")
@@ -188,6 +191,7 @@ class GarvisAssistant:
         self.session_db = session_db or self._default_session_db()
         self._runner: RunCallable = runner or Runner.run
         self._session_factory = session_factory or _default_session_factory
+        self.repository_root = repository_root or Path.cwd()
         self._sessions: Dict[str, Any] = {}
         self.agent = Agent(
             name="GARVIS",
@@ -233,6 +237,9 @@ class GarvisAssistant:
                 "usefully and prepare the work, but do not claim execution. State the exact action "
                 "that requires Adrien's approval before it is performed.]"
             )
+
+        if should_ground_repository(clean_message):
+            run_input = ground_message(run_input, self.repository_root)
 
         result = await self._runner(
             self.agent,
