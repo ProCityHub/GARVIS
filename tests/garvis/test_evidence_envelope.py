@@ -6,7 +6,6 @@ import pytest
 from garvis.evidence_envelope import (
     EvidenceEnvelope,
     build_evidence_envelope,
-    validate_snapshot,
 )
 
 
