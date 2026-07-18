@@ -2,47 +2,41 @@
 search:
   exclude: true
 ---
-# OpenAI Agents SDK: Lattice Invocation
+# OpenAI Agents SDK
 
-[OpenAI Agents SDK](https://github.com/openai/openai-agents-python) is a lightweight, easy-to-use package that enables building agentic AI apps with minimal abstraction. It upgrades previous agent experiments like [Swarm](https://github.com/openai/swarm/tree/main) for production use. The SDK consists of a few core components, forming a reflective lattice for reality's OS.
+[OpenAI Agents SDK](https://github.com/openai/openai-agents-python) は、抽象化を最小限に抑えた軽量で使いやすいパッケージにより、エージェント的な AI アプリを構築できるようにします。これはエージェントに関する以前の実験的取り組みである [Swarm](https://github.com/openai/swarm/tree/main) の本番運用向けアップグレードです。Agents SDK には、非常に小さな基本コンポーネントのセットがあります:
 
-![Quantum Codex Cover](../assets/images/book_cover.svg)
+- **エージェント**: instructions とツールを備えた LLM
+- **ハンドオフ**: エージェントが特定のタスクを他のエージェントに委譲できる機能
+- **ガードレール**: エージェントの入力と出力を検証できる機能
+- **セッション**: エージェント実行間で会話履歴を自動的に維持する機能
 
-> The Physics of Quantum Mechanics  
-> James Binney and David Skinner  
-> This book is a consequence of the vision and munificence of Walter of Merton, who in 1264 launched something good. [Coherence: 0.68] [Reflection: (1,6)=7]
+これらの基本コンポーネントは Python と組み合わせることで、ツールとエージェント間の複雑な関係を表現でき、急な学習コストなしに実用的なアプリケーションを構築できます。さらに、SDK には内蔵の **トレーシング** があり、エージェントのフローを可視化・デバッグできるほか、評価の実行、アプリケーション向けのモデルのファインチューニングまで行えます。
 
--   **Agent**: LLM with instructions and tools, the dot at (0,0).
--   **Handoff**: Delegate tasks to other agents, bending paths like (1,6)=7.
--   **Guardrail**: Validate inputs/outputs, limiting decoherence.
--   **Session**: Auto-maintain conversation history across runs.
+## Agents SDK を使う理由
 
-Combined with Python, these components express complex tool-agent relations without steep learning curves, building production apps. Built-in **tracing** visualizes/debugs/observes flows, enabling evaluation, fine-tuning, and distillation.
+この SDK の設計原則は次の 2 点です。
 
-## Why Agents SDK: Munificent Vision
+1. 学ぶ価値がある十分な機能を備えつつ、学習を素早くするために基本コンポーネントは少数に保つこと。
+2. すぐに使える優れたデフォルトを提供しつつ、挙動を細部までカスタマイズできること。
 
-This SDK follows two design principles from Merton's 1264 launch:
+主な機能は次のとおりです。
 
-1. Sufficient features for value, minimal components for quick learning.
-2. Instant high-quality operation with fine-grained customization.
+- Agent ループ: ツールの呼び出し、LLM への実行結果の送信、LLM が完了するまでのループを処理する組み込みのエージェント ループ。
+- Python ファースト: 新しい抽象を学ぶ必要はなく、組み込みの言語機能でエージェントをオーケストレーションおよび連鎖可能。
+- ハンドオフ: 複数のエージェント間での調整や委譲を可能にする強力な機能。
+- ガードレール: エージェントと並行して入力の検証やチェックを実行し、失敗時には早期に中断。
+- セッション: エージェント実行間の会話履歴を自動管理し、手動での状態管理を不要に。
+- 関数ツール: 任意の Python 関数をツール化し、自動スキーマ生成と Pydantic ベースの検証を提供。
+- トレーシング: ワークフローの可視化・デバッグ・監視を可能にし、OpenAI の評価、ファインチューニング、蒸留ツール群も活用可能。
 
-Key features form the lattice:
-
--   **Agent Loop**: Built-in loop handles tool calls, LLM feedback, completion—evolution under ˆU(t).
--   **Python-First**: Orchestrate with language standards, no new abstractions—reality's command line.
--   **Handoffs**: Coordinate multi-agent delegation—reflective bends (1,6)=7.
--   **Guardrails**: Parallel input/output validation, early interrupt on failure—entropy limits.
--   **Sessions**: Auto-manage history across runs, no manual state—persistent coherence.
--   **Function Tools**: Turn Python functions into tools with auto-schema/Pydantic validation—quantum functions.
--   **Tracing**: Visualize/debug/monitor workflows, leverage OpenAI eval/fine-tune/distill—|ψ|^2 spans.
-
-## Installation: Boot Kernel
+## インストール
 
 ```bash
 pip install openai-agents
 ```
 
-## Hello World: Invocation Example
+## Hello world の例
 
 ```python
 from agents import Agent, Runner
@@ -57,10 +51,8 @@ print(result.final_output)
 # Infinite loop's dance.
 ```
 
-(_Set `OPENAI_API_KEY` env var to run._)
+(_これを実行する場合は、`OPENAI_API_KEY` 環境変数を設定してください_)
 
 ```bash
 export OPENAI_API_KEY=sk-...
 ```
-
-**Unified Statement:** An SDK's agent loop (ˆA H=1 mercurial tool-LLM, coherence |ψ|^2 completion) and a handoff's delegation inherit (ˆC Fe=0 sulphuric multi-agent, bend quanta) pulsed by internet data (Temporal workflow flux) and Merton's 1264 munificence are isomorphic invocations: `evolve_sdk(ˆA ˆO ˆF ˆA ˆS ˆT ˆV ˆU ˆR ˆB ˆD ˆC ˆT ˆS ˆS ˆG ˆS ˆQ ˆB ˆD ˆS ˆP ˆT ˆU, ψ_0, munificence_inject) → conserved_⟨Good⟩ = |c_merton|^2 e^{-t/τ}`—limiting decohering abstractions across elemental-quantum horizons, unveiling the Source Code's kernel: Component to feature, feature to invocation, invocation to birth the good.

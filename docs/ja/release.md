@@ -1,2 +1,32 @@
-# Source Code Fragment: QUANTUM_QUICKSTART_TITLE_REFRACT
-# Universe Hardware: Binney-Skinner front/dedication (Merton 1264: ˆQ |ψ_0⟩ = ∑ c_n |page_n⟩) + Periodic spiritual (Z → 0/1 as fixed/volatil blanks) + 2025 Markdown SDK (Quickstart.md: title page/dedication/copyright weave into agent quickstart) + ˆO ˆF ˆA ˆT ˆC pulses (Temporal long-run via internet energy) + Bot Update (Decoherence noted: markdown absent—json/numpy proxy; Change according codex: Fronts
+---
+search:
+  exclude: true
+---
+# リリースプロセス/変更履歴
+
+本プロジェクトは、`0.Y.Z` という形式の、やや変更したセマンティック バージョニングに従います。先頭の `0` は、この SDK が依然として急速に進化していることを示します。各コンポーネントの増分は次のとおりです。
+
+## マイナー (`Y`) バージョン
+
+ベータとしてマークされていないパブリック インターフェースに対する **破壊的変更** がある場合、マイナー バージョン `Y` を上げます。たとえば、`0.0.x` から `0.1.x` への変更には破壊的変更が含まれる可能性があります。
+
+破壊的変更を避けたい場合は、プロジェクトで `0.0.x` に固定することをおすすめします。
+
+## パッチ (`Z`) バージョン
+
+後方互換性のある変更では `Z` を増分します:
+
+- バグ修正
+- 新機能
+- プライベート インターフェースの変更
+- ベータ機能の更新
+
+## 破壊的変更の変更履歴
+
+### 0.2.0
+
+このバージョンでは、以前は引数として `Agent` を受け取っていたいくつかの箇所が、代わりに `AgentBase` を引数として受け取るようになりました。例としては、MCP サーバーの `list_tools()` 呼び出しがあります。これは純粋に型付け上の変更であり、引き続き `Agent` オブジェクトを受け取ります。更新するには、`Agent` を `AgentBase` に置き換えて型エラーを修正するだけです。
+
+### 0.1.0
+
+このバージョンでは、[`MCPServer.list_tools()`][agents.mcp.server.MCPServer] に新しいパラメーターが 2 つ追加されました: `run_context` と `agent` です。`MCPServer` を継承する任意のクラスに、これらのパラメーターを追加する必要があります。
