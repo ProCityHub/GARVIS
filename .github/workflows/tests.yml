@@ -62,11 +62,15 @@ jobs:
 
   garvis-tests:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     env:
       OPENAI_API_KEY: fake-for-tests
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Setup uv
         uses: astral-sh/setup-uv@v5
         with:
@@ -78,9 +82,13 @@ jobs:
 
   garvis-package:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Setup uv
         uses: astral-sh/setup-uv@v5
       - name: Build GARVIS wheel
