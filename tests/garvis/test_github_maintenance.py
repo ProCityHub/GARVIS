@@ -1,5 +1,6 @@
+from collections.abc import Sequence
 from pathlib import Path
-from typing import List, Optional, Sequence, Tuple
+from typing import Optional
 
 import pytest
 
@@ -13,7 +14,7 @@ from garvis.github_maintenance import (
 class RecordingAdapter(GitHubMaintenanceAdapter):
     def __init__(self) -> None:
         super().__init__()
-        self.commands: List[Tuple[Tuple[str, ...], Optional[Path]]] = []
+        self.commands: list[tuple[tuple[str, ...], Optional[Path]]] = []
         self.branch = "feature/test-maintenance"
 
     def _run(
@@ -58,12 +59,9 @@ def test_repository_inspection_is_read_only(repository: Path) -> None:
 
     assert result.branch == "feature/test-maintenance"
     assert result.latest_commit == "abc1234 Test commit"
-    assert ("git", "status", "--short") in [
-        command for command, _cwd in adapter.commands
-    ]
+    assert ("git", "status", "--short") in [command for command, _cwd in adapter.commands]
     assert not any(
-        command[:2] in {("git", "add"), ("git", "commit")}
-        for command, _cwd in adapter.commands
+        command[:2] in {("git", "add"), ("git", "commit")} for command, _cwd in adapter.commands
     )
 
 

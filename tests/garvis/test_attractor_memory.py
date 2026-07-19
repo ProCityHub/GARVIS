@@ -106,7 +106,7 @@ class TestRecall(unittest.TestCase):
 
         result = memory.recall(cue, target=PATTERN_A)
 
-        self.assertIsNotNone(result.initial_energy)
+        assert result.initial_energy is not None
 
         energies = (result.initial_energy,) + result.energy_trace
 
@@ -129,6 +129,7 @@ class TestRecall(unittest.TestCase):
 
         self.assertTrue(result.converged)
         self.assertFalse(result.exact_match)
+        assert result.hamming_distance is not None
         self.assertGreater(result.hamming_distance, 0)
         self.assertIn(
             "converged_to_non_target_attractor",
@@ -176,6 +177,7 @@ class TestRecall(unittest.TestCase):
 
         self.assertTrue(result.converged)
         self.assertFalse(result.exact_match)
+        assert result.hamming_distance is not None
         self.assertGreater(result.hamming_distance, 0)
         self.assertIn(
             "converged_to_non_target_attractor",
