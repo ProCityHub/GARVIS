@@ -59,6 +59,38 @@ jobs:
       - name: Run tests with coverage
         run: make coverage
 
+
+  garvis-tests:
+    runs-on: ubuntu-latest
+    env:
+      OPENAI_API_KEY: fake-for-tests
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - name: Install dependencies
+        run: make sync
+      - name: Run GARVIS tests
+        run: uv run pytest tests/garvis -q
+
+  garvis-package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+      - name: Build GARVIS wheel
+        run: uv build --wheel
+      - name: Verify installed GARVIS import
+        run: |
+          uv venv .wheel-venv
+          uv pip install --python .wheel-venv/bin/python dist/*.whl
+          .wheel-venv/bin/python -c "import garvis; print(garvis.__version__)"
+
   build-docs:
     runs-on: ubuntu-latest
     env:

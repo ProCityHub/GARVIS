@@ -27,6 +27,12 @@ class FakeRunner:
         return FakeResult(self.output)
 
 
+def test_default_agent_has_no_external_tools() -> None:
+    assistant = GarvisAssistant(persist_memory=False)
+
+    assert assistant.agent.tools == []
+
+
 def test_normal_question_is_not_approval_gated() -> None:
     assessment = assess_request("What is the purpose of the heartbeat?")
 
