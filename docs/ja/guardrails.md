@@ -4,44 +4,44 @@ search:
 ---
 # ガードレール
 
-ガードレールはエージェントと _並行して_ 実行され、ユーザー入力のチェックやバリデーションを行います。たとえば、非常に賢い（そのため遅く/高価な）モデルで顧客からのリクエストに対応するエージェントがあるとします。悪意あるユーザーがそのモデルに数学の宿題を手伝わせることは避けたいはずです。そこで、速く/安価なモデルでガードレールを実行できます。ガードレールが悪意ある使用を検知した場合、即座にエラーを発生させ、高価なモデルの実行を停止して時間とコストを節約します。
+ガードレールは、エージェントと _並行して_ 実行され、ユーザー入力のチェックと検証を行います。たとえば、顧客からのリクエスト対応にとても賢い（つまり遅くて高価な）モデルを使うエージェントがあるとします。悪意のあるユーザーが数学の宿題を手伝うようモデルに依頼するのは避けたいはずです。そこで、速く安価なモデルでガードレールを実行できます。ガードレールが悪意のある利用を検出した場合、直ちにエラーを発生させ、高価なモデルの実行を止めて時間やコストを節約できます。
 
-ガードレールには 2 種類あります:
+ガードレールには 2 種類あります。
 
-1. 入力ガードレールは最初のユーザー入力で実行されます
-2. 出力ガードレールは最終的なエージェント出力で実行されます
+1. 入力ガードレールは最初のユーザー入力に対して実行されます
+2. 出力ガードレールは最終的なエージェント出力に対して実行されます
 
 ## 入力ガードレール
 
-入力ガードレールは 3 つの手順で実行されます:
+入力ガードレールは次の 3 段階で動作します。
 
-1. まず、ガードレールはエージェントに渡されたものと同じ入力を受け取ります。
-2. 次に、ガードレール関数が実行され、[`GuardrailFunctionOutput`][agents.guardrail.GuardrailFunctionOutput] を生成し、それが [`InputGuardrailResult`][agents.guardrail.InputGuardrailResult] にラップされます。
-3. 最後に、[`.tripwire_triggered`][agents.guardrail.GuardrailFunctionOutput.tripwire_triggered] が true かを確認します。true の場合、[`InputGuardrailTripwireTriggered`][agents.exceptions.InputGuardrailTripwireTriggered] 例外が送出されるため、ユーザーへの適切な対応や例外処理が可能です。
+1. まず、ガードレールはエージェントに渡されたのと同じ入力を受け取ります。
+2. 次に、ガードレール関数が実行され、[`GuardrailFunctionOutput`][agents.guardrail.GuardrailFunctionOutput] を生成し、それを [`InputGuardrailResult`][agents.guardrail.InputGuardrailResult] にラップします。
+3. 最後に、[`.tripwire_triggered`][agents.guardrail.GuardrailFunctionOutput.tripwire_triggered] が true かどうかを確認します。true の場合、[`InputGuardrailTripwireTriggered`][agents.exceptions.InputGuardrailTripwireTriggered] 例外が送出され、ユーザーへの適切な応答や例外処理が可能になります。
 
 !!! Note
 
-    入力ガードレールはユーザー入力で実行されることを想定しているため、あるエージェントのガードレールは、そのエージェントが「最初の」エージェントである場合にのみ実行されます。なぜ `guardrails` プロパティがエージェント上にあり、`Runner.run` に渡さないのか疑問に思うかもしれません。これは、ガードレールが実際のエージェントに密接に関連する傾向があるためです。エージェントごとに異なるガードレールを実行することになるので、コードを同じ場所にまとめると可読性の面で有用です。
+    入力ガードレールはユーザー入力での実行を想定しているため、エージェントのガードレールはそのエージェントが *最初* のエージェントである場合にのみ実行されます。なぜ `guardrails` プロパティがエージェント側にあり、`Runner.run` に渡さないのかと疑問に思うかもしれません。これは、ガードレールが実際の Agent に紐づくことが多いからです。エージェントごとに異なるガードレールを実行するため、コードを近接させることで可読性が向上します。
 
 ## 出力ガードレール
 
-出力ガードレールは 3 つの手順で実行されます:
+出力ガードレールは次の 3 段階で動作します。
 
 1. まず、ガードレールはエージェントが生成した出力を受け取ります。
-2. 次に、ガードレール関数が実行され、[`GuardrailFunctionOutput`][agents.guardrail.GuardrailFunctionOutput] を生成し、それが [`OutputGuardrailResult`][agents.guardrail.OutputGuardrailResult] にラップされます。
-3. 最後に、[`.tripwire_triggered`][agents.guardrail.GuardrailFunctionOutput.tripwire_triggered] が true かを確認します。true の場合、[`OutputGuardrailTripwireTriggered`][agents.exceptions.OutputGuardrailTripwireTriggered] 例外が送出されるため、ユーザーへの適切な対応や例外処理が可能です。
+2. 次に、ガードレール関数が実行され、[`GuardrailFunctionOutput`][agents.guardrail.GuardrailFunctionOutput] を生成し、それを [`OutputGuardrailResult`][agents.guardrail.OutputGuardrailResult] にラップします。
+3. 最後に、[`.tripwire_triggered`][agents.guardrail.GuardrailFunctionOutput.tripwire_triggered] が true かどうかを確認します。true の場合、[`OutputGuardrailTripwireTriggered`][agents.exceptions.OutputGuardrailTripwireTriggered] 例外が送出され、ユーザーへの適切な応答や例外処理が可能になります。
 
 !!! Note
 
-    出力ガードレールは最終的なエージェント出力で実行されることを想定しているため、あるエージェントのガードレールは、そのエージェントが「最後の」エージェントである場合にのみ実行されます。入力ガードレールと同様に、ガードレールは実際のエージェントに密接に関連する傾向があるため、コードを同じ場所にまとめることは可読性の面で有用です。
+    出力ガードレールは最終的なエージェント出力での実行を想定しているため、エージェントのガードレールはそのエージェントが *最後* のエージェントである場合にのみ実行されます。入力ガードレールと同様に、実際の Agent に紐づくことが多いため、エージェントごとに異なるガードレールを実行し、コードを近接させることで可読性が向上します。
 
-## トリップワイヤ
+## トリップワイヤー
 
-入力または出力がガードレールに不合格となった場合、ガードレールはトリップワイヤでそれを通知できます。トリップワイヤが発火したガードレールを検知するとすぐに、`{Input,Output}GuardrailTripwireTriggered` 例外を送出し、エージェントの実行を停止します。
+入力または出力がガードレールに不合格だった場合、ガードレールはトリップワイヤーでそれを通知できます。トリップワイヤーが作動したガードレールを検出した時点で、直ちに `{Input,Output}GuardrailTripwireTriggered` 例外を送出し、エージェントの実行を停止します。
 
 ## ガードレールの実装
 
-入力を受け取り、[`GuardrailFunctionOutput`][agents.guardrail.GuardrailFunctionOutput] を返す関数を提供する必要があります。次の例では、内部でエージェントを実行してこれを行います。
+入力を受け取り、[`GuardrailFunctionOutput`][agents.guardrail.GuardrailFunctionOutput] を返す関数を用意する必要があります。この例では、内部で Agent を実行してこれを行います。
 
 ```python
 from pydantic import BaseModel
