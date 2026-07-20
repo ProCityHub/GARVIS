@@ -1,5 +1,10 @@
 """GARVIS pulse-driven classical lattice cognition."""
 
+from .cognitive_cycle import (
+    CognitiveCycleStage,
+    LatticeCognitiveCycleResult,
+    run_lattice_cognitive_cycle,
+)
 from .consolidation import (
     ConsolidatedEvidenceMemory,
     consolidate_evidence_assessment,
@@ -29,8 +34,10 @@ from .resonance_packet import (
 )
 
 __all__ = [
+    "CognitiveCycleStage",
     "ConsolidatedEvidenceMemory",
     "HeartbeatPulse",
+    "LatticeCognitiveCycleResult",
     "LatticeResonancePacket",
     "MemoryAttractor",
     "MirrorConnection",
@@ -46,4 +53,5 @@ __all__ = [
     "calculate_cue_alignment",
     "consolidate_evidence_assessment",
     "evaluate_recall_equilibrium",
+    "run_lattice_cognitive_cycle",
 ]
