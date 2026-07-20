@@ -1,3 +1,5 @@
+from typing import Any
+
 import pytest
 
 from garvis.lattice_cognition import (
@@ -150,7 +152,7 @@ def test_invalid_unit_values_are_rejected(
     field: str,
     value: float,
 ) -> None:
-    values = {
+    values: dict[str, Any] = {
         "packet_id": "packet",
         "cycle": 0,
         "components": (
