@@ -1,0 +1,14 @@
+{
+  "immutable_source_evidence": {
+    "test-observation": {
+      "status": "observed",
+      "signal": 1.0
+    }
+  },
+  "deterministic_agi_measurements": {
+    "coherence": 0.6
+  },
+  "approval_state": {
+    "human_approved": false
+  }
+}
