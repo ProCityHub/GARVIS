@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import json
 import os
 import sys
 from pathlib import Path
 from typing import Optional, Sequence
 
 from .assistant import DEFAULT_MODEL, GarvisAssistant, GarvisResponseError
+from .lattice_cycle_cli import run_lattice_cycle_file
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -44,7 +46,63 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Disable persistent conversation memory for this run.",
     )
+    parser.add_argument(
+        "--lattice-cycle",
+        type=Path,
+        default=None,
+        metavar="JSON_PATH",
+        help=(
+            "Run the local deterministic lattice cognitive cycle "
+            "from an explicit JSON evidence file."
+        ),
+    )
+    parser.add_argument(
+        "--cycle",
+        type=int,
+        default=0,
+        help="Non-negative heartbeat cycle number. Default: %(default)s.",
+    )
+    parser.add_argument(
+        "--external-action",
+        action="store_true",
+        help=(
+            "Mark the evaluated proposal as external. This requests "
+            "human review and never performs the action."
+        ),
+    )
     return parser
+
+
+def _run_local_lattice_cycle(args: argparse.Namespace) -> int:
+    if args.prompt or args.interactive:
+        print(
+            "GARVIS lattice-cycle error: --lattice-cycle cannot be "
+            "combined with a conversation prompt or --interactive.",
+            file=sys.stderr,
+        )
+        return 2
+
+    try:
+        summary = run_lattice_cycle_file(
+            path=args.lattice_cycle,
+            cycle=args.cycle,
+            external_action=args.external_action,
+        )
+    except ValueError as exc:
+        print(
+            f"GARVIS lattice-cycle error: {exc}",
+            file=sys.stderr,
+        )
+        return 2
+
+    print(
+        json.dumps(
+            summary,
+            indent=2,
+            sort_keys=True,
+        )
+    )
+    return 0
 
 
 def _check_configuration() -> Optional[str]:
@@ -89,6 +147,9 @@ async def _run_interactive(assistant: GarvisAssistant, session_id: str) -> int:
 
 
 async def _run(args: argparse.Namespace) -> int:
+    if args.lattice_cycle is not None:
+        return _run_local_lattice_cycle(args)
+
     configuration_error = _check_configuration()
     if configuration_error:
         print(f"GARVIS configuration error: {configuration_error}", file=sys.stderr)
