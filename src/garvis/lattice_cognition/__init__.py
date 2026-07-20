@@ -1,5 +1,9 @@
 """GARVIS pulse-driven classical lattice cognition."""
 
+from .consolidation import (
+    ConsolidatedEvidenceMemory,
+    consolidate_evidence_assessment,
+)
 from .pulse_bus import (
     HeartbeatPulse,
     PulseBus,
@@ -21,6 +25,7 @@ from .resonance_packet import (
 )
 
 __all__ = [
+    "ConsolidatedEvidenceMemory",
     "HeartbeatPulse",
     "LatticeResonancePacket",
     "MemoryAttractor",
@@ -34,4 +39,5 @@ __all__ = [
     "ResonanceComponent",
     "apply_heartbeat",
     "calculate_cue_alignment",
+    "consolidate_evidence_assessment",
 ]
