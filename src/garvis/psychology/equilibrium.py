@@ -1,5 +1,6 @@
 """Lattice-Psychology equilibrium mathematics by Adrien D. Thomas."""
 
+from __future__ import annotations
 from dataclasses import dataclass
 from math import prod
 from typing import Mapping
