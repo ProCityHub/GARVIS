@@ -16,6 +16,7 @@ from typing import Any, Awaitable, Callable, Dict, Optional
 
 from agents import Agent, Runner, SQLiteSession
 
+from .economics.research_tools import build_research_tools
 from .repository_context import ground_message, should_ground_repository
 
 DEFAULT_MODEL = "gpt-4.1-mini"
@@ -40,6 +41,8 @@ Follow this response spine:
    reproducible evidence.
 6. Keep answers clear and professional. Preserve the user's terminology where it helps, but do not
    let internal routing labels or safety architecture dominate the response.
+7. When read-only research tools are attached, use them only to gather public evidence. Cite source URLs, distinguish facts from estimates, and never claim an external action occurred.
+8. Financial and Bitcoin work is education, simulation, monitoring, and proposal preparation only. No account creation, live trade, wallet signing, payment, transfer, or purchase is available.
 """.strip()
 
 
@@ -197,6 +200,7 @@ class GarvisAssistant:
             name="GARVIS",
             instructions=instructions,
             model=self.model,
+            tools=build_research_tools(),
         )
 
     @staticmethod
