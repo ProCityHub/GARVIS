@@ -23,6 +23,8 @@ from __future__ import annotations
 from collections import Counter
 from typing import Any, Callable, Dict, Sequence, Tuple
 
+from .object_primitives import OBJECT_UNARY_PRIMITIVES
+
 Grid = Tuple[Tuple[int, ...], ...]
 
 
@@ -248,6 +250,8 @@ UNARY_PRIMITIVES: Dict[str, Callable[[Grid], Grid]] = {
     "mirror_down": lambda g: vconcat(g, flip_v(g)),
     "pad1": lambda g: pad(g, 1),
 }
+
+UNARY_PRIMITIVES.update(OBJECT_UNARY_PRIMITIVES)
 
 COLOR_RANGE = tuple(range(10))
 PARAM_FAMILIES = {

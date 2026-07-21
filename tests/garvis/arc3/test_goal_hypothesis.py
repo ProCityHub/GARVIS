@@ -8,7 +8,6 @@ from garvis.arc3.goal_hypothesis import (
     GoalHypothesisGenerator,
 )
 
-
 FRAME = parse_frame([
     [0, 0, 0, 0, 0],
     [0, 12, 0, 8, 0],
