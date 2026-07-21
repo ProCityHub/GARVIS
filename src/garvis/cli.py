@@ -105,7 +105,21 @@ def _run_local_lattice_cycle(args: argparse.Namespace) -> int:
     return 0
 
 
-def _check_configuration() -> Optional[str]:
+def _check_configuration(model: Optional[str] = None) -> Optional[str]:
+    from .anthropic_backend import is_anthropic_model
+    from .assistant import DEFAULT_MODEL
+
+    resolved = model or os.getenv("GARVIS_MODEL", DEFAULT_MODEL)
+    if is_anthropic_model(resolved):
+        if not os.getenv("ANTHROPIC_API_KEY"):
+            return (
+                "ANTHROPIC_API_KEY is not set. Add it to your environment before "
+                "running GARVIS on an Anthropic model; do not place API keys in "
+                "the repository."
+            )
+        return None
+    if resolved.strip().lower().startswith("litellm/"):
+        return None  # provider-specific keys; litellm reports its own errors
     if not os.getenv("OPENAI_API_KEY"):
         return (
             "OPENAI_API_KEY is not set. Add it to your environment before running GARVIS; "
@@ -150,7 +164,7 @@ async def _run(args: argparse.Namespace) -> int:
     if args.lattice_cycle is not None:
         return _run_local_lattice_cycle(args)
 
-    configuration_error = _check_configuration()
+    configuration_error = _check_configuration(args.model)
     if configuration_error:
         print(f"GARVIS configuration error: {configuration_error}", file=sys.stderr)
         return 2
