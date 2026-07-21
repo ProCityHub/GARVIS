@@ -16,6 +16,7 @@ from typing import Any, Awaitable, Callable, Dict, Optional
 
 from agents import Agent, Runner, SQLiteSession
 
+from .bounded_session import BoundedSession
 from .repository_context import ground_message, should_ground_repository
 
 DEFAULT_MODEL = "gpt-5.1"
@@ -159,8 +160,9 @@ def assess_request(message: str) -> RequestAssessment:
     return RequestAssessment(ApprovalRequirement.NONE)
 
 
-def _default_session_factory(session_id: str, db_path: Path) -> SQLiteSession:
-    return SQLiteSession(session_id, db_path)
+def _default_session_factory(session_id: str, db_path: Path) -> BoundedSession:
+    """Full history persists in SQLite; the model reads a bounded window."""
+    return BoundedSession(SQLiteSession(session_id, db_path))
 
 
 class GarvisAssistant:
