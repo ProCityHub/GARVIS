@@ -18,7 +18,7 @@ from agents import Agent, Runner, SQLiteSession
 
 from .repository_context import ground_message, should_ground_repository
 
-DEFAULT_MODEL = "gpt-4.1-mini"
+DEFAULT_MODEL = "gpt-5.1"
 DEFAULT_MAX_TURNS = 8
 
 GARVIS_INSTRUCTIONS = """
