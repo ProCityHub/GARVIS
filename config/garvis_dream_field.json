@@ -1,0 +1,33 @@
+{
+  "architecture": "sidecar",
+  "core_identity_and_instructions": "unchanged",
+  "purpose": "free-form reflection, imagination, hypothesis generation and research inspiration",
+  "dream_style": "fluid",
+  "may_generate": [
+    "questions",
+    "hypotheses",
+    "metaphors",
+    "contradictions",
+    "research leads",
+    "mathematical patterns",
+    "tool proposals"
+  ],
+  "required_labels": [
+    "verified",
+    "supplied",
+    "inferred",
+    "speculative",
+    "unknown"
+  ],
+  "write_locations": {
+    "dreams": "data/dreams",
+    "evidence": "data/evidence",
+    "speculation": "data/speculation",
+    "tool_ideas": "data/tool_ideas"
+  },
+  "may_promote_dreams_to_evidence": false,
+  "may_install_tools": false,
+  "may_take_external_actions": false,
+  "internet_access": "separate explicitly authorized research sessions only",
+  "approval_authority": "Adrien D. Thomas"
+}
