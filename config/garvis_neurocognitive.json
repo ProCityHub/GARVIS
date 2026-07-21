@@ -1,0 +1,25 @@
+{
+  "name": "GARVIS Neurocognitive Heartbeat",
+  "architect": "Adrien D. Thomas",
+  "organization": "ProCityHub",
+  "states": {
+    "0.0": "immutable origin and sensory observation",
+    "0.2": "signal segmentation",
+    "0.4": "prediction and candidate interpretation",
+    "0.6": "coherence, evidence ranking, and selective recall",
+    "0.8": "bounded internal simulation and dream hypotheses",
+    "1.0": "language and action planning",
+    "1.2": "output execution",
+    "1.4": "feedback and prediction-error recording",
+    "1.6": "episodic and semantic consolidation"
+  },
+  "memory_policy": {
+    "complete_archive": true,
+    "unlimited_prompt_replay": false,
+    "working_context": "bounded selective recall",
+    "raw_episode_overwrite": false,
+    "dreams_are_evidence": false,
+    "retractions_remain_visible": true
+  },
+  "external_actions": "Adrien D. Thomas approval required"
+}
