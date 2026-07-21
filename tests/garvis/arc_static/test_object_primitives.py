@@ -42,9 +42,13 @@ def test_filter_rejects_invalid_pixel_range():
 
 def test_largest_and_smallest_are_deterministic():
     frame = extract_objects([[0, 2, 2, 0, 3], [0, 2, 0, 0, 0], [4, 0, 0, 0, 0]])
-    assert largest_object(frame).color == 2
-    assert smallest_object(frame).color == 3
-    assert smallest_object(frame) == smallest_object(frame)
+    largest = largest_object(frame)
+    smallest = smallest_object(frame)
+    assert largest is not None
+    assert smallest is not None
+    assert largest.color == 2
+    assert smallest.color == 3
+    assert smallest == smallest_object(frame)
 
 
 def test_translation_preserves_shape_signature():
