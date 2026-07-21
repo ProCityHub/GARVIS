@@ -231,7 +231,13 @@ class GarvisAssistant:
         self._sessions[clean_session_id] = session
         return session
 
-    async def respond(self, message: str, *, session_id: str = "default") -> GarvisReply:
+    async def respond(
+        self,
+        message: str,
+        *,
+        session_id: str = "default",
+        ground_repository: Optional[bool] = None,
+    ) -> GarvisReply:
         """Return an answer using bounded working memory while preserving archival memory."""
         clean_message = message.strip()
         if not clean_message:
@@ -249,7 +255,12 @@ class GarvisAssistant:
                 "that requires Adrien's approval before it is performed.]"
             )
 
-        if should_ground_repository(clean_message):
+        repository_grounding = (
+            should_ground_repository(clean_message)
+            if ground_repository is None
+            else ground_repository
+        )
+        if repository_grounding:
             model_input = ground_message(model_input, self.repository_root)
 
         session = self._get_session(session_id)

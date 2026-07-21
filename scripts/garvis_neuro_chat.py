@@ -17,10 +17,37 @@ def parser() -> argparse.ArgumentParser:
     result = argparse.ArgumentParser(
         description="Run GARVIS with the hypercube neurocognitive memory spine."
     )
-    result.add_argument("--session", default="neuro-0.1")
+    result.add_argument("--session", default="neuro-0.2")
     result.add_argument("--db", type=Path, default=None)
     result.add_argument("--model", default=os.getenv("GARVIS_MODEL"))
+    result.add_argument(
+        "--repository-grounding",
+        action="store_true",
+        help="Attach repository snapshots when the current request asks about code.",
+    )
     return result
+
+
+def read_user_message() -> str:
+    first = input("\nAdrien: ")
+    command = first.strip().casefold()
+
+    if command != "/paste":
+        return first.strip()
+
+    print("Paste the complete message now.")
+    print("Type /send on a new line when the message is complete.")
+    print("Type /cancel on a new line to discard it.")
+
+    lines: list[str] = []
+    while True:
+        line = input()
+        command = line.strip().casefold()
+        if command == "/send":
+            return "\n".join(lines).strip()
+        if command == "/cancel":
+            return ""
+        lines.append(line)
 
 
 async def run() -> int:
@@ -31,8 +58,6 @@ async def run() -> int:
         return 2
 
     engine = NeurocognitiveEngine(db_path=args.db)
-    # The language model receives bounded recall from the engine. The SDK session
-    # is intentionally disabled so it can never replay an unlimited raw archive.
     assistant = GarvisAssistant(
         model=args.model,
         persist_memory=False,
@@ -41,11 +66,13 @@ async def run() -> int:
 
     print("GARVIS neurocognitive chat is active.")
     print("0.0 archive → 0.6 recall → 1.0 response → 1.6 consolidation")
+    print("One-line message: type normally and press Enter.")
+    print("Multiline message: type /paste, paste everything, then type /send.")
     print("Type /exit to close.")
 
     while True:
         try:
-            user_text = input("\nAdrien: ").strip()
+            user_text = read_user_message()
         except (EOFError, KeyboardInterrupt):
             print()
             return 0
@@ -57,6 +84,10 @@ async def run() -> int:
 
         cycle = engine.prepare(user_text, session_id=args.session)
         model_input = (
+            "[Operating instruction]\n"
+            "Answer the current sensory input directly. Recalled memory is supporting "
+            "context, not a separate request. Do not recite repository evidence, system "
+            "architecture, or prior answers unless the current input asks for them.\n\n"
             f"{cycle.model_context}\n\n"
             "[Current sensory input]\n"
             f"{cycle.raw_input}"
@@ -66,6 +97,7 @@ async def run() -> int:
             reply = await assistant.respond(
                 model_input,
                 session_id=f"{args.session}-bounded",
+                ground_repository=args.repository_grounding,
             )
         except Exception as exc:
             engine.feedback(

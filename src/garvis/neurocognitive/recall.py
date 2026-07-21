@@ -3,20 +3,39 @@
 from __future__ import annotations
 
 import math
+import re
 from datetime import datetime, timezone
 from typing import Iterable
 
 from .models import EvidenceStatus, MemoryRecord, RecallResult
 from .segmentation import tokenize
 
-_STATUS_WEIGHT = {
-    EvidenceStatus.VERIFIED: 1.0,
-    EvidenceStatus.SUPPLIED: 0.85,
-    EvidenceStatus.INFERRED: 0.65,
-    EvidenceStatus.SPECULATIVE: 0.35,
-    EvidenceStatus.UNKNOWN: 0.15,
-    EvidenceStatus.RETRACTED: -1.0,
+_STOPWORDS = {
+    "a", "an", "and", "are", "as", "at", "be", "but", "by", "do", "for",
+    "from", "garvis", "had", "has", "have", "he", "her", "here", "him",
+    "his", "i", "in", "is", "it", "its", "me", "my", "of", "on", "or",
+    "our", "she", "so", "system", "software", "architecture", "that", "the",
+    "their", "them", "there", "they", "this", "to", "us", "was", "we",
+    "were", "what", "when", "where", "which", "who", "why", "will", "with",
+    "you", "your", "adrien",
 }
+
+_STATUS_BONUS = {
+    EvidenceStatus.VERIFIED: 0.30,
+    EvidenceStatus.SUPPLIED: 0.20,
+    EvidenceStatus.INFERRED: 0.08,
+    EvidenceStatus.SPECULATIVE: -0.08,
+    EvidenceStatus.UNKNOWN: -0.12,
+    EvidenceStatus.RETRACTED: 0.25,
+}
+
+
+def _meaningful_tokens(text: str) -> set[str]:
+    return {
+        token
+        for token in tokenize(text)
+        if len(token) > 1 and token not in _STOPWORDS
+    }
 
 
 def _age_days(created_at: str) -> float:
@@ -27,38 +46,58 @@ def _age_days(created_at: str) -> float:
         return 0.0
     if created.tzinfo is None:
         created = created.replace(tzinfo=timezone.utc)
-    return max(0.0, (datetime.now(timezone.utc) - created).total_seconds() / 86_400)
+    return max(
+        0.0,
+        (datetime.now(timezone.utc) - created).total_seconds() / 86_400,
+    )
 
 
 def score_memory(query: str, memory: MemoryRecord) -> RecallResult:
-    query_tokens = set(tokenize(query))
-    memory_tokens = set(tokenize(memory.content))
-    overlap = len(query_tokens & memory_tokens)
-    union = max(1, len(query_tokens | memory_tokens))
-    semantic_overlap = overlap / union
-    exact_phrase = 1.0 if query.casefold() in memory.content.casefold() else 0.0
-    status_weight = _STATUS_WEIGHT[memory.status]
-    recency = 1.0 / (1.0 + math.log1p(_age_days(memory.created_at)))
-    context_cost = min(1.0, len(memory.content) / 8_000)
+    query_tokens = _meaningful_tokens(query)
+    memory_tokens = _meaningful_tokens(memory.content)
+    overlap = query_tokens & memory_tokens
 
-    score = (
-        4.0 * semantic_overlap
-        + 1.5 * exact_phrase
-        + 1.4 * memory.importance
-        + 1.0 * memory.confidence
-        + 0.6 * recency
-        + 1.2 * status_weight
-        - 0.5 * context_cost
+    query_coverage = len(overlap) / max(1, len(query_tokens))
+    memory_coverage = len(overlap) / max(1, len(memory_tokens))
+    normalized_query = " ".join(query.casefold().split())
+    normalized_memory = " ".join(memory.content.casefold().split())
+    exact_phrase = (
+        1.0
+        if normalized_query
+        and len(normalized_query) >= 8
+        and normalized_query in normalized_memory
+        else 0.0
     )
+    recency = 1.0 / (1.0 + math.log1p(_age_days(memory.created_at)))
+    context_cost = min(1.0, len(memory.content) / 6_000)
+
+    if not overlap and not exact_phrase:
+        score = 0.0
+    else:
+        score = (
+            3.2 * query_coverage
+            + 2.0 * memory_coverage
+            + 1.4 * exact_phrase
+            + 0.35 * memory.importance
+            + 0.25 * memory.confidence
+            + 0.12 * recency
+            + _STATUS_BONUS[memory.status]
+            - 0.18 * context_cost
+        )
 
     reasons = (
-        f"overlap={semantic_overlap:.3f}",
+        f"query_coverage={query_coverage:.3f}",
+        f"memory_coverage={memory_coverage:.3f}",
         f"status={memory.status.value}",
         f"importance={memory.importance:.2f}",
         f"confidence={memory.confidence:.2f}",
-        f"recency={recency:.2f}",
     )
     return RecallResult(memory=memory, score=score, reasons=reasons)
+
+
+def _dedup_key(memory: MemoryRecord) -> str:
+    normalized = re.sub(r"\s+", " ", memory.content.casefold()).strip()
+    return normalized[:1_000]
 
 
 def recall(
@@ -69,7 +108,20 @@ def recall(
 ) -> tuple[RecallResult, ...]:
     scored = [score_memory(query, memory) for memory in memories]
     scored.sort(key=lambda item: (item.score, item.memory.id), reverse=True)
-    return tuple(item for item in scored if item.score > 0.8)[:limit]
+
+    selected: list[RecallResult] = []
+    seen: set[str] = set()
+    for item in scored:
+        if item.score < 0.72:
+            continue
+        key = _dedup_key(item.memory)
+        if key in seen:
+            continue
+        selected.append(item)
+        seen.add(key)
+        if len(selected) >= limit:
+            break
+    return tuple(selected)
 
 
 def contradictions(
