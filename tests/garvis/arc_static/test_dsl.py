@@ -4,9 +4,9 @@ import pytest
 
 from garvis.arc_static import dsl
 from garvis.arc_static.dsl import (
-    DslError,
-    UNARY_PRIMITIVES,
     PARAM_FAMILIES,
+    UNARY_PRIMITIVES,
+    DslError,
     as_grid,
 )
 

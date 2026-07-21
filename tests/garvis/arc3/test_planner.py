@@ -1,5 +1,7 @@
 """Tests for the ARC-3 planner (DIRECTIVE-011 module 5)."""
 
+from dataclasses import FrozenInstanceError
+
 import pytest
 
 from garvis.arc3.planner import Plan, PlannerError, plan_path
@@ -89,5 +91,5 @@ def test_rejects_bad_input():
 def test_plan_is_frozen_dataclass():
     p = plan_path((0, 0), (0, 1), MOVES, (1, 2))
     assert isinstance(p, Plan)
-    with pytest.raises(Exception):
+    with pytest.raises(FrozenInstanceError):
         p.actions = ()
