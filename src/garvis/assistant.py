@@ -14,8 +14,14 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Awaitable, Callable, Dict, Optional
 
-from agents import Agent, Runner, SQLiteSession
+from agents import Agent, RunConfig, Runner, SQLiteSession
 
+from .context_window import (
+    emergency_current_input,
+    is_context_length_error,
+    make_bounded_session_input,
+    prepare_current_input,
+)
 from .economics.research_tools import build_research_tools
 from .repository_context import ground_message, should_ground_repository
 
@@ -226,31 +232,76 @@ class GarvisAssistant:
         return session
 
     async def respond(self, message: str, *, session_id: str = "default") -> GarvisReply:
-        """Return a direct answer while preserving approval metadata for external actions."""
-
+        """Return an answer using bounded working memory while preserving archival memory."""
         clean_message = message.strip()
         if not clean_message:
             raise ValueError("message must not be empty")
 
         assessment = assess_request(clean_message)
-        run_input = clean_message
+        stored_input = prepare_current_input(clean_message, session_id=session_id)
+        model_input = stored_input
+
         if assessment.requires_approval:
-            run_input = (
-                f"{clean_message}\n\n"
+            model_input = (
+                f"{model_input}\n\n"
                 "[GARVIS runtime note: This request includes an outside-world action. Answer "
                 "usefully and prepare the work, but do not claim execution. State the exact action "
                 "that requires Adrien's approval before it is performed.]"
             )
 
         if should_ground_repository(clean_message):
-            run_input = ground_message(run_input, self.repository_root)
+            model_input = ground_message(model_input, self.repository_root)
 
-        result = await self._runner(
-            self.agent,
-            run_input,
-            session=self._get_session(session_id),
-            max_turns=self.max_turns,
-        )
+        session = self._get_session(session_id)
+        if session is None:
+            primary_input = model_input
+            run_config = RunConfig()
+        else:
+            primary_input = stored_input
+            run_config = RunConfig(
+                session_input_callback=make_bounded_session_input(model_input)
+            )
+
+        try:
+            result = await self._runner(
+                self.agent,
+                primary_input,
+                session=session,
+                max_turns=self.max_turns,
+                run_config=run_config,
+            )
+        except Exception as exc:
+            if not is_context_length_error(exc):
+                raise
+
+            fallback_input = emergency_current_input(model_input)
+            try:
+                result = await self._runner(
+                    self.agent,
+                    fallback_input,
+                    session=None,
+                    max_turns=self.max_turns,
+                    run_config=RunConfig(),
+                )
+            except Exception as fallback_exc:
+                if is_context_length_error(fallback_exc):
+                    raise GarvisResponseError(
+                        "GARVIS preserved the archive, but this single request is still too "
+                        "large for one model call. Its full text remains archived locally."
+                    ) from fallback_exc
+                raise
+
+            recovered_output = getattr(result, "final_output", None)
+            add_items = getattr(session, "add_items", None) if session is not None else None
+            if (
+                isinstance(recovered_output, str)
+                and recovered_output.strip()
+                and callable(add_items)
+            ):
+                await add_items(
+                    [{"role": "assistant", "content": recovered_output.strip()}]
+                )
+
         output = getattr(result, "final_output", None)
         if not isinstance(output, str) or not output.strip():
             raise GarvisResponseError("GARVIS completed the run without a text answer")
