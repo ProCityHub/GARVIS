@@ -18,9 +18,11 @@ class LocalRuntimeMemoryPromptTests(unittest.TestCase):
             envelope,
             "[memory id=3 evidence=user_supplied] Use local GGUF.",
         )
-        self.assertIn("GARVIS_MEMORY_CONTEXT_BEGIN", prompt)
+        self.assertNotIn("GARVIS_MEMORY_CONTEXT_BEGIN", prompt)
+        self.assertIn("Use this fallible recalled context only when relevant:", prompt)
+        self.assertIn("[memory id=3 evidence=user_supplied] Use local GGUF.", prompt)
         self.assertIn("Use local GGUF.", prompt)
-        self.assertIn("GARVIS_MEMORY_CONTEXT_END", prompt)
+        self.assertNotIn("GARVIS_MEMORY_CONTEXT_END", prompt)
 
     def test_empty_context_is_omitted(self) -> None:
         envelope = FilingEnvelope(
