@@ -125,3 +125,27 @@ def test_directory_list_returns_without_calling_model(tmp_path: Path) -> None:
     assert local.calls == []
     assert research.queries == []
     runtime.close()
+
+
+def test_file_search_returns_exact_matches_without_calling_model(tmp_path: Path) -> None:
+    source = tmp_path / "settings.py"
+    source.write_text(
+        'ROOTS = os.getenv("GARVIS_LOCAL_ACCESS_ROOTS", "")\n',
+        encoding="utf-8",
+    )
+    local = FakeLocal(tmp_path)
+    research = FakeResearcher()
+    runtime = make_runtime(tmp_path, local, research)
+
+    request = runtime.respond(f'Search files in "{tmp_path}" for GARVIS_LOCAL_ACCESS_ROOTS')
+    assert "Approve? [Y/N]" in request
+
+    result = runtime.respond("y")
+
+    assert "Read-only text matches" in result
+    assert "settings.py:1:" in result
+    assert "GARVIS_LOCAL_ACCESS_ROOTS" in result
+    assert "is set to" not in result
+    assert local.calls == []
+    assert research.queries == []
+    runtime.close()
