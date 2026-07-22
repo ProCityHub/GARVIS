@@ -1,5 +1,7 @@
 """Tests for the ARC-3 goal-hypothesis generator (DIRECTIVE-011 module 4)."""
 
+from typing import Any, cast
+
 import pytest
 
 from garvis.arc3.frame_parser import parse_frame
@@ -7,7 +9,6 @@ from garvis.arc3.goal_hypothesis import (
     GoalHypothesisError,
     GoalHypothesisGenerator,
 )
-
 
 FRAME = parse_frame([
     [0, 0, 0, 0, 0],
@@ -110,9 +111,9 @@ def test_reset_clears_lifecycle():
 def test_rejects_bad_input():
     g = GoalHypothesisGenerator()
     with pytest.raises(GoalHypothesisError):
-        g.candidates([[0, 1]])
+        g.candidates(cast(Any, [[0, 1]]))
     with pytest.raises(GoalHypothesisError):
-        g.record_game_over("hazard")
+        g.record_game_over(cast(Any, "hazard"))
     with pytest.raises(GoalHypothesisError):
         g.record_level_completed(True)
 

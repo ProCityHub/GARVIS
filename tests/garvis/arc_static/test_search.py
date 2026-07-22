@@ -2,8 +2,8 @@
 
 import pytest
 
-from garvis.arc_static.dsl import as_grid, rot90, replace_color
-from garvis.arc_static.search import Program, SearchError, solve_task, synthesize
+from garvis.arc_static.dsl import as_grid, replace_color, rot90
+from garvis.arc_static.search import SearchError, solve_task, synthesize
 
 
 def pairs_from(fn, inputs):
@@ -18,7 +18,8 @@ def test_depth1_synthesis():
 
 
 def test_depth2_synthesis():
-    fn = lambda g: replace_color(rot90(g), 1, 5)
+    def fn(g):
+        return replace_color(rot90(g), 1, 5)
     train = pairs_from(fn, [[[1, 2], [3, 4]], [[1, 1], [0, 2]]])
     p = synthesize(train)
     assert p is not None and len(p.names) == 2
@@ -36,6 +37,7 @@ def test_verified_on_all_pairs_or_none():
 def test_deterministic_program_choice():
     train = pairs_from(rot90, [[[1, 2], [3, 4]]])
     a, b = synthesize(train), synthesize(train)
+    assert a is not None and b is not None
     assert a.names == b.names
 
 

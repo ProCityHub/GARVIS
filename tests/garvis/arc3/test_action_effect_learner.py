@@ -1,6 +1,7 @@
 """Tests for the ARC-3 action-effect learner (DIRECTIVE-011 module 3)."""
 
 import dataclasses
+from typing import Any, cast
 
 import pytest
 
@@ -53,7 +54,7 @@ def test_summarize_frame_event():
 
 def test_summarize_rejects_non_diff():
     with pytest.raises(ActionEffectError):
-        summarize_diff("nope")
+        summarize_diff(cast(Any, "nope"))
 
 
 def test_no_prediction_below_threshold():
@@ -78,6 +79,7 @@ def test_prediction_confidence_is_modal_share():
     learner.observe(2, d([[5, 0]], [[0, 5]]))
     learner.observe(2, d([[0, 5]], [[0, 5]]))  # blocked once
     p = learner.predict(2)
+    assert p is not None
     assert p.effect.kind == "moved"
     assert p.confidence == pytest.approx(2 / 3)
     assert p.observations == 3
@@ -88,8 +90,11 @@ def test_actions_learned_independently():
     for _ in range(2):
         learner.observe(1, d([[5, 0]], [[0, 5]]))
         learner.observe(3, d([[0, 5]], [[0, 5]]))
-    assert learner.predict(1).effect.kind == "moved"
-    assert learner.predict(3).effect.kind == "no_change"
+    first = learner.predict(1)
+    third = learner.predict(3)
+    assert first is not None and third is not None
+    assert first.effect.kind == "moved"
+    assert third.effect.kind == "no_change"
     assert learner.known_actions() == (1, 3)
 
 
@@ -119,16 +124,16 @@ def test_reset_clears_evidence():
 def test_rejects_bad_action_id():
     learner = ActionEffectLearner()
     with pytest.raises(ActionEffectError):
-        learner.observe("ACTION1", d([[0, 5]], [[0, 5]]))
+        learner.observe(cast(Any, "ACTION1"), d([[0, 5]], [[0, 5]]))
     with pytest.raises(ActionEffectError):
         learner.observe(True, d([[0, 5]], [[0, 5]]))
 
 
 def test_no_semantic_fields():
-    p = None
     learner = ActionEffectLearner()
     for _ in range(2):
         learner.observe(1, d([[5, 0]], [[0, 5]]))
     p = learner.predict(1)
+    assert p is not None
     names = {f.name for f in dataclasses.fields(p)}
     assert names.isdisjoint({"wall", "hazard", "goal", "player", "role"})

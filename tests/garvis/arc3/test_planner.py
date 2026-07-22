@@ -1,5 +1,8 @@
 """Tests for the ARC-3 planner (DIRECTIVE-011 module 5)."""
 
+from dataclasses import FrozenInstanceError
+from typing import Any, cast
+
 import pytest
 
 from garvis.arc3.planner import Plan, PlannerError, plan_path
@@ -10,6 +13,7 @@ MOVES = {UP: (-1, 0), DOWN: (1, 0), LEFT: (0, -1), RIGHT: (0, 1)}
 
 def test_straight_line_plan():
     p = plan_path((0, 0), (0, 3), MOVES, (1, 4))
+    assert p is not None
     assert p.actions == (RIGHT, RIGHT, RIGHT)
     assert p.path[0] == (0, 0) and p.path[-1] == (0, 3)
     assert p.length == 3
@@ -17,6 +21,7 @@ def test_straight_line_plan():
 
 def test_already_at_target():
     p = plan_path((2, 2), (2, 2), MOVES, (5, 5))
+    assert p is not None
     assert p.actions == () and p.path == ((2, 2),)
 
 
@@ -62,6 +67,7 @@ def test_deterministic_tie_break():
     # prefer lower action ids at each branch.
     a = plan_path((1, 1), (2, 2), MOVES, (4, 4))
     b = plan_path((1, 1), (2, 2), MOVES, (4, 4))
+    assert a is not None and b is not None
     assert a == b
     assert a.actions == (DOWN, RIGHT)  # DOWN(2) explored before RIGHT(4)
 
@@ -70,12 +76,13 @@ def test_non_unit_moves_supported():
     # Evidence said this game moves two cells per press: planner obeys.
     big = {RIGHT: (0, 2), DOWN: (2, 0)}
     p = plan_path((0, 0), (0, 4), big, (1, 5))
+    assert p is not None
     assert p.actions == (RIGHT, RIGHT)
 
 
 def test_rejects_bad_input():
     with pytest.raises(PlannerError):
-        plan_path("start", (0, 0), MOVES, (3, 3))
+        plan_path(cast(Any, "start"), (0, 0), MOVES, (3, 3))
     with pytest.raises(PlannerError):
         plan_path((0, 0), (1, 1), {}, (3, 3))
     with pytest.raises(PlannerError):
@@ -89,5 +96,5 @@ def test_rejects_bad_input():
 def test_plan_is_frozen_dataclass():
     p = plan_path((0, 0), (0, 1), MOVES, (1, 2))
     assert isinstance(p, Plan)
-    with pytest.raises(Exception):
-        p.actions = ()
+    with pytest.raises(FrozenInstanceError):
+        cast(Any, p).actions = ()
