@@ -8,16 +8,34 @@ import os
 import re
 import subprocess
 import sys
+from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Optional, Sequence
 
 _THINK = re.compile(r"<think>.*?</think>", re.DOTALL | re.IGNORECASE)
 _ANSI = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
 _ACTIONS = {
-    "archive", "book", "buy", "cancel", "change", "close", "delete", "email",
-    "message", "open", "pay", "post", "publish", "remove", "sell", "send",
-    "submit", "trade", "transfer", "update", "upload",
+    "archive",
+    "book",
+    "buy",
+    "cancel",
+    "change",
+    "close",
+    "delete",
+    "email",
+    "message",
+    "open",
+    "pay",
+    "post",
+    "publish",
+    "remove",
+    "sell",
+    "send",
+    "submit",
+    "trade",
+    "transfer",
+    "update",
+    "upload",
 }
 
 
@@ -39,17 +57,21 @@ class LocalRuntimeConfig:
     timeout_seconds: int = 300
 
     @classmethod
-    def from_environment(cls, repository_root: Optional[Path] = None) -> "LocalRuntimeConfig":
+    def from_environment(cls, repository_root: Path | None = None) -> LocalRuntimeConfig:
         root = repository_root or Path.cwd()
         return cls(
-            engine=Path(os.getenv(
-                "GARVIS_LLAMA_CHAT",
-                str(Path.home() / "llama.cpp" / "build" / "bin" / "llama-simple-chat"),
-            )),
-            model=Path(os.getenv(
-                "GARVIS_LOCAL_MODEL",
-                str(root / "models" / "Qwen3-4B-Q4_K_M.gguf"),
-            )),
+            engine=Path(
+                os.getenv(
+                    "GARVIS_LLAMA_CHAT",
+                    str(Path.home() / "llama.cpp" / "build" / "bin" / "llama-simple-chat"),
+                )
+            ),
+            model=Path(
+                os.getenv(
+                    "GARVIS_LOCAL_MODEL",
+                    str(root / "models" / "Qwen3-4B-Q4_K_M.gguf"),
+                )
+            ),
             context_size=int(os.getenv("GARVIS_CONTEXT_SIZE", "4096")),
             gpu_layers=int(os.getenv("GARVIS_GPU_LAYERS", "0")),
             timeout_seconds=int(os.getenv("GARVIS_LOCAL_TIMEOUT", "300")),
@@ -83,7 +105,16 @@ def classify_request(message: str) -> FilingEnvelope:
         destination = "habit_registry"
     elif tokens & {"claim", "evidence", "scientific", "hypothesis", "speculation", "research"}:
         destination = "epistemic_registry"
-    elif tokens & {"build", "code", "commit", "github", "repository", "runtime", "model", "software"}:
+    elif tokens & {
+        "build",
+        "code",
+        "commit",
+        "github",
+        "repository",
+        "runtime",
+        "model",
+        "software",
+    }:
         destination = "engineering_registry"
     else:
         destination = "general_dialogue"
@@ -117,11 +148,9 @@ def render_local_prompt(
     memory_context: str = "",
 ) -> str:
     filing_json = json.dumps(asdict(envelope), sort_keys=True)
-    clean_memory = memory_context.strip()
+    clean_memory = " ".join(memory_context.strip().split())
     memory_block = (
-        "GARVIS_MEMORY_CONTEXT_BEGIN\n"
-        f"{clean_memory}\n"
-        "GARVIS_MEMORY_CONTEXT_END\n"
+        f" GARVIS_MEMORY_CONTEXT_BEGIN={json.dumps(clean_memory)} GARVIS_MEMORY_CONTEXT_END"
         if clean_memory
         else ""
     )
@@ -133,10 +162,10 @@ def render_local_prompt(
         "Residual traces are not facts and must never be reconstructed as quotations. "
         "Do not reveal hidden reasoning. Do not claim an outside-world action occurred. "
         "Treat provisional claims as provisional, not scientific fact. "
-        "Give only a direct, professional final answer.\n"
-        f"GARVIS_FILING_ENVELOPE={filing_json}\n"
-        f"{memory_block}"
-        f"REQUEST={envelope.request}"
+        "Give only one direct, professional final answer. "
+        f"GARVIS_FILING_ENVELOPE={filing_json}"
+        f"{memory_block} "
+        f"REQUEST={json.dumps(envelope.request)}"
     )
 
 
@@ -161,7 +190,10 @@ class LocalLanguageRuntime:
         memory_store = None
         memory_context = ""
         memory_enabled = os.getenv("GARVIS_MEMORY_ENABLED", "1").casefold() not in {
-            "0", "false", "no", "off",
+            "0",
+            "false",
+            "no",
+            "off",
         }
         if memory_enabled:
             try:
@@ -172,6 +204,7 @@ class LocalLanguageRuntime:
                 )
 
                 memory_store = MemoryStore.from_environment()
+                memory_context = memory_store.render_context(envelope.request)
                 memory_store.remember(
                     envelope.request,
                     kind=MemoryKind.EPISODIC,
@@ -182,7 +215,6 @@ class LocalLanguageRuntime:
                     salience=0.60,
                     confidence=0.65,
                 )
-                memory_context = memory_store.render_context(envelope.request)
             except Exception as exc:
                 memory_store = None
                 if os.getenv("GARVIS_MEMORY_DEBUG", "0") == "1":
@@ -190,8 +222,13 @@ class LocalLanguageRuntime:
 
         prompt = render_local_prompt(envelope, memory_context)
         command = [
-            str(self.config.engine), "-m", str(self.config.model),
-            "-c", str(self.config.context_size), "-ngl", str(self.config.gpu_layers),
+            str(self.config.engine),
+            "-m",
+            str(self.config.model),
+            "-c",
+            str(self.config.context_size),
+            "-ngl",
+            str(self.config.gpu_layers),
         ]
         try:
             try:
@@ -199,8 +236,7 @@ class LocalLanguageRuntime:
                     command,
                     input=prompt + "\n",
                     text=True,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
+                    capture_output=True,
                     timeout=self.config.timeout_seconds,
                     check=False,
                 )
@@ -250,7 +286,7 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(argv: Optional[Sequence[str]] = None) -> int:
+def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     prompt = " ".join(args.prompt).strip()
     if not prompt:
