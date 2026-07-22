@@ -156,6 +156,11 @@ class CapabilityAwareRuntime:
             report = execute_local_access(request, self.local_runtime.repository_root)
             if request.operation == "list":
                 answer = f"Read-only top-level listing for {report.target_path}:\n{report.content}"
+            elif request.operation == "search":
+                answer = (
+                    f"Read-only text matches for {request.search_query!r} "
+                    f"in {report.target_path}:\n{report.content}"
+                )
             else:
                 answer = self.local_runtime.respond(
                     request.original_request,
