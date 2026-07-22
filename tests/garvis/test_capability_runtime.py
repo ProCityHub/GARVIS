@@ -106,3 +106,22 @@ def test_local_file_denial_reads_nothing(tmp_path: Path) -> None:
     assert runtime.respond("n") == "Local file access denied. No files were read."
     assert local.calls == []
     runtime.close()
+
+
+def test_directory_list_returns_without_calling_model(tmp_path: Path) -> None:
+    (tmp_path / "alpha.txt").write_text("do not open me", encoding="utf-8")
+    (tmp_path / "folder").mkdir()
+    local = FakeLocal(tmp_path)
+    research = FakeResearcher()
+    runtime = make_runtime(tmp_path, local, research)
+
+    assert "Approve? [Y/N]" in runtime.respond(f'List files in "{tmp_path}"')
+    result = runtime.respond("y")
+
+    assert "Read-only top-level listing" in result
+    assert "alpha.txt" in result
+    assert "folder/" in result
+    assert "do not open me" not in result
+    assert local.calls == []
+    assert research.queries == []
+    runtime.close()
