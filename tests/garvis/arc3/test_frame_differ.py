@@ -1,5 +1,7 @@
 """Tests for the deterministic ARC-3 frame differ (DIRECTIVE-011 module 2)."""
 
+from typing import Any, cast
+
 import pytest
 
 from garvis.arc3.frame_differ import FrameDiffError, diff_frames
@@ -111,4 +113,4 @@ def test_deterministic_repeat():
 
 def test_rejects_non_parsed_input():
     with pytest.raises(FrameDiffError):
-        diff_frames([[0, 1]], parse_frame([[0, 1]]))
+        diff_frames(cast(Any, [[0, 1]]), parse_frame([[0, 1]]))

@@ -1,5 +1,7 @@
 """Tests for the Anthropic backend (Claude via OpenAI-compatible endpoint)."""
 
+from typing import Any
+
 import pytest
 
 import garvis.anthropic_backend as ab
@@ -27,7 +29,7 @@ def test_configure_requires_key(monkeypatch):
 
 
 def test_configure_points_client_at_anthropic(monkeypatch):
-    calls = {}
+    calls: dict[str, Any] = {}
     monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key-not-real")
     monkeypatch.setattr(
         ab, "set_default_openai_client",

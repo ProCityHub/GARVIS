@@ -1,5 +1,8 @@
 """Tests for the ARC-3 per-game memory (DIRECTIVE-011 module 6)."""
 
+from dataclasses import FrozenInstanceError
+from typing import Any, cast
+
 import pytest
 
 from garvis.arc3.game_memory import (
@@ -11,12 +14,12 @@ from garvis.arc3.game_memory import (
 )
 
 
-def sample():
+def sample() -> GameMemory:
     return GameMemory(
         game_id="pc01",
-        confirmed_goal_colors={14},
-        demoted_colors={8},
-        wall_colors={10},
+        confirmed_goal_colors=frozenset({14}),
+        demoted_colors=frozenset({8}),
+        wall_colors=frozenset({10}),
         action_moves=((1, (-1, 0)), (2, (1, 0)), (3, (0, -1)), (4, (0, 1))),
     )
 
@@ -33,9 +36,9 @@ def test_serialization_is_deterministic():
     assert sample().to_json() == sample().to_json()
     shuffled = GameMemory(
         game_id="pc01",
-        confirmed_goal_colors={14},
-        demoted_colors={8},
-        wall_colors={10},
+        confirmed_goal_colors=frozenset({14}),
+        demoted_colors=frozenset({8}),
+        wall_colors=frozenset({10}),
         action_moves=((4, (0, 1)), (1, (-1, 0)), (3, (0, -1)), (2, (1, 0))),
     )
     assert shuffled.to_json() == sample().to_json()
@@ -78,7 +81,7 @@ def test_mismatched_game_id_rejected(tmp_path):
 
 def test_overwrite_updates_cleanly(tmp_path):
     save_memory(sample(), str(tmp_path))
-    updated = GameMemory(game_id="pc01", confirmed_goal_colors={14, 9})
+    updated = GameMemory(game_id="pc01", confirmed_goal_colors=frozenset({14, 9}))
     save_memory(updated, str(tmp_path))
     assert load_memory(str(tmp_path), "pc01") == updated
 
@@ -95,13 +98,13 @@ def test_rejects_bad_construction():
     with pytest.raises(GameMemoryError):
         GameMemory(game_id="")
     with pytest.raises(GameMemoryError):
-        GameMemory(game_id="x", wall_colors={"ten"})
+        GameMemory(game_id="x", wall_colors=cast(Any, {"ten"}))
     with pytest.raises(GameMemoryError):
-        GameMemory(game_id="x", demoted_colors={True})
+        GameMemory(game_id="x", demoted_colors=cast(Any, {True}))
     with pytest.raises(GameMemoryError):
-        GameMemory(game_id="x", action_moves=((1, (0,)),))
+        GameMemory(game_id="x", action_moves=cast(Any, ((1, (0,)),)))
     with pytest.raises(GameMemoryError):
-        save_memory("not-a-memory", "/tmp")
+        save_memory(cast(Any, "not-a-memory"), "/tmp")
 
 
 def test_no_secret_like_fields():
@@ -112,5 +115,5 @@ def test_no_secret_like_fields():
 
 def test_frozen_dataclass():
     m = sample()
-    with pytest.raises(Exception):
-        m.game_id = "hacked"
+    with pytest.raises(FrozenInstanceError):
+        cast(Any, m).game_id = "hacked"
