@@ -1,0 +1,26 @@
+{
+  "authority": "Adrien D. Thomas",
+  "memory": {
+    "model_weights_modified": false,
+    "research_kind": "semantic",
+    "single_domain_status": "provisional_claim",
+    "source_urls_preserved": true,
+    "two_domain_status": "evidence_supported"
+  },
+  "network": {
+    "approval_scope": "one exact research request",
+    "approval_words": ["Y", "yes", "approve"],
+    "default": "approval",
+    "denial_words": ["N", "no", "deny", "cancel"],
+    "methods": ["GET"],
+    "private_networks_allowed": false,
+    "uploads_allowed": false
+  },
+  "phone_discovery": {
+    "android_permission_bypass": false,
+    "recursive_file_scan": false,
+    "scope": "Termux-accessible tools and high-level roots",
+    "secret_reading": false
+  },
+  "version": 1
+}

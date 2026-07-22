@@ -15,7 +15,7 @@ from .lattice_cycle_cli import run_lattice_cycle_file
 
 if TYPE_CHECKING:
     from .assistant import GarvisAssistant
-    from .local_language_runtime import LocalLanguageRuntime
+    from .capability_runtime import CapabilityAwareRuntime
 
 DEFAULT_REMOTE_MODEL = "gpt-5.1"
 
@@ -116,10 +116,12 @@ def _run_local_lattice_cycle(args: argparse.Namespace) -> int:
     return 0
 
 
-def _build_local_runtime() -> LocalLanguageRuntime:
+def _build_local_runtime() -> CapabilityAwareRuntime:
+    from .capability_runtime import CapabilityAwareRuntime
     from .local_language_runtime import LocalLanguageRuntime, LocalRuntimeConfig
 
-    return LocalLanguageRuntime(LocalRuntimeConfig.from_environment(Path.cwd()))
+    local = LocalLanguageRuntime(LocalRuntimeConfig.from_environment(Path.cwd()))
+    return CapabilityAwareRuntime(local)
 
 
 def _configure_local_memory(args: argparse.Namespace) -> None:
@@ -128,7 +130,7 @@ def _configure_local_memory(args: argparse.Namespace) -> None:
         os.environ["GARVIS_MEMORY_DB"] = str(args.db.expanduser())
 
 
-def _run_local_interactive(runtime: LocalLanguageRuntime) -> int:
+def _run_local_interactive(runtime: CapabilityAwareRuntime) -> int:
     print("GARVIS local is active. Type /exit to end the session.")
     while True:
         try:
