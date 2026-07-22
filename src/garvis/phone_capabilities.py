@@ -59,7 +59,10 @@ def scan_phone_capabilities() -> dict[str, object]:
         )
     return {
         "scope": "Termux sandbox and Android paths already granted to Termux",
-        "warning": "No recursive file reading or Android permission bypass is performed.",
+        "warning": (
+            "Discovery only. No recursive file reading, permission bypass, background monitoring, "
+            "camera, microphone, location, screen, or message access is performed."
+        ),
         "capabilities": capabilities,
         "storage_roots": roots,
     }
