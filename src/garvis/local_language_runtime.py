@@ -146,12 +146,19 @@ def classify_request(message: str) -> FilingEnvelope:
 def render_local_prompt(
     envelope: FilingEnvelope,
     memory_context: str = "",
+    external_context: str = "",
 ) -> str:
     filing_json = json.dumps(asdict(envelope), sort_keys=True)
     clean_memory = " ".join(memory_context.strip().split())
     memory_block = (
         f" GARVIS_MEMORY_CONTEXT_BEGIN={json.dumps(clean_memory)} GARVIS_MEMORY_CONTEXT_END"
         if clean_memory
+        else ""
+    )
+    clean_external = " ".join(external_context.strip().split())
+    external_block = (
+        f" GARVIS_EXTERNAL_EVIDENCE_BEGIN={json.dumps(clean_external)} GARVIS_EXTERNAL_EVIDENCE_END"
+        if clean_external
         else ""
     )
     return (
@@ -164,7 +171,8 @@ def render_local_prompt(
         "Treat provisional claims as provisional, not scientific fact. "
         "Give only one direct, professional final answer. "
         f"GARVIS_FILING_ENVELOPE={filing_json}"
-        f"{memory_block} "
+        f"{memory_block}"
+        f"{external_block} "
         f"REQUEST={json.dumps(envelope.request)}"
     )
 
@@ -185,7 +193,7 @@ class LocalLanguageRuntime:
         config.validate()
         self.config = config
 
-    def respond(self, message: str) -> str:
+    def respond(self, message: str, *, external_context: str = "") -> str:
         envelope = classify_request(message)
         memory_store = None
         memory_context = ""
@@ -220,7 +228,7 @@ class LocalLanguageRuntime:
                 if os.getenv("GARVIS_MEMORY_DEBUG", "0") == "1":
                     print(f"GARVIS memory warning: {exc}", file=sys.stderr)
 
-        prompt = render_local_prompt(envelope, memory_context)
+        prompt = render_local_prompt(envelope, memory_context, external_context)
         command = [
             str(self.config.engine),
             "-m",

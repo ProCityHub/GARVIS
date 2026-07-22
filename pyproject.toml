@@ -37,6 +37,7 @@ Repository = "https://github.com/openai/openai-agents-python"
 garvis = "garvis.cli:main"
 garvis-local = "garvis.local_language_runtime:main"
 garvis-memory = "garvis.memory_lifecycle:main"
+garvis-capabilities = "garvis.capability_cli:main"
 
 [project.optional-dependencies]
 voice = ["numpy>=2.2.0, <3; python_version>='3.10'", "websockets>=15.0, <16"]
