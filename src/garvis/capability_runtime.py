@@ -154,10 +154,13 @@ class CapabilityAwareRuntime:
         )
         try:
             report = execute_local_access(request, self.local_runtime.repository_root)
-            answer = self.local_runtime.respond(
-                request.original_request,
-                workspace_context=report.render_context(),
-            )
+            if request.operation == "list":
+                answer = f"Read-only top-level listing for {report.target_path}:\n{report.content}"
+            else:
+                answer = self.local_runtime.respond(
+                    request.original_request,
+                    workspace_context=report.render_context(),
+                )
         except LocalAccessError as exc:
             self.local_access_store.audit(
                 "local_access_failed",

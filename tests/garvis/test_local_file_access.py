@@ -84,3 +84,34 @@ def test_outside_allowed_roots_is_blocked(tmp_path: Path) -> None:
     )
     with pytest.raises(LocalAccessError, match="outside the approved"):
         execute_local_access(request, tmp_path, roots=(tmp_path.resolve(),))
+
+
+def test_directory_list_is_top_level_and_does_not_open_files(tmp_path: Path) -> None:
+    visible = tmp_path / "visible.txt"
+    visible.write_text("content must not be returned", encoding="utf-8")
+    nested = tmp_path / "nested"
+    nested.mkdir()
+    (nested / "deep.txt").write_text("deep content", encoding="utf-8")
+    secret = tmp_path / ".secrets"
+    secret.mkdir()
+    (secret / "hidden.txt").write_text("hidden", encoding="utf-8")
+
+    now = datetime.now(timezone.utc)
+    request = LocalAccessRequest(
+        "id",
+        "default",
+        "list directory",
+        str(tmp_path),
+        "list",
+        "",
+        LocalAccessState.APPROVED,
+        now,
+        now,
+    )
+    report = execute_local_access(request, tmp_path, roots=(tmp_path.resolve(),))
+
+    assert "visible.txt" in report.content
+    assert "nested/" in report.content
+    assert "deep.txt" not in report.content
+    assert "content must not be returned" not in report.content
+    assert ".secrets" not in report.content
