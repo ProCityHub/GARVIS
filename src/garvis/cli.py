@@ -168,7 +168,21 @@ def _run_local(args: argparse.Namespace) -> int:
         return _run_local_interactive(runtime)
 
     try:
-        print(runtime.respond(prompt))
+        reply = runtime.respond(prompt)
+        print(reply)
+
+        if "Approve? [Y/N]" in reply:
+            try:
+                approval = input().strip()
+            except (EOFError, KeyboardInterrupt):
+                print()
+                return 0
+
+            if approval.casefold() not in {"y", "yes", "n", "no"}:
+                print("GARVIS approval cancelled: enter Y or N.", file=sys.stderr)
+                return 2
+
+            print(runtime.respond(approval))
     except Exception as exc:
         print(f"GARVIS local error: {exc}", file=sys.stderr)
         return 1
@@ -257,6 +271,33 @@ async def _run(args: argparse.Namespace) -> int:
             return 1
 
         _print_reply(reply.text, reply.requires_approval, reply.approval_reason)
+
+        if reply.requires_approval:
+            try:
+                approval = input().strip()
+            except (EOFError, KeyboardInterrupt):
+                print()
+                return 0
+
+            if approval.casefold() not in {"y", "yes", "n", "no"}:
+                print("GARVIS approval cancelled: enter Y or N.", file=sys.stderr)
+                return 2
+
+            try:
+                reply = await assistant.respond(
+                    approval,
+                    session_id=args.session,
+                )
+            except Exception as exc:
+                print(f"GARVIS error: {exc}", file=sys.stderr)
+                return 1
+
+            _print_reply(
+                reply.text,
+                reply.requires_approval,
+                reply.approval_reason,
+            )
+
         return 0
 
     return await _run_interactive(assistant, args.session)

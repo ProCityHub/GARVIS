@@ -58,3 +58,36 @@ def test_default_run_uses_local_runtime(
     assert result == 0
     assert runtime.messages == ["hello"]
     assert capsys.readouterr().out.strip() == "local reply: hello"
+
+
+class FakeApprovalRuntime:
+    def __init__(self) -> None:
+        self.messages: list[str] = []
+
+    def respond(self, message: str) -> str:
+        self.messages.append(message)
+        if len(self.messages) == 1:
+            return "GARVIS requests internet research permission.\n\nApprove? [Y/N]"
+        return "Approved research answer."
+
+
+def test_local_one_shot_consumes_approval(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    runtime = FakeApprovalRuntime()
+    monkeypatch.setattr(cli, "_build_local_runtime", lambda: runtime)
+    monkeypatch.setattr("builtins.input", lambda: "y")
+
+    args = cli.build_parser().parse_args(["research", "current", "drywall", "prices"])
+    result = asyncio.run(cli._run(args))
+
+    assert result == 0
+    assert runtime.messages == [
+        "research current drywall prices",
+        "y",
+    ]
+
+    output = capsys.readouterr().out
+    assert "Approve? [Y/N]" in output
+    assert output.rstrip().endswith("Approved research answer.")
