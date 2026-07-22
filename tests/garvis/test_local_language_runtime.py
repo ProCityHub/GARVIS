@@ -38,8 +38,10 @@ class LocalLanguageRuntimeTests(unittest.TestCase):
         )
         prompt = render_local_prompt(envelope)
         self.assertTrue(prompt.startswith("/no_think "))
-        self.assertIn("GARVIS_FILING_ENVELOPE=", prompt)
-        self.assertIn('"destination": "engineering_registry"', prompt)
+        self.assertNotIn("GARVIS_FILING_ENVELOPE=", prompt)
+        self.assertIn("Operate with local response only permission", prompt)
+        self.assertIn('User request: "Test request"', prompt)
+        self.assertIn("focus on engineering registry", prompt)
 
     def test_clean_output_removes_thinking(self) -> None:
         self.assertEqual(
