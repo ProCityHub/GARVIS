@@ -1,0 +1,31 @@
+{
+  "authority": "Adrien D. Thomas / ProCityHub",
+  "automatic_steps": [
+    "verify_repository",
+    "verify_clean_worktree",
+    "backup_touched_files",
+    "install_payload",
+    "patch_local_runtime",
+    "run_validation",
+    "commit",
+    "push",
+    "create_or_reuse_pull_request",
+    "watch_checks",
+    "squash_merge_only_when_green",
+    "update_main"
+  ],
+  "boundaries": {
+    "model_output_remains_unverified": true,
+    "no_automatic_hard_delete": true,
+    "no_external_business_actions": true,
+    "no_model_weights_in_git": true,
+    "no_secrets": true,
+    "protected_memory_never_auto_traced": true
+  },
+  "branch": "feature/memory-lifecycle-v1",
+  "directive_id": "garvis-memory-lifecycle-v1",
+  "full_auto": true,
+  "merge_strategy": "squash",
+  "objective": "Install an evidence-aware, bounded, human-inspired memory lifecycle for the local GGUF GARVIS runtime.",
+  "repository": "~/GARVIS"
+}

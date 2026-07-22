@@ -112,16 +112,30 @@ def classify_request(message: str) -> FilingEnvelope:
     )
 
 
-def render_local_prompt(envelope: FilingEnvelope) -> str:
+def render_local_prompt(
+    envelope: FilingEnvelope,
+    memory_context: str = "",
+) -> str:
     filing_json = json.dumps(asdict(envelope), sort_keys=True)
+    clean_memory = memory_context.strip()
+    memory_block = (
+        "GARVIS_MEMORY_CONTEXT_BEGIN\n"
+        f"{clean_memory}\n"
+        "GARVIS_MEMORY_CONTEXT_END\n"
+        if clean_memory
+        else ""
+    )
     return (
         "/no_think "
         "You are GARVIS, Adrien D. Thomas's local ProCityHub assistant. "
         "Use the GARVIS filing envelope as binding routing metadata. "
+        "Treat recalled memory as fallible context whose evidence label remains binding. "
+        "Residual traces are not facts and must never be reconstructed as quotations. "
         "Do not reveal hidden reasoning. Do not claim an outside-world action occurred. "
         "Treat provisional claims as provisional, not scientific fact. "
         "Give only a direct, professional final answer.\n"
         f"GARVIS_FILING_ENVELOPE={filing_json}\n"
+        f"{memory_block}"
         f"REQUEST={envelope.request}"
     )
 
@@ -143,34 +157,83 @@ class LocalLanguageRuntime:
         self.config = config
 
     def respond(self, message: str) -> str:
-        prompt = render_local_prompt(classify_request(message))
+        envelope = classify_request(message)
+        memory_store = None
+        memory_context = ""
+        memory_enabled = os.getenv("GARVIS_MEMORY_ENABLED", "1").casefold() not in {
+            "0", "false", "no", "off",
+        }
+        if memory_enabled:
+            try:
+                from garvis.memory_lifecycle import (
+                    EvidenceStatus,
+                    MemoryKind,
+                    MemoryStore,
+                )
+
+                memory_store = MemoryStore.from_environment()
+                memory_store.remember(
+                    envelope.request,
+                    kind=MemoryKind.EPISODIC,
+                    evidence_status=EvidenceStatus(envelope.evidence_status),
+                    source="adrien_user_input",
+                    destination=envelope.destination,
+                    tags=(envelope.destination,),
+                    salience=0.60,
+                    confidence=0.65,
+                )
+                memory_context = memory_store.render_context(envelope.request)
+            except Exception as exc:
+                memory_store = None
+                if os.getenv("GARVIS_MEMORY_DEBUG", "0") == "1":
+                    print(f"GARVIS memory warning: {exc}", file=sys.stderr)
+
+        prompt = render_local_prompt(envelope, memory_context)
         command = [
             str(self.config.engine), "-m", str(self.config.model),
             "-c", str(self.config.context_size), "-ngl", str(self.config.gpu_layers),
         ]
         try:
-            completed = subprocess.run(
-                command,
-                input=prompt + "\n",
-                text=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                timeout=self.config.timeout_seconds,
-                check=False,
-            )
-        except subprocess.TimeoutExpired as exc:
-            raise RuntimeError(
-                f"Local GARVIS model timed out after {self.config.timeout_seconds} seconds"
-            ) from exc
-        if completed.returncode != 0:
-            detail = clean_model_output(completed.stderr or completed.stdout)
-            raise RuntimeError(
-                f"Local GARVIS model exited with code {completed.returncode}: {detail}"
-            )
-        output = clean_model_output(completed.stdout) or clean_model_output(completed.stderr)
-        if not output:
-            raise RuntimeError("Local GARVIS model returned no usable answer")
-        return output
+            try:
+                completed = subprocess.run(
+                    command,
+                    input=prompt + "\n",
+                    text=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    timeout=self.config.timeout_seconds,
+                    check=False,
+                )
+            except subprocess.TimeoutExpired as exc:
+                raise RuntimeError(
+                    f"Local GARVIS model timed out after {self.config.timeout_seconds} seconds"
+                ) from exc
+            if completed.returncode != 0:
+                detail = clean_model_output(completed.stderr or completed.stdout)
+                raise RuntimeError(
+                    f"Local GARVIS model exited with code {completed.returncode}: {detail}"
+                )
+            output = clean_model_output(completed.stdout) or clean_model_output(completed.stderr)
+            if not output:
+                raise RuntimeError("Local GARVIS model returned no usable answer")
+            if memory_store is not None:
+                from garvis.memory_lifecycle import EvidenceStatus, MemoryKind
+
+                memory_store.remember(
+                    output[: memory_store.policy.model_output_max_chars],
+                    kind=MemoryKind.EPISODIC,
+                    evidence_status=EvidenceStatus.MODEL_GENERATED,
+                    source="local_model_output",
+                    destination=envelope.destination,
+                    tags=("local_model_output", envelope.destination),
+                    salience=0.35,
+                    confidence=0.20,
+                )
+                memory_store.maintain_if_due()
+            return output
+        finally:
+            if memory_store is not None:
+                memory_store.close()
 
 
 def build_parser() -> argparse.ArgumentParser:
