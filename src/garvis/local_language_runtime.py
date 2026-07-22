@@ -187,34 +187,48 @@ def render_local_prompt(
 
 def clean_model_output(text: str) -> str:
     cleaned = _THINK.sub("", _ANSI.sub("", text))
-
-    legacy_markers = (
+    legacy_markers = {
         "GARVIS_FILING_ENVELOPE=",
-        "GARVIS_MEMORY_CONTEXT_BEGIN=",
+        "GARVIS_MEMORY_CONTEXT_BEGIN",
         "GARVIS_MEMORY_CONTEXT_END",
-        "GARVIS_EXTERNAL_EVIDENCE_BEGIN=",
+        "GARVIS_EXTERNAL_EVIDENCE_BEGIN",
         "GARVIS_EXTERNAL_EVIDENCE_END",
         "REQUEST=",
-    )
+    }
     hidden_prefixes = (
         "/no_think",
-        "You are GARVIS,",
+        "You are GARVIS.",
         "Operate with ",
         "Treat the request as ",
         "Use this fallible recalled context",
         "Use this external evidence",
         "User request:",
     )
+    private_memory_headers = (
+        "storage of research conclusions",
+        "internal memory records",
+        "recalled memory records",
+    )
 
-    lines = []
+    lines: list[str] = []
     for line in cleaned.splitlines():
         stripped = line.strip()
-        if not stripped or set(stripped) <= {">"}:
+        if not stripped or set(stripped) <= {"."}:
             continue
         if any(marker in stripped for marker in legacy_markers):
             continue
         if stripped.startswith(hidden_prefixes):
             continue
+
+        plain = stripped.strip("*_`#> -")
+        lowered = plain.casefold()
+        label = lowered.split(":", 1)[0].strip()
+
+        if any(lowered.startswith(header) for header in private_memory_headers):
+            break
+        if label in {"memory id", "memory_id"}:
+            break
+
         lines.append(line.rstrip())
 
     answer = "\n".join(lines).strip()
