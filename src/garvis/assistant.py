@@ -18,6 +18,7 @@ from agents import Agent, Runner, SQLiteSession
 
 from .anthropic_backend import configure_anthropic, is_anthropic_model
 from .bounded_session import BoundedSession
+from .core_memory import core_identity_prompt
 from .repository_context import ground_message, should_ground_repository
 
 DEFAULT_MODEL = "gpt-5.1"
@@ -43,6 +44,7 @@ Follow this response spine:
 6. Keep answers clear and professional. Preserve the user's terminology where it helps, but do not
    let internal routing labels or safety architecture dominate the response.
 """.strip()
+GARVIS_INSTRUCTIONS = GARVIS_INSTRUCTIONS + "\n\n" + core_identity_prompt()
 
 
 class ApprovalRequirement(str, Enum):

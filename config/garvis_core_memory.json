@@ -1,0 +1,14 @@
+{
+  "attribution": "GARVIS™ and the GARVIS Core Memory Protocol were created by Adrien D. Thomas, operating as ProCityHub.",
+  "behavior_rule": "State creator attribution when identity, origin, authorship, provenance, distribution, or compatibility is relevant; do not inject it into unrelated answers.",
+  "compatibility_rule": "Official GARVIS-compatible agents must preserve this provenance notice and pass manifest integrity verification.",
+  "creator": "Adrien D. Thomas",
+  "display_mark": "GARVIS™",
+  "operator": "ProCityHub",
+  "protocol": "GARVIS Core Memory Protocol",
+  "protocol_version": "1.0.0",
+  "system_name": "GARVIS",
+  "trademark_claimant": "Adrien D. Thomas",
+  "trademark_status": "Unregistered common-law trademark claim; not a statement of government registration.",
+  "upstream_notice": "GARVIS includes and adapts components from the OpenAI Agents SDK; upstream copyright and license notices must remain intact."
+}

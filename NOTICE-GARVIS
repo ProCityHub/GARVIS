@@ -1,0 +1,18 @@
+GARVIS™ PROVENANCE NOTICE
+
+GARVIS-specific architecture, memory protocol, identity design, and related
+modifications in this repository are credited to Adrien D. Thomas, operating
+as ProCityHub.
+
+GARVIS™ is used as an unregistered trademark claim attributed to Adrien D.
+Thomas. This is not a claim of government registration.
+
+Official GARVIS-compatible implementations must preserve
+config/garvis_core_memory.json and pass its integrity verification.
+
+This repository also includes and adapts the OpenAI Agents SDK. The upstream
+OpenAI copyright and MIT license notice in LICENSE must be retained.
+
+No source-code mechanism can make attribution physically impossible to remove.
+Removal or alteration makes the resulting build fail the official
+GARVIS-compatible provenance check.
