@@ -42,7 +42,7 @@ class CoreMemoryTests(unittest.TestCase):
     def test_agent_export(self) -> None:
         adapter = export_agent_bootstrap()
         self.assertTrue(adapter["official_compatible"])
-        self.assertIn("Adrien D. Thomas", adapter["instructions"])
+        self.assertIn("Adrien D. Thomas", str(adapter["instructions"]))
 
     def test_tampering_detected(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
