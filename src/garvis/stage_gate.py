@@ -1,20 +1,19 @@
 from __future__ import annotations
 
+import json
+from collections.abc import Mapping
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta, timezone
 from enum import Enum
 from hashlib import sha256
-import json
-from typing import Any, Final, Mapping
+from typing import Any, Final
 from uuid import uuid4
-
 
 CREATOR: Final = "Adrien D. Thomas"
 SYSTEM_DESIGNATION: Final = "GARVIS AGI Beta"
 DEVELOPMENT_TRACK: Final = "UPGRADE 2"
 SCIENTIFIC_VALIDATION_STATUS: Final = (
-    "Full AGI is a development objective; "
-    "scientific validation is not established."
+    "Full AGI is a development objective; scientific validation is not established."
 )
 
 DEFAULT_TRANSITION_TTL_SECONDS: Final = 24 * 60 * 60
@@ -135,9 +134,7 @@ def parse_direct_decision(answer: str) -> Decision:
     if normalized in {"no", "n", "deny", "denied", "stop"}:
         return Decision.DENY
 
-    raise InvalidDecisionError(
-        "an explicit yes, no, approve, or deny decision is required"
-    )
+    raise InvalidDecisionError("an explicit yes, no, approve, or deny decision is required")
 
 
 def transition_is_legal(source: Stage, destination: Stage) -> bool:
@@ -178,7 +175,8 @@ def capability_claim_status(
 
 # GARVIS STAGE-GATE PROTOTYPE PART 1A COMPLETE
 
-@dataclass(frozen=True, slots=True)
+
+@dataclass(frozen=True)
 class ProjectRecord:
     """Identity and current governance position for one GARVIS project."""
 
@@ -220,7 +218,7 @@ class ProjectRecord:
         }
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ApprovalQuestion:
     """One exact question to which Adrien may answer yes or no."""
 
@@ -260,7 +258,7 @@ class ApprovalQuestion:
         return sha256_payload(self.identity_payload())
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class AuthorizationGrant:
     """A transition, protected-action, or scoped-exception decision."""
 
@@ -310,7 +308,7 @@ class AuthorizationGrant:
         }
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class EvidenceRecord:
     """Evidence bound to an exact project stage and artifact."""
 
@@ -340,7 +338,7 @@ class EvidenceRecord:
         }
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class AuditEnvelope:
     """Tamper-evident wrapper linking a record to the prior audit record."""
 
@@ -355,7 +353,7 @@ class AuditEnvelope:
         record_type: str,
         payload: Mapping[str, Any],
         previous_record_hash: str = "",
-    ) -> "AuditEnvelope":
+    ) -> AuditEnvelope:
         unsigned = {
             "record_type": record_type,
             "payload": dict(payload),
@@ -386,6 +384,7 @@ class AuditEnvelope:
 
 
 # GARVIS STAGE-GATE PROTOTYPE PART 1B COMPLETE
+
 
 class AuthorizationError(StageGateError):
     """Base error for invalid or unusable authorization."""
@@ -536,9 +535,7 @@ def grant_from_answer(
 
     clean_approver = approver.strip()
     if clean_approver != CREATOR:
-        raise AuthorizationMismatchError(
-            f"approval authority must be {CREATOR}"
-        )
+        raise AuthorizationMismatchError(f"approval authority must be {CREATOR}")
 
     return AuthorizationGrant(
         grant_id=new_identifier("grant"),
@@ -586,27 +583,19 @@ def validate_grant(
     }
 
     mismatches = [
-        name
-        for name, expected_value in expected.items()
-        if getattr(grant, name) != expected_value
+        name for name, expected_value in expected.items() if getattr(grant, name) != expected_value
     ]
     if mismatches:
-        raise AuthorizationMismatchError(
-            "authorization does not match: " + ", ".join(mismatches)
-        )
+        raise AuthorizationMismatchError("authorization does not match: " + ", ".join(mismatches))
 
     if grant.decision is not Decision.APPROVE:
         raise AuthorizationDeniedError("Adrien denied this request")
 
     if grant.revoked:
-        raise AuthorizationRevokedError(
-            grant.revocation_reason or "authorization was revoked"
-        )
+        raise AuthorizationRevokedError(grant.revocation_reason or "authorization was revoked")
 
     if grant.one_time and grant.consumed_at is not None:
-        raise AuthorizationConsumedError(
-            "one-time authorization has already been consumed"
-        )
+        raise AuthorizationConsumedError("one-time authorization has already been consumed")
 
     for label, value in (
         ("question", question.expires_at),
@@ -650,33 +639,19 @@ def apply_transition(
 
     expected_request = f"{project.current_stage.value}->{destination.value}"
     if question.request_kind != "transition":
-        raise AuthorizationMismatchError(
-            "approval question is not a transition request"
-        )
+        raise AuthorizationMismatchError("approval question is not a transition request")
     if question.requested_value != expected_request:
-        raise AuthorizationMismatchError(
-            "approval question targets a different transition"
-        )
+        raise AuthorizationMismatchError("approval question targets a different transition")
     if question.project_id != project.project_id:
-        raise AuthorizationMismatchError(
-            "approval question targets a different project"
-        )
+        raise AuthorizationMismatchError("approval question targets a different project")
     if question.repository != project.repository:
-        raise AuthorizationMismatchError(
-            "approval question targets a different repository"
-        )
+        raise AuthorizationMismatchError("approval question targets a different repository")
     if question.branch != project.branch:
-        raise AuthorizationMismatchError(
-            "approval question targets a different branch"
-        )
+        raise AuthorizationMismatchError("approval question targets a different branch")
     if question.commit_or_artifact_hash != project.artifact_hash:
-        raise AuthorizationMismatchError(
-            "approval question targets a different artifact"
-        )
+        raise AuthorizationMismatchError("approval question targets a different artifact")
     if question.scope != project.approved_files:
-        raise AuthorizationMismatchError(
-            "approval question targets a different file scope"
-        )
+        raise AuthorizationMismatchError("approval question targets a different file scope")
 
     current = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
     consumed = consume_grant(question, grant, now=current)
@@ -699,13 +674,12 @@ def consume_protected_action_authorization(
     """Validate a protected-action grant without executing the action."""
 
     if question.request_kind != "protected_action":
-        raise AuthorizationMismatchError(
-            "approval question is not a protected-action request"
-        )
+        raise AuthorizationMismatchError("approval question is not a protected-action request")
     return consume_grant(question, grant, now=now)
 
 
 # GARVIS STAGE-GATE PROTOTYPE PART 1C COMPLETE
+
 
 class AuditChainError(StageGateError):
     """Raised when governance history cannot be verified."""
@@ -791,9 +765,7 @@ def validate_evidence(
         mismatches.append("artifact_hash")
 
     if mismatches:
-        raise EvidenceMismatchError(
-            "evidence does not match: " + ", ".join(mismatches)
-        )
+        raise EvidenceMismatchError("evidence does not match: " + ", ".join(mismatches))
 
 
 def seal_audit_records(
@@ -831,19 +803,13 @@ def verify_audit_chain(
 
     for index, envelope in enumerate(envelopes):
         if envelope.previous_record_hash != expected_previous_hash:
-            raise AuditChainError(
-                f"audit linkage failed at record {index}"
-            )
+            raise AuditChainError(f"audit linkage failed at record {index}")
 
         if not envelope.verify():
-            raise AuditChainError(
-                f"audit record hash failed at record {index}"
-            )
+            raise AuditChainError(f"audit record hash failed at record {index}")
 
         if envelope.record_hash in seen_record_hashes:
-            raise AuditChainError(
-                f"duplicate audit record detected at record {index}"
-            )
+            raise AuditChainError(f"duplicate audit record detected at record {index}")
         seen_record_hashes.add(envelope.record_hash)
 
         payload = dict(envelope.payload)
@@ -858,15 +824,11 @@ def verify_audit_chain(
         if identifier_field is not None:
             value = payload.get(identifier_field)
             if not isinstance(value, str) or not value:
-                raise AuditChainError(
-                    f"missing {identifier_field} at record {index}"
-                )
+                raise AuditChainError(f"missing {identifier_field} at record {index}")
 
             identity = (identifier_field, value)
             if identity in seen_identifiers:
-                raise AuditChainError(
-                    f"duplicate {identifier_field} detected at record {index}"
-                )
+                raise AuditChainError(f"duplicate {identifier_field} detected at record {index}")
             seen_identifiers.add(identity)
 
         expected_previous_hash = envelope.record_hash
@@ -882,9 +844,7 @@ def active_authorization_count(
     return sum(
         1
         for grant in grants
-        if grant.decision is Decision.APPROVE
-        and not grant.revoked
-        and grant.consumed_at is None
+        if grant.decision is Decision.APPROVE and not grant.revoked and grant.consumed_at is None
     )
 
 
@@ -899,9 +859,7 @@ def render_project_status(
 
     active = active_authorization_count(grants)
     revoked = sum(1 for grant in grants if grant.revoked)
-    consumed = sum(
-        1 for grant in grants if grant.consumed_at is not None
-    )
+    consumed = sum(1 for grant in grants if grant.consumed_at is not None)
 
     lines = [
         f"System: {project.designation}",
