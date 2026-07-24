@@ -116,12 +116,12 @@ def _run_local_lattice_cycle(args: argparse.Namespace) -> int:
     return 0
 
 
-def _build_local_runtime() -> CapabilityAwareRuntime:
+def _build_local_runtime(session_id: str = "default") -> CapabilityAwareRuntime:
     from .capability_runtime import CapabilityAwareRuntime
     from .local_language_runtime import LocalLanguageRuntime, LocalRuntimeConfig
 
     local = LocalLanguageRuntime(LocalRuntimeConfig.from_environment(Path.cwd()))
-    return CapabilityAwareRuntime(local)
+    return CapabilityAwareRuntime(local, session_id=session_id)
 
 
 def _configure_local_memory(args: argparse.Namespace) -> None:
@@ -158,7 +158,7 @@ def _run_local(args: argparse.Namespace) -> int:
     _configure_local_memory(args)
 
     try:
-        runtime = _build_local_runtime()
+        runtime = _build_local_runtime(args.session)
     except Exception as exc:
         print(f"GARVIS local configuration error: {exc}", file=sys.stderr)
         return 2
