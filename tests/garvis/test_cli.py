@@ -50,7 +50,7 @@ def test_default_run_uses_local_runtime(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     runtime = FakeLocalRuntime()
-    monkeypatch.setattr(cli, "_build_local_runtime", lambda: runtime)
+    monkeypatch.setattr(cli, "_build_local_runtime", lambda session_id="default": runtime)
 
     args = cli.build_parser().parse_args(["hello"])
     result = asyncio.run(cli._run(args))
@@ -76,7 +76,7 @@ def test_local_one_shot_consumes_approval(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     runtime = FakeApprovalRuntime()
-    monkeypatch.setattr(cli, "_build_local_runtime", lambda: runtime)
+    monkeypatch.setattr(cli, "_build_local_runtime", lambda session_id="default": runtime)
     monkeypatch.setattr("builtins.input", lambda: "y")
 
     args = cli.build_parser().parse_args(["research", "current", "drywall", "prices"])
