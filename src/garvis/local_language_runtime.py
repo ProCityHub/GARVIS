@@ -271,10 +271,13 @@ class LocalLanguageRuntime:
         self,
         config: LocalRuntimeConfig,
         repository_root: Path | None = None,
+        *,
+        session_id: str = "default",
     ) -> None:
         config.validate()
         self.config = config
         self.repository_root = (repository_root or Path.cwd()).resolve()
+        self.session_id = session_id.strip() or "default"
 
     def respond(
         self,
@@ -306,12 +309,16 @@ class LocalLanguageRuntime:
                 memory_store = MemoryStore.from_environment()
                 ensure_core_memories(memory_store)
                 core_context = render_core_context(memory_store)
-                recalled_context = memory_store.render_context(envelope.request)
+                recalled_context = memory_store.render_context(
+                    envelope.request,
+                    session_id=self.session_id,
+                )
                 memory_context = "\n".join(
                     part for part in (core_context, recalled_context) if part
                 )
                 memory_store.remember(
                     envelope.request,
+                    session_id=self.session_id,
                     kind=MemoryKind.EPISODIC,
                     evidence_status=EvidenceStatus(envelope.evidence_status),
                     source="adrien_user_input",
@@ -379,6 +386,7 @@ class LocalLanguageRuntime:
 
                 memory_store.remember(
                     output[: memory_store.policy.model_output_max_chars],
+                    session_id=self.session_id,
                     kind=MemoryKind.EPISODIC,
                     evidence_status=EvidenceStatus.MODEL_GENERATED,
                     source="local_model_output",

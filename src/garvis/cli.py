@@ -120,7 +120,10 @@ def _build_local_runtime(session_id: str = "default") -> CapabilityAwareRuntime:
     from .capability_runtime import CapabilityAwareRuntime
     from .local_language_runtime import LocalLanguageRuntime, LocalRuntimeConfig
 
-    local = LocalLanguageRuntime(LocalRuntimeConfig.from_environment(Path.cwd()))
+    local = LocalLanguageRuntime(
+        LocalRuntimeConfig.from_environment(Path.cwd()),
+        session_id=session_id,
+    )
     return CapabilityAwareRuntime(local, session_id=session_id)
 
 
