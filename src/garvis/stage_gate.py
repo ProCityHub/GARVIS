@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 from hashlib import sha256
 import json
@@ -95,7 +95,7 @@ REMEDIATION_TRANSITIONS: Final[Mapping[Stage, frozenset[Stage]]] = {
 def utc_now_iso() -> str:
     """Return the current UTC time in a stable ISO-8601 representation."""
 
-    return datetime.now(UTC).isoformat().replace("+00:00", "Z")
+    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
 def new_identifier(prefix: str) -> str:
@@ -422,7 +422,7 @@ def parse_utc_iso(value: str) -> datetime:
     if parsed.tzinfo is None:
         raise ValueError("timestamp must include a timezone")
 
-    return parsed.astimezone(UTC)
+    return parsed.astimezone(timezone.utc)
 
 
 def expiry_iso(
@@ -435,11 +435,11 @@ def expiry_iso(
     if ttl_seconds < 1:
         raise ValueError("ttl_seconds must be positive")
 
-    current = now or datetime.now(UTC)
+    current = now or datetime.now(timezone.utc)
     if current.tzinfo is None:
         raise ValueError("now must include a timezone")
 
-    expires = current.astimezone(UTC) + timedelta(seconds=ttl_seconds)
+    expires = current.astimezone(timezone.utc) + timedelta(seconds=ttl_seconds)
     return expires.isoformat().replace("+00:00", "Z")
 
 
@@ -568,7 +568,7 @@ def validate_grant(
 ) -> None:
     """Fail closed unless a grant matches the exact approval question."""
 
-    current = (now or datetime.now(UTC)).astimezone(UTC)
+    current = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
 
     expected = {
         "project_id": question.project_id,
@@ -624,7 +624,7 @@ def consume_grant(
 ) -> AuthorizationGrant:
     """Validate and atomically represent consumption of a one-time grant."""
 
-    current = (now or datetime.now(UTC)).astimezone(UTC)
+    current = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
     validate_grant(question, grant, now=current)
 
     if not grant.one_time:
@@ -678,7 +678,7 @@ def apply_transition(
             "approval question targets a different file scope"
         )
 
-    current = (now or datetime.now(UTC)).astimezone(UTC)
+    current = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
     consumed = consume_grant(question, grant, now=current)
 
     updated = replace(
