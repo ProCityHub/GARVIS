@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import replace
-from datetime import UTC, datetime, timedelta
-from pathlib import Path
 import sqlite3
+from dataclasses import replace
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import pytest
@@ -35,14 +35,12 @@ from garvis.stage_gate import (
     validate_grant,
     verify_audit_chain,
 )
-
 from garvis.stage_gate_store import (
     StageGateStore,
     StoreConflictError,
     StoreCorruptionError,
     StoreReferenceError,
 )
-
 
 APPROVED_FILES = (
     "src/garvis/stage_gate.py",
@@ -163,7 +161,7 @@ def test_expired_approval_is_rejected() -> None:
     expired_question = replace(
         question,
         expires_at=(
-            datetime.now(UTC) - timedelta(seconds=1)
+            datetime.now(timezone.utc) - timedelta(seconds=1)
         ).isoformat().replace("+00:00", "Z"),
     )
     grant = grant_from_answer(expired_question, "yes")
