@@ -121,11 +121,34 @@ def _build_local_runtime(session_id: str = "default") -> CapabilityAwareRuntime:
     from .local_language_runtime import LocalLanguageRuntime, LocalRuntimeConfig
 
     normalized_session_id = session_id.strip() or "default"
+
     local = LocalLanguageRuntime(
         LocalRuntimeConfig.from_environment(Path.cwd()),
         session_id=normalized_session_id,
     )
-    return CapabilityAwareRuntime(local, session_id=normalized_session_id)
+
+    previous_network_mode = os.environ.get(
+        "GARVIS_NETWORK_MODE"
+    )
+
+    if previous_network_mode is None:
+        os.environ["GARVIS_NETWORK_MODE"] = "thanos"
+
+    try:
+        return CapabilityAwareRuntime(
+            local,
+            session_id=normalized_session_id,
+        )
+    finally:
+        if previous_network_mode is None:
+            os.environ.pop(
+                "GARVIS_NETWORK_MODE",
+                None,
+            )
+        else:
+            os.environ["GARVIS_NETWORK_MODE"] = (
+                previous_network_mode
+            )
 
 
 def _configure_local_memory(args: argparse.Namespace) -> None:
