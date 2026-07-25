@@ -69,7 +69,7 @@ def make_repo(tmp_path: Path) -> Path:
     return repo
 
 
-def commit_change(repo: Path, files: dict, message: str = "change") -> None:
+def commit_change(repo: Path, files: dict[str, str], message: str = "change") -> None:
     if _git(repo, "branch", "--show-current").strip() == "main":
         _git(repo, "checkout", "-q", "-b", "feature")
     for path, text in files.items():
@@ -78,7 +78,7 @@ def commit_change(repo: Path, files: dict, message: str = "change") -> None:
     _git(repo, "commit", "-q", "-m", message)
 
 
-def run_guard(repo: Path):
+def run_guard(repo: Path) -> subprocess.CompletedProcess[str]:
     # Inherit the real environment. Hardcoding PATH breaks on Termux, where
     # git lives under /data/data/com.termux/files/usr/bin rather than /usr/bin.
     env = dict(os.environ)
