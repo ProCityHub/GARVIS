@@ -2,23 +2,23 @@
 search:
   exclude: true
 ---
-# 使用量
+# 利用状況
 
-Agents SDK は、すべての実行に対するトークン使用量を自動的に追跡します。実行コンテキストから参照でき、コストの監視、制限の適用、分析の記録に利用できます。
+Agents SDK は各実行のトークン利用状況を自動的に追跡します。実行コンテキストから参照でき、コスト監視、制限の適用、分析記録に利用できます。
 
 ## 追跡対象
 
-- **requests**: 実行された LLM API 呼び出し数
+- **requests**: 実行された LLM API 呼び出し回数
 - **input_tokens**: 送信された入力トークンの合計
 - **output_tokens**: 受信した出力トークンの合計
-- **total_tokens**: 入力 + 出力
+- **total_tokens**: input + output
 - **details**:
   - `input_tokens_details.cached_tokens`
   - `output_tokens_details.reasoning_tokens`
 
-## 実行からの使用量へのアクセス
+## 実行からの利用状況の取得
 
-`Runner.run(...)` の後、`result.context_wrapper.usage` から使用量にアクセスします。
+`Runner.run(...)` の後、`result.context_wrapper.usage` から利用状況にアクセスします。
 
 ```python
 result = await Runner.run(agent, "What's the weather in Tokyo?")
@@ -30,11 +30,11 @@ print("Output tokens:", usage.output_tokens)
 print("Total tokens:", usage.total_tokens)
 ```
 
-使用量は、実行中のすべてのモデル呼び出し（ツール呼び出しやハンドオフを含む）にわたって集計されます。
+利用状況は実行中のすべてのモデル呼び出し（ツール呼び出しやハンドオフを含む）にわたって集計されます。
 
-### LiteLLM モデルでの使用量有効化
+### LiteLLM モデルでの利用状況の有効化
 
-LiteLLM プロバイダーは、デフォルトでは使用量メトリクスを報告しません。[`LitellmModel`](models/litellm.md) を使用する場合、エージェントに `ModelSettings(include_usage=True)` を渡すと、LiteLLM のレスポンスが `result.context_wrapper.usage` を埋めるようになります。
+LiteLLM プロバイダーはデフォルトでは利用状況メトリクスを報告しません。[`LitellmModel`](models/litellm.md) を使用する場合、エージェントに `ModelSettings(include_usage=True)` を渡すと、LiteLLM のレスポンスが `result.context_wrapper.usage` に反映されます。
 
 ```python
 from agents import Agent, ModelSettings, Runner
@@ -50,9 +50,9 @@ result = await Runner.run(agent, "What's the weather in Tokyo?")
 print(result.context_wrapper.usage.total_tokens)
 ```
 
-## セッションでの使用量へのアクセス
+## セッションでの利用状況の取得
 
-`Session`（例えば、`SQLiteSession`）を使用する場合、`Runner.run(...)` への各呼び出しは、その特定の実行の使用量を返します。セッションはコンテキスト用に会話履歴を保持しますが、各実行の使用量は独立しています。
+`Session`（例: `SQLiteSession`）を使用する場合、`Runner.run(...)` の各呼び出しは、その特定の実行に対する利用状況を返します。セッションは文脈として会話履歴を保持しますが、各実行の利用状況は独立しています。
 
 ```python
 session = SQLiteSession("my_conversation")
@@ -64,11 +64,11 @@ second = await Runner.run(agent, "Can you elaborate?", session=session)
 print(second.context_wrapper.usage.total_tokens)  # Usage for second run
 ```
 
-セッションは実行間で会話コンテキストを保持しますが、各 `Runner.run()` 呼び出しで返される使用量メトリクスは、その実行のみを表します。セッションでは、前のメッセージが各実行の入力として再投入される場合があり、その結果、後続ターンの入力トークン数に影響します。
+セッションは実行間で会話コンテキストを保持しますが、各 `Runner.run()` 呼び出しで返される利用状況メトリクスは、その実行のみを表します。セッションでは、前のメッセージが各実行の入力として再投入される場合があり、その結果、後続のターンで入力トークン数に影響します。
 
-## フックでの使用量の利用
+## フックでの利用状況の活用
 
-`RunHooks` を使用している場合、各フックに渡される `context` オブジェクトには `usage` が含まれます。これにより、重要なライフサイクル時点で使用量を記録できます。
+`RunHooks` を使用している場合、各フックに渡される `context` オブジェクトには `usage` が含まれます。これにより、ライフサイクルの重要なタイミングで利用状況を記録できます。
 
 ```python
 class MyHooks(RunHooks):
@@ -79,8 +79,8 @@ class MyHooks(RunHooks):
 
 ## API リファレンス
 
-詳細な API ドキュメントは以下を参照してください。
+詳細な API ドキュメントは以下をご覧ください:
 
-- [`Usage`][agents.usage.Usage] - 使用量追跡のデータ構造
-- [`RunContextWrapper`][agents.run.RunContextWrapper] - 実行コンテキストからの使用量アクセス
-- [`RunHooks`][agents.run.RunHooks] - 使用量追跡ライフサイクルへのフック
+-   [`Usage`][agents.usage.Usage] - 利用状況の追跡データ構造
+-   [`RunContextWrapper`][agents.run.RunContextWrapper] - 実行コンテキストから利用状況にアクセス
+-   [`RunHooks`][agents.run.RunHooks] - 利用状況トラッキングのライフサイクルにフック
