@@ -7,6 +7,7 @@ import ipaddress
 import json
 import re
 import socket
+import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from html.parser import HTMLParser
 from urllib.parse import parse_qs, quote_plus, unquote, urljoin, urlparse
@@ -101,6 +102,60 @@ def _unpack_ddg(url: str) -> str:
     parsed = urlparse(html.unescape(url))
     query = parse_qs(parsed.query)
     return unquote(query["uddg"][0]) if query.get("uddg") else html.unescape(url)
+
+
+_OFFICIAL_SOURCE_CATALOG = (
+    (
+        ("python", "asyncio"),
+        "Python asyncio documentation",
+        "https://docs.python.org/3/library/asyncio.html",
+    ),
+    (
+        ("python", "subprocess"),
+        "Python subprocess documentation",
+        "https://docs.python.org/3/library/subprocess.html",
+    ),
+    (
+        ("python", "logging"),
+        "Python logging documentation",
+        "https://docs.python.org/3/library/logging.html",
+    ),
+    (
+        ("python", "concurrent"),
+        "Python concurrent.futures documentation",
+        "https://docs.python.org/3/library/concurrent.futures.html",
+    ),
+    (
+        ("github", "actions"),
+        "GitHub Actions documentation",
+        "https://docs.github.com/en/actions",
+    ),
+    (
+        ("git", "worktree"),
+        "Git worktree documentation",
+        "https://git-scm.com/docs/git-worktree",
+    ),
+    (
+        ("pytest",),
+        "pytest documentation",
+        "https://docs.pytest.org/en/stable/",
+    ),
+    (
+        ("mypy",),
+        "mypy documentation",
+        "https://mypy.readthedocs.io/en/stable/",
+    ),
+    (
+        ("pydantic",),
+        "Pydantic documentation",
+        "https://docs.pydantic.dev/latest/",
+    ),
+    (
+        ("model context protocol",),
+        "Model Context Protocol documentation",
+        "https://modelcontextprotocol.io/docs",
+    ),
+)
 
 
 def _validate_public_url(url: str) -> None:
@@ -230,6 +285,292 @@ class InternetResearchClient:
             if isinstance(source_url, str)
         ]
 
+    def _official_sources(self, query: str) -> list[ResearchSource]:
+        """Return known official documentation relevant to the actual query."""
+
+        lowered = query.casefold()
+        results: list[ResearchSource] = []
+
+        for required, title, url in _OFFICIAL_SOURCE_CATALOG:
+            if not all(term in lowered for term in required):
+                continue
+
+            results.append(
+                ResearchSource(
+                    title=title,
+                    url=url,
+                    domain=_domain(url),
+                    snippet="Official documentation relevant to the research query.",
+                )
+            )
+
+            if len(results) >= self.policy.max_results:
+                break
+
+        return results
+
+    def _duckduckgo_lite(self, query: str) -> list[ResearchSource]:
+        """Use DuckDuckGo's lite interface as a second parser/search path."""
+
+        body, _, _ = self._get(
+            "https://lite.duckduckgo.com/lite/?q="
+            f"{quote_plus(query)}"
+        )
+
+        text = body.decode(
+            "utf-8",
+            errors="replace",
+        )
+
+        links = re.findall(
+            r'<a[^>]+href=["\']([^"\']+)["\'][^>]*>(.*?)</a>',
+            text,
+            re.I | re.S,
+        )
+
+        results: list[ResearchSource] = []
+        seen: set[str] = set()
+
+        for raw_url, raw_title in links:
+            url = _unpack_ddg(raw_url)
+
+            if not urlparse(url).scheme:
+                url = urljoin(
+                    "https://lite.duckduckgo.com/",
+                    url,
+                )
+                url = _unpack_ddg(url)
+
+            domain = _domain(url)
+
+            if (
+                not domain
+                or domain.endswith("duckduckgo.com")
+                or url in seen
+            ):
+                continue
+
+            try:
+                _validate_public_url(url)
+            except ResearchError:
+                continue
+
+            seen.add(url)
+
+            results.append(
+                ResearchSource(
+                    title=_visible(raw_title) or domain,
+                    url=url,
+                    domain=domain,
+                    snippet="",
+                )
+            )
+
+            if len(results) >= self.policy.max_results:
+                break
+
+        return results
+
+    def _github(self, query: str) -> list[ResearchSource]:
+        """Search public GitHub repositories through GitHub's public API."""
+
+        terms = re.findall(
+            r"[A-Za-z0-9_.+-]{3,}",
+            query,
+        )
+
+        search_query = " ".join(
+            terms[:12]
+        ).strip()
+
+        if not search_query:
+            return []
+
+        url = (
+            "https://api.github.com/search/repositories?"
+            f"q={quote_plus(search_query[:180])}"
+            "&sort=updated&order=desc"
+            f"&per_page={self.policy.max_results}"
+        )
+
+        body, _, _ = self._get(url)
+
+        data = json.loads(
+            body.decode(
+                "utf-8",
+                errors="replace",
+            )
+        )
+
+        items = data.get("items", [])
+
+        if not isinstance(items, list):
+            return []
+
+        results: list[ResearchSource] = []
+
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+
+            api_url = str(
+                item.get("url") or ""
+            ).strip()
+
+            if not api_url:
+                continue
+
+            try:
+                _validate_public_url(api_url)
+            except ResearchError:
+                continue
+
+            description = str(
+                item.get("description") or ""
+            )
+
+            metadata = {
+                "full_name": item.get("full_name"),
+                "description": item.get("description"),
+                "language": item.get("language"),
+                "updated_at": item.get("updated_at"),
+                "pushed_at": item.get("pushed_at"),
+                "stargazers_count": item.get(
+                    "stargazers_count"
+                ),
+                "html_url": item.get("html_url"),
+            }
+
+            results.append(
+                ResearchSource(
+                    title=str(
+                        item.get("full_name")
+                        or item.get("name")
+                        or "GitHub repository"
+                    ),
+                    url=api_url,
+                    domain=_domain(api_url),
+                    snippet=description[:500],
+                    excerpt=json.dumps(
+                        metadata,
+                        sort_keys=True,
+                    )[: self.policy.max_excerpt_chars],
+                )
+            )
+
+            if len(results) >= self.policy.max_results:
+                break
+
+        return results
+
+    def _arxiv(self, query: str) -> list[ResearchSource]:
+        """Search arXiv for papers related to the actual research query."""
+
+        terms = re.findall(
+            r"[A-Za-z0-9_-]{3,}",
+            query,
+        )
+
+        compact = " ".join(
+            terms[:16]
+        ).strip()
+
+        if not compact:
+            return []
+
+        search_expression = quote_plus(
+            "all:" + compact
+        )
+
+        url = (
+            "https://export.arxiv.org/api/query?"
+            f"search_query={search_expression}"
+            "&start=0"
+            f"&max_results={self.policy.max_results}"
+        )
+
+        body, _, _ = self._get(url)
+
+        root = ET.fromstring(body)
+
+        namespace = {
+            "atom": "http://www.w3.org/2005/Atom"
+        }
+
+        results: list[ResearchSource] = []
+
+        for entry in root.findall(
+            "atom:entry",
+            namespace,
+        ):
+            title = " ".join(
+                (
+                    entry.findtext(
+                        "atom:title",
+                        default="",
+                        namespaces=namespace,
+                    )
+                    or ""
+                ).split()
+            )
+
+            summary = " ".join(
+                (
+                    entry.findtext(
+                        "atom:summary",
+                        default="",
+                        namespaces=namespace,
+                    )
+                    or ""
+                ).split()
+            )
+
+            source_url = (
+                entry.findtext(
+                    "atom:id",
+                    default="",
+                    namespaces=namespace,
+                )
+                or ""
+            ).strip()
+
+            if source_url.startswith(
+                "http://arxiv.org/"
+            ):
+                source_url = (
+                    "https://arxiv.org/"
+                    + source_url[
+                        len("http://arxiv.org/"):
+                    ]
+                )
+
+            if not source_url:
+                continue
+
+            try:
+                _validate_public_url(
+                    source_url
+                )
+            except ResearchError:
+                continue
+
+            results.append(
+                ResearchSource(
+                    title=title or "arXiv paper",
+                    url=source_url,
+                    domain=_domain(source_url),
+                    snippet=summary[:500],
+                    excerpt=summary[
+                        : self.policy.max_excerpt_chars
+                    ],
+                )
+            )
+
+            if len(results) >= self.policy.max_results:
+                break
+
+        return results
+
     def _excerpt(self, source: ResearchSource) -> ResearchSource:
         try:
             body, final_url, content_type = self._get(source.url)
@@ -248,27 +589,115 @@ class InternetResearchClient:
         )
 
     def research(self, query: str) -> ResearchReport:
-        clean = " ".join(query.strip().split())
+        clean = " ".join(
+            query.strip().split()
+        )
+
         if not clean:
-            raise ResearchError("Research query must not be empty")
-        provider = "duckduckgo_html"
-        try:
-            sources = self._duckduckgo(clean)
-        except (ResearchError, requests.RequestException, ValueError):
-            sources = []
-        if not sources:
-            provider = "wikipedia_opensearch"
+            raise ResearchError(
+                "Research query must not be empty"
+            )
+
+        sources: list[ResearchSource] = []
+        seen: set[str] = set()
+        providers: list[str] = []
+
+        def add(
+            provider: str,
+            candidates: list[ResearchSource],
+        ) -> None:
+            added = False
+
+            for source in candidates:
+                if (
+                    not source.url
+                    or source.url in seen
+                ):
+                    continue
+
+                seen.add(source.url)
+                sources.append(source)
+                added = True
+
+                if (
+                    len(sources)
+                    >= self.policy.max_results
+                ):
+                    break
+
+            if added:
+                providers.append(provider)
+
+        add(
+            "official_catalog",
+            self._official_sources(clean),
+        )
+
+        provider_calls = (
+            (
+                "duckduckgo_html",
+                self._duckduckgo,
+            ),
+            (
+                "duckduckgo_lite",
+                self._duckduckgo_lite,
+            ),
+            (
+                "wikipedia_opensearch",
+                self._wikipedia,
+            ),
+            (
+                "github_repository_search",
+                self._github,
+            ),
+            (
+                "arxiv",
+                self._arxiv,
+            ),
+        )
+
+        for provider_name, provider_call in provider_calls:
+            if (
+                len(sources)
+                >= self.policy.max_results
+            ):
+                break
+
             try:
-                sources = self._wikipedia(clean)
+                candidates = provider_call(clean)
             except (
                 ResearchError,
                 requests.RequestException,
                 ValueError,
                 json.JSONDecodeError,
-            ) as exc:
-                raise ResearchError(f"No public results available: {exc}") from exc
+                ET.ParseError,
+            ):
+                candidates = []
+
+            add(
+                provider_name,
+                candidates,
+            )
+
+        if not sources:
+            raise ResearchError(
+                "No public results available from "
+                "official documentation, DuckDuckGo, "
+                "Wikipedia, GitHub, or arXiv"
+            )
+
         enriched = tuple(
-            self._excerpt(source) if index < self.policy.max_pages else source
-            for index, source in enumerate(sources)
+            self._excerpt(source)
+            if index < self.policy.max_pages
+            else source
+            for index, source in enumerate(
+                sources
+            )
         )
-        return ResearchReport(clean, enriched, provider)
+
+        return ResearchReport(
+            clean,
+            enriched,
+            "+".join(providers)
+            or "multi_source_public_research",
+        )
