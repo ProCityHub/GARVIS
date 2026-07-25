@@ -1,0 +1,21 @@
+# GARVIS governance ownership
+# Owner and final merge authority: Adrien D. Thomas (@ProCityHub)
+#
+# Pair with branch protection on main:
+#   - Require a pull request before merging
+#   - Require review from Code Owners
+#   - Do not allow bypassing the above settings
+#
+# This file is the enforcement wall. It lives on GitHub's side, outside the
+# runtime GARVIS can rewrite.
+
+/.github/                          @ProCityHub
+/FROZEN_FILES.txt                  @ProCityHub
+/GOVERNED_FILES.txt                @ProCityHub
+/RETRACTIONS.md                    @ProCityHub
+/src/garvis/thanos_mode.py         @ProCityHub
+/src/garvis/stage_gate.py          @ProCityHub
+/src/garvis/stage_gate_store.py    @ProCityHub
+/src/garvis/upgrade_cycle.py       @ProCityHub
+/src/garvis/upgrade_research.py    @ProCityHub
+/src/garvis/github_maintenance.py  @ProCityHub
