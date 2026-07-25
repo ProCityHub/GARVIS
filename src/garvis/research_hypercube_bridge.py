@@ -31,7 +31,7 @@ import tempfile
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation, localcontext
 from pathlib import Path
-from typing import Any, Mapping, Optional, Sequence, Tuple
+from typing import Any, Mapping, Optional, Protocol, Sequence, Tuple
 
 from garvis.assistant import GarvisAssistant
 from garvis.hypercube_snapshot import validate_hypercube_snapshot
@@ -57,6 +57,20 @@ __all__ = [
 
 class BridgeError(RuntimeError):
     """Raised when a research-to-verification cycle cannot be completed."""
+
+
+class ResearchClient(Protocol):
+    """Internet-research interface accepted by the bridge."""
+
+    def research(self, query: str) -> ResearchReport:
+        ...
+
+
+class ReasoningAssistant(Protocol):
+    """GARVIS reasoning interface accepted by the bridge."""
+
+    async def respond(self, message: str, *, session_id: str) -> Any:
+        ...
 
 
 @dataclass(frozen=True)
@@ -428,8 +442,8 @@ class HypercubeResearchBridge:
         repository_root: Path,
         model: str,
         ledger_path: Path,
-        research_client: Optional[InternetResearchClient] = None,
-        assistant: Optional[GarvisAssistant] = None,
+        research_client: Optional[ResearchClient] = None,
+        assistant: Optional[ReasoningAssistant] = None,
     ) -> None:
         self.repository_root = repository_root
         self.model = model
