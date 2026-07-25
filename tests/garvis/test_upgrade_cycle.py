@@ -182,21 +182,35 @@ def _at_merging(cycle, auth):
     return current
 
 
-def _preconditions(**overrides) -> MergePreconditions:
-    base = {
-        "repository": "ProCityHub/GARVIS",
-        "changed_paths": ("src/garvis/assistant.py",),
-        "expected_head_sha": "abc123",
-        "actual_head_sha": "abc123",
-        "required_checks_complete": True,
-        "required_checks_passed": True,
-        "tested_artifact_sha": "tree1",
-        "proposed_artifact_sha": "tree1",
-        "base_sha_at_test_time": "base1",
-        "base_sha_now": "base1",
-    }
-    base.update(overrides)
-    return MergePreconditions(**base)
+def _preconditions(
+    *,
+    repository: str = "ProCityHub/GARVIS",
+    changed_paths: tuple[str, ...] = ("src/garvis/assistant.py",),
+    expected_head_sha: str = "abc123",
+    actual_head_sha: str = "abc123",
+    required_checks_complete: bool = True,
+    required_checks_passed: bool = True,
+    tested_artifact_sha: str = "tree1",
+    proposed_artifact_sha: str = "tree1",
+    base_sha_at_test_time: str = "base1",
+    base_sha_now: str = "base1",
+    secrets_detected: bool = False,
+    rollback_available: bool = True,
+) -> MergePreconditions:
+    return MergePreconditions(
+        repository=repository,
+        changed_paths=changed_paths,
+        expected_head_sha=expected_head_sha,
+        actual_head_sha=actual_head_sha,
+        required_checks_complete=required_checks_complete,
+        required_checks_passed=required_checks_passed,
+        tested_artifact_sha=tested_artifact_sha,
+        proposed_artifact_sha=proposed_artifact_sha,
+        base_sha_at_test_time=base_sha_at_test_time,
+        base_sha_now=base_sha_now,
+        secrets_detected=secrets_detected,
+        rollback_available=rollback_available,
+    )
 
 
 def test_green_cycle_merges_without_owner_checkpoint(cycle, auth) -> None:

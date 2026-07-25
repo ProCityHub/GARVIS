@@ -22,18 +22,25 @@ from garvis.upgrade_research import (
 )
 
 
-def _evidence(url: str = "https://docs.python.org/3.9/library/datetime.html", **kw):
-    base = {
-        "query": "datetime.UTC availability",
-        "url": url,
-        "content": b"datetime.UTC was added in Python 3.11",
-        "claim": "datetime.UTC is unavailable before Python 3.11",
-        "confidence": "high",
-        "subject_version": "3.9",
-        "affects": "replace datetime.UTC with timezone.utc",
-    }
-    base.update(kw)
-    return evidence_from_source(**base)
+def _evidence(
+    url: str = "https://docs.python.org/3.9/library/datetime.html",
+    *,
+    query: str = "datetime.UTC availability",
+    content: bytes = b"datetime.UTC was added in Python 3.11",
+    claim: str = "datetime.UTC is unavailable before Python 3.11",
+    confidence: str = "high",
+    subject_version: str = "3.9",
+    affects: str = "replace datetime.UTC with timezone.utc",
+) -> ResearchEvidence:
+    return evidence_from_source(
+        query=query,
+        url=url,
+        content=content,
+        claim=claim,
+        confidence=confidence,
+        subject_version=subject_version,
+        affects=affects,
+    )
 
 
 @pytest.mark.parametrize(
