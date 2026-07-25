@@ -83,3 +83,70 @@ def test_zero_source_report_is_refused(monkeypatch) -> None:
         client.research(
             "a query with no available source"
         )
+
+
+
+def test_duckduckgo_lite_ignores_non_result_links(monkeypatch) -> None:
+    import garvis.internet_research as research_module
+    from garvis.internet_research import InternetResearchClient, ResearchPolicy
+
+    client = InternetResearchClient(
+        policy=ResearchPolicy(
+            max_results=5,
+            max_pages=0,
+        )
+    )
+
+    html = """
+    <html>
+      <body>
+        <a href="https://navigation.example/help">Navigation</a>
+        <a class="result-link" href="https://result-one.example/page">
+          Result One
+        </a>
+        <a href="https://result-two.example/page" class="result-link">
+          Result Two
+        </a>
+      </body>
+    </html>
+    """
+
+    monkeypatch.setattr(
+        research_module,
+        "_validate_public_url",
+        lambda _url: None,
+    )
+    monkeypatch.setattr(
+        client,
+        "_get",
+        lambda url: (
+            html.encode("utf-8"),
+            "text/html",
+            url,
+        ),
+    )
+
+    results = client._duckduckgo_lite("test query")
+
+    assert [item.url for item in results] == [
+        "https://result-one.example/page",
+        "https://result-two.example/page",
+    ]
+
+
+def test_github_non_object_payload_returns_empty(monkeypatch) -> None:
+    from garvis.internet_research import InternetResearchClient
+
+    client = InternetResearchClient()
+
+    monkeypatch.setattr(
+        client,
+        "_get",
+        lambda url: (
+            b'["unexpected", "payload"]',
+            "application/json",
+            url,
+        ),
+    )
+
+    assert client._github("python autonomous agent") == []

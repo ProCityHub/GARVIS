@@ -229,3 +229,42 @@ def test_hypercube_recalculates_numeric_claim(
     assert result["math_verification_status"] == "PASS"
     assert result["hypercube_acceptance"] == "PASS"
     assert result["math_verification"][0]["actual"] == "1"
+
+
+
+def test_governance_record_is_private_and_self_describing(
+    tmp_path: Path,
+) -> None:
+    import json
+
+    report = ResearchReport(
+        "research current Python documentation",
+        (
+            ResearchSource(
+                "Python documentation",
+                "https://docs.python.org/3/",
+                "docs.python.org",
+                "Official Python documentation.",
+                "Official Python documentation.",
+            ),
+        ),
+        "test-primary",
+    )
+
+    _, result = govern_research_answer(
+        "research current Python documentation",
+        "Evidence [S1]\nGARVIS_MATH_CLAIMS_JSON=[]",
+        report,
+        tmp_path,
+        session_id="permissions-test",
+        garvis_home=tmp_path / "garvis-home",
+    )
+
+    record = Path(result["verification_record"])
+    persisted = json.loads(
+        record.read_text(encoding="utf-8")
+    )
+
+    assert persisted["verification_record"] == str(record)
+    assert record.stat().st_mode & 0o777 == 0o600
+    assert record.parent.stat().st_mode & 0o777 == 0o700

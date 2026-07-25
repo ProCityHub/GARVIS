@@ -138,3 +138,59 @@ def test_build_local_runtime_normalizes_shared_session_id(
         "local": expected_session_id,
         "capability": expected_session_id,
     }
+
+
+
+def test_build_local_runtime_intentionally_defaults_cli_to_thanos(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, str | None] = {}
+
+    monkeypatch.delenv(
+        "GARVIS_NETWORK_MODE",
+        raising=False,
+    )
+
+    class FakeLocalRuntimeConfig:
+        @staticmethod
+        def from_environment(_repository_root: object) -> object:
+            return object()
+
+    class FakeLocalLanguageRuntime:
+        def __init__(
+            self,
+            _config: object,
+            *,
+            session_id: str,
+        ) -> None:
+            captured["session_id"] = session_id
+
+    class FakeCapabilityAwareRuntime:
+        def __init__(
+            self,
+            _local_runtime: object,
+            *,
+            session_id: str,
+        ) -> None:
+            captured["network_mode_during_construction"] = (
+                cli.os.environ.get("GARVIS_NETWORK_MODE")
+            )
+            captured["capability_session_id"] = session_id
+
+    monkeypatch.setattr(
+        "garvis.local_language_runtime.LocalRuntimeConfig",
+        FakeLocalRuntimeConfig,
+    )
+    monkeypatch.setattr(
+        "garvis.local_language_runtime.LocalLanguageRuntime",
+        FakeLocalLanguageRuntime,
+    )
+    monkeypatch.setattr(
+        "garvis.capability_runtime.CapabilityAwareRuntime",
+        FakeCapabilityAwareRuntime,
+    )
+
+    cli._build_local_runtime()
+
+    assert captured["network_mode_during_construction"] == "thanos"
+    assert "GARVIS_NETWORK_MODE" not in cli.os.environ

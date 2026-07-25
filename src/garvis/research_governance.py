@@ -381,14 +381,23 @@ def govern_research_answer(
     output.parent.mkdir(
         parents=True,
         exist_ok=True,
+        mode=0o700,
     )
+    output.parent.chmod(0o700)
+
+    result["verification_record"] = str(output)
+
+    output.touch(
+        mode=0o600,
+        exist_ok=True,
+    )
+    output.chmod(0o600)
 
     output.write_text(
         json.dumps(result, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
     )
-
-    result["verification_record"] = str(output)
+    output.chmod(0o600)
 
     return clean_answer, result
 
