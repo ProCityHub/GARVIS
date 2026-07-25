@@ -195,6 +195,10 @@ def _run_local(args: argparse.Namespace) -> int:
 
 def _check_configuration(model: str | None = None) -> str | None:
     from .anthropic_backend import is_anthropic_model
+    from .provider_bridge import (
+        is_openai_compatible_model,
+        provider_configuration_error,
+    )
 
     resolved = model or os.getenv("GARVIS_MODEL", DEFAULT_REMOTE_MODEL)
     if is_anthropic_model(resolved):
@@ -205,6 +209,8 @@ def _check_configuration(model: str | None = None) -> str | None:
                 "the repository."
             )
         return None
+    if is_openai_compatible_model(resolved):
+        return provider_configuration_error(resolved)
     if resolved.strip().lower().startswith("litellm/"):
         return None  # provider-specific keys; litellm reports its own errors
     if not os.getenv("OPENAI_API_KEY"):
