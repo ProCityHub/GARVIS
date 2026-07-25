@@ -46,7 +46,12 @@ class ProviderSpec:
 
 
 _PROVIDER_SPECS = {
+    # groq/ and grok/ are different companies and are deliberately adjacent
+    # here so the one-letter difference is visible at the point of change.
+    # groq/ -> Groq, inference hardware serving open models.
+    # grok/ -> xAI, the Grok model family.
     "groq": ProviderSpec("groq", "groq/", "https://api.groq.com/openai/v1", "GROQ_API_KEY"),
+    "grok": ProviderSpec("grok", "grok/", "https://api.x.ai/v1", "XAI_API_KEY"),
     "openrouter": ProviderSpec(
         "openrouter", "openrouter/", "https://openrouter.ai/api/v1", "OPENROUTER_API_KEY"
     ),
