@@ -1,4 +1,5 @@
 from __future__ import annotations
+import os
 
 import asyncio
 
@@ -173,7 +174,7 @@ def test_build_local_runtime_intentionally_defaults_cli_to_thanos(
             session_id: str,
         ) -> None:
             captured["network_mode_during_construction"] = (
-                cli.os.environ.get("GARVIS_NETWORK_MODE")
+                os.environ.get("GARVIS_NETWORK_MODE")
             )
             captured["capability_session_id"] = session_id
 
@@ -193,4 +194,4 @@ def test_build_local_runtime_intentionally_defaults_cli_to_thanos(
     cli._build_local_runtime()
 
     assert captured["network_mode_during_construction"] == "thanos"
-    assert "GARVIS_NETWORK_MODE" not in cli.os.environ
+    assert "GARVIS_NETWORK_MODE" not in os.environ
