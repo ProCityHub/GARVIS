@@ -19,7 +19,7 @@ class FakeLocal:
     def __init__(self, repository_root: Path, answer: str) -> None:
         self.repository_root = repository_root
         self.answer = answer
-        self.calls = []
+        self.calls: list[tuple[str, str, str]] = []
 
     def respond(
         self,
@@ -36,7 +36,7 @@ class FakeLocal:
 
 class PrimaryResearcher:
     def __init__(self) -> None:
-        self.queries = []
+        self.queries: list[str] = []
 
     def research(self, query: str) -> ResearchReport:
         self.queries.append(query)
