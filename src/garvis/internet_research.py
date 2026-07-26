@@ -323,7 +323,8 @@ class InternetResearchClient:
         )
 
         links = re.findall(
-            r'<a[^>]+href=["\']([^"\']+)["\'][^>]*>(.*?)</a>',
+            r'<a(?=[^>]*\bclass=["\'][^"\']*result-link[^"\']*["\'])'
+            r'[^>]+href=["\']([^"\']+)["\'][^>]*>(.*?)</a>',
             text,
             re.I | re.S,
         )
@@ -401,6 +402,9 @@ class InternetResearchClient:
                 errors="replace",
             )
         )
+
+        if not isinstance(data, dict):
+            return []
 
         items = data.get("items", [])
 
