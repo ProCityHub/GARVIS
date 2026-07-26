@@ -1,7 +1,3 @@
-from math import isclose, pi
-
-import pytest
-
 from garvis.prime_oab_reciprocal import (
     EPOCH_NODES,
     OABCapsule,
@@ -99,6 +95,7 @@ def test_machine_checkable_claims_are_plain_arithmetic():
 def test_retracted_scalar_phi_rule_is_not_executable():
     import ast
     import inspect
+
     import garvis.prime_oab_reciprocal as module
 
     tree = ast.parse(inspect.getsource(module))
