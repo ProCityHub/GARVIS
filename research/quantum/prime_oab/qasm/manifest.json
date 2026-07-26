@@ -1,0 +1,62 @@
+[
+  {
+    "label": "V4_PRIME_OAB",
+    "filename": "GARVIS_HYPERCUBE_HEARTBEAT_PRIME_OAB_V4.qasm",
+    "sha256": "ecbb149cc352ff00f2e62c521a49784465dab937072e3c5bec74495ca234aa76",
+    "bytes": 9780
+  },
+  {
+    "label": "V5_INTERFERENCE",
+    "filename": "GARVIS_HYPERCUBE_HEARTBEAT_INTERFERENCE_V5.qasm",
+    "sha256": "b57091df80f2744dc79ec0d5ab9b1af626fdee91be2ffd6dcea023622a12c480",
+    "bytes": 12093
+  },
+  {
+    "label": "V6_EVIDENCE",
+    "filename": "GARVIS_HYPERCUBE_HEARTBEAT_EVIDENCE_V6.qasm",
+    "sha256": "95e81c320d6215aeceddefc9f98a57b301d364a440d9f15ecd4e10dd6ce9d5df",
+    "bytes": 12711
+  },
+  {
+    "label": "V7_CONTROLLED",
+    "filename": "GARVIS_HYPERCUBE_HEARTBEAT_CONTROLLED_V7.qasm",
+    "sha256": "123ac74f9c7a882118e91a7028fa274f3f3a0ef10a144e0dd4244d04b3eb54f0",
+    "bytes": 13289
+  },
+  {
+    "label": "V8_CLOSED_LOOP",
+    "filename": "GARVIS_HYPERCUBE_CLOSED_LOOP_V8.qasm",
+    "sha256": "f30d37da87de8dfd4ecf5fecd4d191b1b4bc8b5036d8d2694e6eedc5640365b5",
+    "bytes": 4345
+  },
+  {
+    "label": "V9_MIRROR_LOOP",
+    "filename": "GARVIS_HYPERCUBE_MIRROR_LOOP_V9.qasm",
+    "sha256": "27d6fbc97fc96d65ff25038e135178f33a9ba4f9e24d3977b72139d062920dc2",
+    "bytes": 11205
+  },
+  {
+    "label": "V10_100Q_FULL_EPOCH",
+    "filename": "GARVIS_HYPERCUBE_FULL_EPOCH_V10_100Q.qasm",
+    "sha256": "50413b843d8978c93683499656f67ac8d91c13eb4c37b9f1727610ca8f98e975",
+    "bytes": 13733
+  },
+  {
+    "label": "V11_128Q_TWO_WAY_MIRROR_FIXED",
+    "filename": "GARVIS_PRIME_OAB_TWO_WAY_MIRROR_V11_128Q_FIXED.qasm",
+    "sha256": "41ad3e0768e41514904728403a678497479dd6db33bdaac85e2a9c0767e2c48b",
+    "bytes": 24609
+  },
+  {
+    "label": "V12_128Q_MIRROR_FIELD_COMPOSER_SAFE",
+    "filename": "GARVIS_PRIME_MIRROR_FIELD_V12_128Q_COMPOSER_SAFE.qasm",
+    "sha256": "9edc55b0bed83ea5410215040a87211281e46fd3b8fd4333bbafc70ae420d3da",
+    "bytes": 25812
+  },
+  {
+    "label": "V12_5Q_RUNNABLE_TWIN",
+    "filename": "GARVIS_PRIME_OAB_MIRROR_QSPHERE_5Q_RUNNABLE.qasm",
+    "sha256": "a613d2ee9ed6047f1125479b673c1645d36c2bc164294c09bc80f3e4cfc9f996",
+    "bytes": 3726
+  }
+]
