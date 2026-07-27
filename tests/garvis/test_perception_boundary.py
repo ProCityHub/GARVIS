@@ -4,7 +4,6 @@ from datetime import datetime, timezone
 
 from garvis.interaction_contracts import ActionProposal, Observation
 
-
 NOW = datetime(2026, 7, 27, 12, 0, tzinfo=timezone.utc)
 
 

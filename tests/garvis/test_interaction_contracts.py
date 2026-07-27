@@ -14,97 +14,96 @@ from garvis.interaction_contracts import (
     grant_authorizes,
 )
 
-
 NOW = datetime(2026, 7, 27, 12, 0, tzinfo=timezone.utc)
 
 
 def observation(**overrides):
-    data = dict(
-        observation_id="obs-001",
-        source="synthetic-test",
-        source_type="document",
-        timestamp=NOW,
-        sequence=1,
-        acquisition_capability="test.fixture",
-        raw_reference="sha256:abc",
-        provenance="unit-test",
-        trust_classification="untrusted",
-        content_type="text/plain",
-        metadata={},
-    )
+    data = {
+        "observation_id": "obs-001",
+        "source": "synthetic-test",
+        "source_type": "document",
+        "timestamp": NOW,
+        "sequence": 1,
+        "acquisition_capability": "test.fixture",
+        "raw_reference": "sha256:abc",
+        "provenance": "unit-test",
+        "trust_classification": "untrusted",
+        "content_type": "text/plain",
+        "metadata": {},
+    }
     data.update(overrides)
     return Observation(**data)
 
 
 def evidence(**overrides):
-    data = dict(
-        evidence_id="ev-001",
-        evidence_type="observation",
-        source="synthetic-test",
-        created_at=NOW,
-        content="candidate statement",
-        digest="sha256:def",
-        provenance="unit-test",
-        verification_status="unverified",
-        parent_evidence_ids=(),
-        metadata={},
-    )
+    data = {
+        "evidence_id": "ev-001",
+        "evidence_type": "observation",
+        "source": "synthetic-test",
+        "created_at": NOW,
+        "content": "candidate statement",
+        "digest": "sha256:def",
+        "provenance": "unit-test",
+        "verification_status": "unverified",
+        "parent_evidence_ids": (),
+        "metadata": {},
+    }
     data.update(overrides)
     return Evidence(**data)
 
 
 def proposal(**overrides):
-    data = dict(
-        proposal_id="act-001",
-        run_id="run-001",
-        session_id="session-001",
-        operation="inspect",
-        target="artifact-A",
-        required_capability="artifact.read",
-        rationale="test",
-        supporting_evidence_ids=("ev-001",),
-        expected_consequence="read-only inspection",
-        risk_classification="low",
-        approval_requirement="explicit",
-        created_at=NOW,
-    )
+    data = {
+        "proposal_id": "act-001",
+        "run_id": "run-001",
+        "session_id": "session-001",
+        "operation": "inspect",
+        "target": "artifact-A",
+        "required_capability": "artifact.read",
+        "rationale": "test",
+        "supporting_evidence_ids": ("ev-001",),
+        "expected_consequence": "read-only inspection",
+        "risk_classification": "low",
+        "approval_requirement": "explicit",
+        "created_at": NOW,
+    }
     data.update(overrides)
     return ActionProposal(**data)
 
 
 def grant(**overrides):
-    data = dict(
-        grant_id="grant-001",
-        capability_id="artifact.read",
-        actor="garvis",
-        project="GARVIS",
-        stage="prototype",
-        operation="inspect",
-        target="artifact-A",
-        approval_evidence_id="approval-001",
-        issued_at=NOW - timedelta(minutes=1),
-        expires_at=NOW + timedelta(minutes=5),
-        revoked=False,
-        scope_metadata={},
-    )
+    data = {
+        "grant_id": "grant-001",
+        "capability_id": "artifact.read",
+        "actor": "garvis",
+        "project": "GARVIS",
+        "stage": "prototype",
+        "operation": "inspect",
+        "target": "artifact-A",
+        "approval_evidence_id": "approval-001",
+        "issued_at": NOW - timedelta(minutes=1),
+        "expires_at": NOW + timedelta(minutes=5),
+        "revoked": False,
+        "scope_metadata": {},
+    }
     data.update(overrides)
     return CapabilityGrant(**data)
 
 
 def result(**overrides):
-    data = dict(
-        execution_id="exec-001",
-        proposal_id="act-001",
-        grant_id="grant-001",
-        adapter_id="simulation-only",
-        started_at=NOW,
-        completed_at=NOW,
-        status="failed",
-        result_evidence_ids=("ev-result-001",),
-        error="synthetic failure",
-        observed_state_digest="sha256:ghi",
-        metadata={},
-    )
+    data = {
+        "execution_id": "exec-001",
+        "proposal_id": "act-001",
+        "grant_id": "grant-001",
+        "adapter_id": "simulation-only",
+        "started_at": NOW,
+        "completed_at": NOW,
+        "status": "failed",
+        "result_evidence_ids": ("ev-result-001",),
+        "error": "synthetic failure",
+        "observed_state_digest": "sha256:ghi",
+        "metadata": {},
+    }
     data.update(overrides)
     return ExecutionResult(**data)
 
