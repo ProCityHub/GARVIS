@@ -38,7 +38,6 @@ PROJECT_DESIGNATION = "GARVIS_VERSION_2_FULL_AGI_BETA"
 _UNIMPLEMENTED = (
     "INTERNET_RESEARCH_WIRING",
     "UPGRADE_WORKSPACE",
-    "REPAIR_ENGINE",
     "GITHUB_CI_MONITOR",
     "RUNTIME_HEALTH_CHECK",
     "ROLLBACK",
@@ -72,7 +71,27 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("pause", help="Suspend autonomous work without revoking.")
     sub.add_parser("resume", help="Resume a paused standing authorization.")
     sub.add_parser("history", help="Print the authorization chain.")
-    sub.add_parser("run", help="Run one autonomous upgrade cycle.")
+    run = sub.add_parser("run", help="Run one autonomous repair cycle.")
+    run.add_argument(
+        "--objective",
+        default=(
+            "Repair and improve GARVIS provider adapters, Universal AI Router, "
+            "runtime integration, research/evidence plumbing, and Hypercube "
+            "Heartbeat interfaces."
+        ),
+        help="Repair objective.",
+    )
+    run.add_argument(
+        "--model",
+        default=None,
+        help="Repair model; defaults to GARVIS_REPAIR_MODEL/GARVIS_MODEL.",
+    )
+    run.add_argument(
+        "--max-repairs",
+        type=int,
+        default=3,
+        help="Maximum bounded patch attempts. Default: 3.",
+    )
     sub.add_parser("health", help="Report runtime health.")
 
     revoke = sub.add_parser("revoke", help="Permanently revoke THANOS MODE.")
@@ -181,10 +200,24 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"CHAIN_LENGTH={len(chain)}")
         return 0
 
-    if args.command in {"run", "health"}:
-        subsystem = "AUTONOMOUS_REPAIR_LOOP" if args.command == "run" else "RUNTIME_HEALTH_CHECK"
-        print(f"{subsystem}=NOT_IMPLEMENTED")
-        print("REASON=required modules are not present in this build")
+    if args.command == "run":
+        record = _load(store)
+        if record is None:
+            print("REFUSED=NO_AUTHORIZATION")
+            return 1
+        from garvis.autonomous_repair_runner import run_autonomous_repair
+
+        return run_autonomous_repair(
+            repository=Path.cwd(),
+            authorization=record,
+            objective=args.objective,
+            model=args.model,
+            max_repairs=args.max_repairs,
+        )
+
+    if args.command == "health":
+        print("RUNTIME_HEALTH_CHECK=NOT_IMPLEMENTED")
+        print("REASON=runtime health subsystem is not present in this build")
         print("MISSING=" + ",".join(_UNIMPLEMENTED))
         return 3
 

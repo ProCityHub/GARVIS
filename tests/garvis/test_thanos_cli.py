@@ -28,7 +28,7 @@ def test_enable_does_not_claim_unbuilt_subsystems(home, capsys) -> None:
     main(["enable"])
     out = capsys.readouterr().out
     assert "ROLLBACK=NOT_IMPLEMENTED" in out
-    assert "REPAIR_ENGINE=NOT_IMPLEMENTED" in out
+    assert "REPAIR_ENGINE=NOT_IMPLEMENTED" not in out
     assert "CAPABILITY_REGISTRY=NOT_IMPLEMENTED" in out
 
 
@@ -85,13 +85,28 @@ def test_revocation_is_not_a_permanent_lockout(home, capsys) -> None:
     assert "THANOS_MODE=ENABLED" in capsys.readouterr().out
 
 
-def test_run_reports_not_implemented_rather_than_success(home, capsys) -> None:
+def test_run_dispatches_to_autonomous_repair(home, capsys, monkeypatch, tmp_path) -> None:
     main(["enable"])
     capsys.readouterr()
-    assert main(["run"]) == 3
-    out = capsys.readouterr().out
-    assert "AUTONOMOUS_REPAIR_LOOP=NOT_IMPLEMENTED" in out
-    assert "PASS" not in out
+
+    called = {}
+
+    def fake_run_autonomous_repair(**kwargs):
+        called.update(kwargs)
+        return 0
+
+    import garvis.autonomous_repair_runner as runner
+
+    monkeypatch.setattr(
+        runner,
+        "run_autonomous_repair",
+        fake_run_autonomous_repair,
+    )
+    monkeypatch.chdir(tmp_path)
+
+    assert main(["run", "--max-repairs", "2"]) == 0
+    assert called["max_repairs"] == 2
+    assert called["authorization"].is_active
 
 
 def test_health_reports_not_implemented(home, capsys) -> None:
