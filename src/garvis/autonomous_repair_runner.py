@@ -254,8 +254,19 @@ def _context_bundle(repository: Path, limit: int = 180_000) -> str:
             continue
 
         block = f"\n===== {relative} =====\n{content}\n"
-        if size + len(block) > limit:
+
+        remaining = max(0, int(limit) - size)
+        if remaining <= 0:
             break
+
+        if len(block) > remaining:
+            # Hypercube compression is lossy activation, not total erasure:
+            # retain the highest-priority prefix that fits this pulse.
+            fragment = block[:remaining]
+            pieces.append(fragment)
+            size += len(fragment)
+            break
+
         pieces.append(block)
         size += len(block)
 
@@ -363,6 +374,41 @@ def _repair_pulse_metrics(
         task_completion=0.12 + 0.18 * progress,
     )
 
+
+
+def _engine_help_supports_prediction_limit(help_text: str) -> bool:
+    """Detect bounded-generation support from the engine's advertised CLI."""
+    for line in help_text.splitlines():
+        tokens = line.replace(",", " ").replace("=", " ").split()
+
+        if "-n" in tokens:
+            return True
+
+        if any(
+            token == "--n-predict"
+            or token.startswith("--n-predict=")
+            for token in tokens
+        ):
+            return True
+
+    return False
+
+
+def _engine_supports_prediction_limit(engine: Path) -> bool:
+    try:
+        result = subprocess.run(
+            [str(engine), "--help"],
+            text=True,
+            capture_output=True,
+            timeout=5,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False
+
+    return _engine_help_supports_prediction_limit(
+        (result.stdout or "") + "\\n" + (result.stderr or "")
+    )
 
 def _local_watchdog_seconds(
     *,
@@ -718,11 +764,25 @@ def _request_patch_local(
         str(config.model),
         "-c",
         str(config.context_size),
-        "-n",
-        str(output_budget),
         "-ngl",
         str(config.gpu_layers),
     ]
+
+    if _engine_supports_prediction_limit(config.engine):
+        command.extend(
+            [
+                "-n",
+                str(output_budget),
+            ]
+        )
+        print("LOCAL_PREDICTION_LIMIT=SUPPORTED")
+    else:
+        # The mathematical output budget remains part of pulse state.
+        # This engine cannot enforce it directly, so the adaptive watchdog
+        # remains process-stall protection.
+        print(
+            "LOCAL_PREDICTION_LIMIT=ENGINE_UNSUPPORTED"
+        )
 
     try:
         result = subprocess.run(

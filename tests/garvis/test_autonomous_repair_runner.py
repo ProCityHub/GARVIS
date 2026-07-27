@@ -298,3 +298,53 @@ def test_adaptive_watchdog_changes_with_workload() -> None:
 
     assert large > small
     assert small != 300.0
+
+def test_context_compression_keeps_partial_observation(tmp_path) -> None:
+    from garvis.autonomous_repair_runner import _context_bundle
+
+    target = (
+        tmp_path
+        / "src"
+        / "garvis"
+        / "provider_bridge.py"
+    )
+    target.parent.mkdir(parents=True)
+    target.write_text(
+        "observed_evidence = True\n" * 1000,
+        encoding="utf-8",
+    )
+
+    context = _context_bundle(
+        tmp_path,
+        limit=180,
+    )
+
+    assert context
+    assert len(context) <= 180
+    assert "provider_bridge.py" in context
+
+
+def test_simple_chat_usage_does_not_claim_n_support() -> None:
+    from garvis.autonomous_repair_runner import (
+        _engine_help_supports_prediction_limit,
+    )
+
+    help_text = (
+        "example usage:\\n"
+        "llama-simple-chat -m model.gguf "
+        "[-c context_size] [-ngl n_gpu_layers]\\n"
+    )
+
+    assert not _engine_help_supports_prediction_limit(
+        help_text
+    )
+
+
+def test_prediction_limit_detected_when_advertised() -> None:
+    from garvis.autonomous_repair_runner import (
+        _engine_help_supports_prediction_limit,
+    )
+
+    assert _engine_help_supports_prediction_limit(
+        "  -n N, --n-predict N  number of tokens\\n"
+    )
