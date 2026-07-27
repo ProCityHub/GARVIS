@@ -119,3 +119,24 @@ def test_xai_becomes_candidate_when_configured(monkeypatch) -> None:
     monkeypatch.setenv("XAI_API_KEY", "configured-for-test")
 
     assert "compatible/grok-4.5" in _candidate_models()
+
+def test_local_candidate_when_runtime_exists(monkeypatch, tmp_path) -> None:
+    from garvis.autonomous_repair_runner import _candidate_models
+
+    engine = tmp_path / "llama-simple-chat"
+    engine.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+    engine.chmod(0o700)
+
+    model = tmp_path / "brain.gguf"
+    model.write_bytes(b"gguf")
+
+    monkeypatch.setenv("GARVIS_LLAMA_CHAT", str(engine))
+    monkeypatch.setenv("GARVIS_LOCAL_MODEL", str(model))
+
+    assert "local" in _candidate_models()
+
+
+def test_local_provider_label() -> None:
+    from garvis.autonomous_repair_runner import _provider_label
+
+    assert _provider_label("local") == "local"

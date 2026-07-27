@@ -127,6 +127,21 @@ def _configure_compatible_provider(model: str) -> None:
         os.environ.setdefault("GARVIS_COMPAT_BASE_URL", "https://api.x.ai/v1")
 
 
+def _local_runtime_available() -> bool:
+    """Return True only when the local llama engine and GGUF brain are usable."""
+    try:
+        from garvis.local_language_runtime import LocalRuntimeConfig
+
+        config = LocalRuntimeConfig.from_environment(Path.cwd())
+        return (
+            config.engine.is_file()
+            and os.access(config.engine, os.X_OK)
+            and config.model.is_file()
+        )
+    except Exception:
+        return False
+
+
 def _candidate_models(requested: str | None = None) -> list[str]:
     """Return configured repair-model candidates in preference order."""
     candidates: list[str] = []
@@ -162,12 +177,17 @@ def _candidate_models(requested: str | None = None) -> list[str]:
     if os.getenv("ANTHROPIC_API_KEY", "").strip():
         add(os.getenv("GARVIS_ANTHROPIC_MODEL"))
 
+    if _local_runtime_available():
+        add("local")
+
     return candidates
 
 
 def _provider_label(model: str) -> str:
     lowered = model.casefold()
 
+    if lowered in {"local", "garvis-local", "garvis/local"}:
+        return "local"
     if lowered.startswith(("anthropic/", "claude/", "claude-")):
         return "anthropic"
     if lowered.startswith("openrouter/"):
@@ -276,6 +296,71 @@ def _research(
     return summary[-50_000:]
 
 
+
+def _request_patch_local(
+    repository: Path,
+    objective: str,
+    failures: str,
+    research: str,
+) -> str:
+    """Generate one candidate repair with GARVIS's on-device GGUF brain."""
+    from garvis.local_language_runtime import (
+        LocalLanguageRuntime,
+        LocalRuntimeConfig,
+    )
+
+    # Keep the entire prompt comfortably below the local context window.
+    repository_evidence = _context_bundle(repository, limit=5500)
+    research_evidence = research[-1200:]
+    failure_evidence = failures[-1200:]
+
+    workspace = (
+        "OBJECTIVE:\n"
+        + objective[:1200]
+        + "\n\nHYPERCUBE HEARTBEAT:\n"
+        + "RECEIVE -> SEGMENT -> PREDICT -> VERIFY -> SIMULATE -> PLAN -> "
+          "OUTPUT -> FEEDBACK -> CONSOLIDATE\n\n"
+        + "CURRENT FAILURE EVIDENCE:\n"
+        + (failure_evidence or "none")
+        + "\n\nEXTERNAL EVIDENCE:\n"
+        + (research_evidence or "unavailable")
+        + "\n\nCURRENT GARVIS MATERIAL:\n"
+        + repository_evidence
+    )
+
+    request = (
+        "Produce one minimal unified diff for this bounded GARVIS Hypercube "
+        "repair. Preserve evidence and authority boundaries. Never alter "
+        "authorization or deployment controls, never include secrets, never "
+        "merge or deploy, and never weaken validation. Return only the unified "
+        "diff, or exactly NO_PATCH_NEEDED if no safe useful alteration is justified."
+    )
+
+    config = LocalRuntimeConfig.from_environment(repository)
+    runtime = LocalLanguageRuntime(
+        config,
+        repository_root=repository,
+        session_id="thanos-autorepair-local",
+    )
+
+    previous_memory = os.environ.get("GARVIS_MEMORY_ENABLED")
+    os.environ["GARVIS_MEMORY_ENABLED"] = "0"
+    try:
+        response = runtime.respond(
+            request,
+            workspace_context=workspace,
+        ).strip()
+    finally:
+        if previous_memory is None:
+            os.environ.pop("GARVIS_MEMORY_ENABLED", None)
+        else:
+            os.environ["GARVIS_MEMORY_ENABLED"] = previous_memory
+
+    if not response:
+        raise RuntimeError("local GARVIS returned an empty repair response")
+
+    return response
+
 def _request_patch(
     repository: Path,
     model: str,
@@ -283,7 +368,15 @@ def _request_patch(
     failures: str,
     research: str,
 ) -> str:
-    """Ask one provider for a repair in an isolated Python process."""
+    """Ask one reasoning organ for a bounded repair candidate."""
+    if _provider_label(model) == "local":
+        return _request_patch_local(
+            repository,
+            objective,
+            failures,
+            research,
+        )
+
     context = _context_bundle(repository, limit=90_000)
 
     prompt = f"""
@@ -634,6 +727,8 @@ def run_autonomous_repair(
     research_errors: list[str] = []
 
     for candidate in models:
+        if _provider_label(candidate) == "local":
+            continue
         try:
             _configure_compatible_provider(candidate)
             research = _research(repo, candidate, objective)
