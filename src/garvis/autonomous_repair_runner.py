@@ -9,6 +9,7 @@ This module never merges or deploys.
 
 from __future__ import annotations
 
+import asyncio
 import importlib.util
 import json
 import os
@@ -97,12 +98,24 @@ def _status(repository: Path) -> str:
 
 
 def _changed_files(repository: Path) -> list[str]:
-    result = _command(
+    tracked = _command(
         ["git", "diff", "--name-only"],
         repository,
         check=True,
     )
-    return [line.strip() for line in result.stdout.splitlines() if line.strip()]
+    untracked = _command(
+        ["git", "ls-files", "--others", "--exclude-standard"],
+        repository,
+        check=True,
+    )
+    return sorted(
+        {
+            line.strip()
+            for output in (tracked.stdout, untracked.stdout)
+            for line in output.splitlines()
+            if line.strip()
+        }
+    )
 
 
 def _configure_compatible_provider(model: str) -> None:
@@ -209,7 +222,14 @@ def _request_patch(
     failures: str,
     research: str,
 ) -> str:
-    context = _context_bundle(repository)
+    """Ask GARVIS for one bounded repair without passing context through argv.
+
+    Large repository contexts must stay inside the Python process. Passing the
+    prompt as a positional CLI argument can exceed Android/Termux ARG_MAX.
+    """
+    from garvis.assistant import GarvisAssistant
+
+    context = _context_bundle(repository, limit=90_000)
 
     prompt = f"""
 You are GARVIS operating under Adrien D. Thomas's bounded autonomous
@@ -248,32 +268,25 @@ Rules:
 - If no useful safe repair remains, output exactly: NO_PATCH_NEEDED
 """.strip()
 
-    result = _command(
-        [
-            sys.executable,
-            "-m",
-            "garvis.cli",
-            "--remote",
-            "--model",
-            model,
-            "--session",
-            "thanos-autorepair",
-            prompt,
-        ],
-        repository,
-        timeout=360,
-    )
-
-    if result.returncode:
-        raise RuntimeError(
-            "GARVIS repair-model request failed:\n"
-            + result.stdout
-            + "\n"
-            + result.stderr
+    async def ask_garvis() -> str:
+        assistant = GarvisAssistant(
+            model=model,
+            persist_memory=False,
+            repository_root=repository,
+            max_turns=4,
         )
+        reply = await assistant.respond(
+            prompt,
+            session_id="thanos-autorepair",
+        )
+        return reply.text
 
-    return result.stdout.strip()
+    response = asyncio.run(ask_garvis()).strip()
 
+    if not response:
+        raise RuntimeError("GARVIS repair-model request returned an empty response")
+
+    return response
 
 def _extract_patch(response: str) -> str | None:
     if response.strip() == "NO_PATCH_NEEDED":
