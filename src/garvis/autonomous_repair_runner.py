@@ -638,6 +638,7 @@ def _request_patch_local(
     pulse_metrics: PulseMetrics | None = None,
 ) -> str:
     """Ask the on-device GARVIS brain for one structured repair proposal."""
+    from garvis.local_inference_client import request_completion
     from garvis.local_language_runtime import (
         LocalRuntimeConfig,
         clean_model_output,
@@ -784,39 +785,87 @@ def _request_patch_local(
             "LOCAL_PREDICTION_LIMIT=ENGINE_UNSUPPORTED"
         )
 
-    try:
-        result = subprocess.run(
-            command,
-            cwd=str(repository),
-            input=prompt + "\n",
-            text=True,
-            capture_output=True,
-            timeout=watchdog_seconds,
-            check=False,
-            env={
-                **os.environ,
-                "GARVIS_MEMORY_ENABLED": "0",
-            },
-        )
-    except subprocess.TimeoutExpired as exc:
-        raise RuntimeError(
-            "PROCESS_STALLED: adaptive watchdog expired after "
-            f"{watchdog_seconds:.1f}s; "
-            "watchdog expiration is not THOUGHT_COMPLETE"
-        ) from exc
+    server_url = os.getenv(
+        "GARVIS_LOCAL_SERVER_URL",
+        "",
+    ).strip()
 
-    if result.returncode:
-        detail = clean_model_output(
-            result.stderr or result.stdout
-        )
-        raise RuntimeError(
-            f"local GARVIS engine exited with code "
-            f"{result.returncode}: {detail[-2000:]}"
+    if server_url:
+        print("LOCAL_TRANSPORT=PERSISTENT_SERVER")
+
+        completion = request_completion(
+            server_url,
+            prompt,
+            n_predict=output_budget,
+            timeout_seconds=watchdog_seconds,
         )
 
-    response = clean_model_output(
-        result.stdout
-    ) or clean_model_output(result.stderr)
+        response = clean_model_output(
+            completion.content
+        )
+
+        if completion.generation_tps:
+            os.environ[
+                "GARVIS_LOCAL_OBSERVED_TPS"
+            ] = str(completion.generation_tps)
+
+            print(
+                "LOCAL_SERVER_GENERATION_TPS="
+                f"{completion.generation_tps:.3f}"
+            )
+
+        if completion.generation_ms:
+            runtime_seconds = (
+                completion.generation_ms / 1000.0
+            )
+
+            os.environ[
+                "GARVIS_LOCAL_RECENT_RUNTIME"
+            ] = str(runtime_seconds)
+
+            print(
+                "LOCAL_SERVER_RUNTIME_SECONDS="
+                f"{runtime_seconds:.3f}"
+            )
+
+    else:
+        print("LOCAL_TRANSPORT=CLI_FALLBACK")
+
+        try:
+            result = subprocess.run(
+                command,
+                cwd=str(repository),
+                input=prompt + "\n",
+                text=True,
+                capture_output=True,
+                timeout=watchdog_seconds,
+                check=False,
+                env={
+                    **os.environ,
+                    "GARVIS_MEMORY_ENABLED": "0",
+                },
+            )
+        except subprocess.TimeoutExpired as exc:
+            raise RuntimeError(
+                "PROCESS_STALLED: adaptive watchdog expired after "
+                f"{watchdog_seconds:.1f}s; "
+                "watchdog expiration is not THOUGHT_COMPLETE"
+            ) from exc
+
+        if result.returncode:
+            detail = clean_model_output(
+                result.stderr or result.stdout
+            )
+
+            raise RuntimeError(
+                "local GARVIS engine exited with code "
+                f"{result.returncode}: {detail[-2000:]}"
+            )
+
+        response = (
+            clean_model_output(result.stdout)
+            or clean_model_output(result.stderr)
+        )
 
     if not response:
         raise RuntimeError(

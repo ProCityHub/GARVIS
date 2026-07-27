@@ -12,6 +12,7 @@ from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
+from .local_inference_client import request_completion
 from .repository_context import (
     build_query_repository_context,
     should_ground_repository,
@@ -350,37 +351,96 @@ class LocalLanguageRuntime:
             repository_context=repository_context,
             workspace_context=workspace_context,
         )
-        command = [
-            str(self.config.engine),
-            "-m",
-            str(self.config.model),
-            "-c",
-            str(self.config.context_size),
-            "-ngl",
-            str(self.config.gpu_layers),
-        ]
+        server_url = os.getenv(
+            "GARVIS_LOCAL_SERVER_URL",
+            "",
+        ).strip()
+
         try:
-            try:
-                completed = subprocess.run(
-                    command,
-                    input=prompt + "\n",
-                    text=True,
-                    capture_output=True,
-                    timeout=self.config.timeout_seconds,
-                    check=False,
+            if server_url:
+                print(
+                    "LOCAL_TRANSPORT=PERSISTENT_SERVER",
+                    file=sys.stderr,
                 )
-            except subprocess.TimeoutExpired as exc:
-                raise RuntimeError(
-                    f"Local GARVIS model timed out after {self.config.timeout_seconds} seconds"
-                ) from exc
-            if completed.returncode != 0:
-                detail = clean_model_output(completed.stderr or completed.stdout)
-                raise RuntimeError(
-                    f"Local GARVIS model exited with code {completed.returncode}: {detail}"
+
+                completion = request_completion(
+                    server_url,
+                    prompt,
+                    n_predict=int(
+                        os.getenv(
+                            "GARVIS_LOCAL_N_PREDICT",
+                            "256",
+                        )
+                    ),
+                    timeout_seconds=self.config.timeout_seconds,
                 )
-            output = clean_model_output(completed.stdout) or clean_model_output(completed.stderr)
+
+                output = clean_model_output(
+                    completion.content
+                )
+
+                if completion.generation_tps:
+                    os.environ[
+                        "GARVIS_LOCAL_OBSERVED_TPS"
+                    ] = str(completion.generation_tps)
+
+                if completion.generation_ms:
+                    os.environ[
+                        "GARVIS_LOCAL_RECENT_RUNTIME"
+                    ] = str(
+                        completion.generation_ms / 1000.0
+                    )
+
+            else:
+                print(
+                    "LOCAL_TRANSPORT=CLI_FALLBACK",
+                    file=sys.stderr,
+                )
+
+                command = [
+                    str(self.config.engine),
+                    "-m",
+                    str(self.config.model),
+                    "-c",
+                    str(self.config.context_size),
+                    "-ngl",
+                    str(self.config.gpu_layers),
+                ]
+
+                try:
+                    completed = subprocess.run(
+                        command,
+                        input=prompt + "\n",
+                        text=True,
+                        capture_output=True,
+                        timeout=self.config.timeout_seconds,
+                        check=False,
+                    )
+                except subprocess.TimeoutExpired as exc:
+                    raise RuntimeError(
+                        "Local GARVIS model timed out after "
+                        f"{self.config.timeout_seconds} seconds"
+                    ) from exc
+
+                if completed.returncode != 0:
+                    detail = clean_model_output(
+                        completed.stderr
+                        or completed.stdout
+                    )
+                    raise RuntimeError(
+                        "Local GARVIS model exited with code "
+                        f"{completed.returncode}: {detail}"
+                    )
+
+                output = (
+                    clean_model_output(completed.stdout)
+                    or clean_model_output(completed.stderr)
+                )
+
             if not output:
-                raise RuntimeError("Local GARVIS model returned no usable answer")
+                raise RuntimeError(
+                    "Local GARVIS model returned no usable answer"
+                )
             if memory_store is not None:
                 from garvis.memory_lifecycle import EvidenceStatus, MemoryKind
 
