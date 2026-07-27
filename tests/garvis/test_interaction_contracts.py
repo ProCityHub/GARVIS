@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
+from typing import Any
 
 import pytest
 
@@ -17,8 +18,8 @@ from garvis.interaction_contracts import (
 NOW = datetime(2026, 7, 27, 12, 0, tzinfo=timezone.utc)
 
 
-def observation(**overrides):
-    data = {
+def observation(**overrides: Any):
+    data: dict[str, Any] = {
         "observation_id": "obs-001",
         "source": "synthetic-test",
         "source_type": "document",
@@ -35,8 +36,8 @@ def observation(**overrides):
     return Observation(**data)
 
 
-def evidence(**overrides):
-    data = {
+def evidence(**overrides: Any):
+    data: dict[str, Any] = {
         "evidence_id": "ev-001",
         "evidence_type": "observation",
         "source": "synthetic-test",
@@ -52,8 +53,8 @@ def evidence(**overrides):
     return Evidence(**data)
 
 
-def proposal(**overrides):
-    data = {
+def proposal(**overrides: Any):
+    data: dict[str, Any] = {
         "proposal_id": "act-001",
         "run_id": "run-001",
         "session_id": "session-001",
@@ -71,8 +72,8 @@ def proposal(**overrides):
     return ActionProposal(**data)
 
 
-def grant(**overrides):
-    data = {
+def grant(**overrides: Any):
+    data: dict[str, Any] = {
         "grant_id": "grant-001",
         "capability_id": "artifact.read",
         "actor": "garvis",
@@ -90,8 +91,8 @@ def grant(**overrides):
     return CapabilityGrant(**data)
 
 
-def result(**overrides):
-    data = {
+def result(**overrides: Any):
+    data: dict[str, Any] = {
         "execution_id": "exec-001",
         "proposal_id": "act-001",
         "grant_id": "grant-001",
