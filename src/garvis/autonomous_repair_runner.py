@@ -21,6 +21,13 @@ from pathlib import Path
 from typing import Sequence
 
 from garvis.github_maintenance import GitHubMaintenanceAdapter
+from garvis.hypercube_heartbeat import (
+    AdaptiveWatchdog,
+    HeartbeatState,
+    PulseMetrics,
+    ReleaseGate,
+    detect_event_boundary,
+)
 from garvis.thanos_mode import (
     ThanosAction,
     ThanosAuthorization,
@@ -299,6 +306,100 @@ def _research(
 
 
 
+
+def _estimate_tokens(text: str) -> int:
+    """Conservative token estimate for pulse/workload mathematics."""
+    return max(1, (len(text) + 3) // 4)
+
+
+def _repair_pulse_metrics(
+    *,
+    objective: str,
+    failures: str,
+    research: str,
+    attempt: int,
+    max_repairs: int,
+    load: float = 0.0,
+) -> PulseMetrics:
+    """Project current repair state into Adrien D. Thomas Heartbeat metrics."""
+    failure_present = bool(failures.strip())
+
+    research_available = bool(
+        research.strip()
+        and "ONLINE_RESEARCH_UNAVAILABLE" not in research
+    )
+
+    lowered_failure = failures.casefold()
+
+    contradiction = (
+        0.95
+        if "contradict" in lowered_failure
+        else 0.0
+    )
+
+    progress = max(
+        0.0,
+        min(
+            1.0,
+            float(attempt) / max(1, max_repairs),
+        ),
+    )
+
+    return PulseMetrics(
+        observer=1.0,
+        actor=0.80 if failure_present else 0.68,
+        background=0.84 if research_available else 0.56,
+        load=max(0.0, min(1.0, load)),
+        prediction_error=0.88 if failure_present else 0.10,
+        uncertainty=(
+            0.62
+            if failure_present
+            else (0.42 if not research_available else 0.22)
+        ),
+        goal_urgency=0.35 + 0.55 * progress,
+        meaningful_change=0.82 if failure_present else 0.20,
+        contradiction=contradiction,
+        evidence_quality=0.84 if research_available else 0.62,
+        task_completion=0.12 + 0.18 * progress,
+    )
+
+
+def _local_watchdog_seconds(
+    *,
+    prompt: str,
+    requested_output_tokens: int,
+    metrics: PulseMetrics,
+) -> float:
+    """Stall protection only. Never defines completion of thought."""
+    observed_tps = max(
+        0.1,
+        float(os.getenv("GARVIS_LOCAL_OBSERVED_TPS", "3.0")),
+    )
+
+    recent_runtime = max(
+        0.0,
+        float(os.getenv("GARVIS_LOCAL_RECENT_RUNTIME", "0")),
+    )
+
+    maximum = max(
+        60.0,
+        float(os.getenv("GARVIS_HEARTBEAT_WATCHDOG_MAX", "900")),
+    )
+
+    watchdog = AdaptiveWatchdog(
+        minimum_seconds=20.0,
+        maximum_seconds=maximum,
+        safety_margin=1.8,
+    )
+
+    return watchdog.estimate(
+        prompt_tokens=_estimate_tokens(prompt),
+        requested_output_tokens=requested_output_tokens,
+        observed_tokens_per_second=observed_tps,
+        device_load=metrics.load,
+        recent_runtime_seconds=recent_runtime,
+    )
+
 def _local_edit_to_patch(repository: Path, response: str) -> str:
     """Convert one grounded local-model proposal into a deterministic Git diff."""
     clean = response.strip()
@@ -487,6 +588,8 @@ def _request_patch_local(
     objective: str,
     failures: str,
     research: str,
+    *,
+    pulse_metrics: PulseMetrics | None = None,
 ) -> str:
     """Ask the on-device GARVIS brain for one structured repair proposal."""
     from garvis.local_language_runtime import (
@@ -497,9 +600,56 @@ def _request_patch_local(
     config = LocalRuntimeConfig.from_environment(repository)
     config.validate()
 
-    source = _context_bundle(repository, limit=5200)
-    failure_evidence = failures[-900:]
-    research_evidence = research[-500:]
+    raw_source = _context_bundle(
+        repository,
+        limit=5200,
+    )
+
+    load = min(
+        1.0,
+        _estimate_tokens(raw_source)
+        / max(1, config.context_size),
+    )
+
+    metrics = pulse_metrics or _repair_pulse_metrics(
+        objective=objective,
+        failures=failures,
+        research=research,
+        attempt=1,
+        max_repairs=1,
+        load=load,
+    )
+
+    # Balloon compression:
+    # increasing pressure narrows the ACTIVE semantic field.
+    source_budget = max(
+        1500,
+        int(
+            5200
+            * (1.0 - 0.52 * metrics.pressure)
+        ),
+    )
+
+    source = _context_bundle(
+        repository,
+        limit=source_budget,
+    )
+
+    failure_evidence = failures[-650:]
+    research_evidence = research[-320:]
+
+    # One pulse should emit a bounded machine decision,
+    # not unlimited prose.
+    output_budget = max(
+        96,
+        min(
+            256,
+            int(
+                256
+                - 104 * metrics.pressure
+            ),
+        ),
+    )
 
     prompt = (
         "/no_think\n"
@@ -536,7 +686,30 @@ def _request_patch_local(
         + (research_evidence or "unavailable")
         + "\n\nREPOSITORY EVIDENCE:\n"
         + source
-        + "\n\nJSON ONLY:\n"
+        + "\n\nHYPERCUBE PULSE:\n"
+        + f"coherence={metrics.coherence:.4f}\n"
+        + f"pressure={metrics.pressure:.4f}\n"
+        + f"uncertainty={metrics.uncertainty:.4f}\n"
+        + "\nJSON ONLY:\n"
+    )
+
+    watchdog_seconds = _local_watchdog_seconds(
+        prompt=prompt,
+        requested_output_tokens=output_budget,
+        metrics=metrics,
+    )
+
+    print(
+        f"LOCAL_PULSE_PRESSURE={metrics.pressure:.4f}"
+    )
+    print(
+        f"ACTIVE_CONTEXT_CHARS={len(source)}"
+    )
+    print(
+        f"LOCAL_OUTPUT_BUDGET={output_budget}"
+    )
+    print(
+        f"WATCHDOG_SECONDS={watchdog_seconds:.1f}"
     )
 
     command = [
@@ -545,23 +718,32 @@ def _request_patch_local(
         str(config.model),
         "-c",
         str(config.context_size),
+        "-n",
+        str(output_budget),
         "-ngl",
         str(config.gpu_layers),
     ]
 
-    result = subprocess.run(
-        command,
-        cwd=str(repository),
-        input=prompt + "\n",
-        text=True,
-        capture_output=True,
-        timeout=config.timeout_seconds,
-        check=False,
-        env={
-            **os.environ,
-            "GARVIS_MEMORY_ENABLED": "0",
-        },
-    )
+    try:
+        result = subprocess.run(
+            command,
+            cwd=str(repository),
+            input=prompt + "\n",
+            text=True,
+            capture_output=True,
+            timeout=watchdog_seconds,
+            check=False,
+            env={
+                **os.environ,
+                "GARVIS_MEMORY_ENABLED": "0",
+            },
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise RuntimeError(
+            "PROCESS_STALLED: adaptive watchdog expired after "
+            f"{watchdog_seconds:.1f}s; "
+            "watchdog expiration is not THOUGHT_COMPLETE"
+        ) from exc
 
     if result.returncode:
         detail = clean_model_output(
@@ -589,6 +771,8 @@ def _request_patch(
     objective: str,
     failures: str,
     research: str,
+    *,
+    pulse_metrics: PulseMetrics | None = None,
 ) -> str:
     """Ask one reasoning organ for a bounded repair candidate."""
     if _provider_label(model) == "local":
@@ -597,6 +781,7 @@ def _request_patch(
             objective,
             failures,
             research,
+            pulse_metrics=pulse_metrics,
         )
 
     context = _context_bundle(repository, limit=90_000)
@@ -969,9 +1154,55 @@ def run_autonomous_repair(
     failures = ""
     selected_model = models[0]
 
+    heartbeat_state = HeartbeatState()
+    release_gate = ReleaseGate()
+
     for attempt in range(1, max_repairs + 1):
+        pulse_metrics = _repair_pulse_metrics(
+            objective=objective,
+            failures=failures,
+            research=research,
+            attempt=attempt,
+            max_repairs=max_repairs,
+        )
+
+        heartbeat_state = heartbeat_state.advance(
+            pulse_metrics,
+            dt=1.0,
+        )
+
+        boundary = detect_event_boundary(
+            pulse_metrics
+        )
+
         print(f"HEARTBEAT_ATTEMPT={attempt}")
-        print("PHASE=RECEIVE_SEGMENT_PREDICT_VERIFY_SIMULATE_PLAN")
+        print(
+            "HEARTBEAT_PERSPECTIVE="
+            f"{heartbeat_state.perspective.value}"
+        )
+        print(
+            "HEARTBEAT_PRESSURE="
+            f"{pulse_metrics.pressure:.4f}"
+        )
+        print(
+            "HEARTBEAT_COHERENCE="
+            f"{pulse_metrics.coherence:.4f}"
+        )
+        print(
+            "HEARTBEAT_REVOLUTIONS="
+            f"{heartbeat_state.revolutions}"
+        )
+        print(
+            "EVENT_BOUNDARY="
+            + (
+                boundary.reason
+                if boundary.triggered
+                else "none"
+            )
+        )
+        print(
+            "PHASE=RECEIVE_SEGMENT_PREDICT_VERIFY_SIMULATE_PLAN"
+        )
 
         try:
             response = None
@@ -990,6 +1221,7 @@ def run_autonomous_repair(
                         objective,
                         failures,
                         research,
+                        pulse_metrics=pulse_metrics,
                     )
 
                     selected_model = candidate
@@ -1045,6 +1277,36 @@ def run_autonomous_repair(
             if not changed:
                 print("AUTONOMOUS_REPAIR=NO_CHANGES")
                 return 0
+
+            release_metrics = PulseMetrics(
+                observer=1.0,
+                actor=1.0,
+                background=1.0,
+                load=0.20,
+                prediction_error=0.0,
+                uncertainty=0.0,
+                goal_urgency=1.0,
+                meaningful_change=1.0,
+                contradiction=0.0,
+                evidence_quality=1.0,
+                task_completion=1.0,
+            )
+
+            if not release_gate.ready(
+                release_metrics,
+                deterministic_gates_passed=passed,
+            ):
+                raise RuntimeError(
+                    "HEARTBEAT_RELEASE_BLOCKED: "
+                    f"readiness="
+                    f"{release_metrics.release_readiness:.4f}"
+                )
+
+            print(
+                "HEARTBEAT_RELEASE_READINESS="
+                f"{release_metrics.release_readiness:.4f}"
+            )
+            print("HEARTBEAT_RELEASE=READY")
 
             for path in changed:
                 if path in _BLOCKED_REPAIR_PATHS or is_protected_path(path):

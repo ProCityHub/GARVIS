@@ -250,3 +250,51 @@ def test_local_json_rejects_non_string_old(tmp_path) -> None:
             '{"action":"replace","path":"src/garvis/x.py",'
             '"old":5,"new":"x"}',
         )
+
+def test_failed_pulse_increases_prediction_error() -> None:
+    from garvis.autonomous_repair_runner import (
+        _repair_pulse_metrics,
+    )
+
+    initial = _repair_pulse_metrics(
+        objective="repair",
+        failures="",
+        research="",
+        attempt=1,
+        max_repairs=3,
+    )
+
+    failed = _repair_pulse_metrics(
+        objective="repair",
+        failures="tests failed",
+        research="",
+        attempt=2,
+        max_repairs=3,
+    )
+
+    assert failed.prediction_error > initial.prediction_error
+    assert failed.pressure > initial.pressure
+
+
+def test_adaptive_watchdog_changes_with_workload() -> None:
+    from garvis.autonomous_repair_runner import (
+        _local_watchdog_seconds,
+    )
+    from garvis.hypercube_heartbeat import PulseMetrics
+
+    metrics = PulseMetrics(load=0.2)
+
+    small = _local_watchdog_seconds(
+        prompt="short",
+        requested_output_tokens=32,
+        metrics=metrics,
+    )
+
+    large = _local_watchdog_seconds(
+        prompt="x" * 8000,
+        requested_output_tokens=256,
+        metrics=metrics,
+    )
+
+    assert large > small
+    assert small != 300.0
