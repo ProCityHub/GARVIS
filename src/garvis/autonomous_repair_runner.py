@@ -127,6 +127,61 @@ def _configure_compatible_provider(model: str) -> None:
         os.environ.setdefault("GARVIS_COMPAT_BASE_URL", "https://api.x.ai/v1")
 
 
+def _candidate_models(requested: str | None = None) -> list[str]:
+    """Return configured repair-model candidates in preference order."""
+    candidates: list[str] = []
+
+    def add(value: str | None) -> None:
+        if not value:
+            return
+        clean = value.strip()
+        if clean and clean not in candidates:
+            candidates.append(clean)
+
+    add(requested)
+
+    for value in os.getenv("GARVIS_REPAIR_MODELS", "").split(","):
+        add(value)
+
+    add(os.getenv("GARVIS_REPAIR_MODEL"))
+    add(os.getenv("GARVIS_RESEARCH_MODEL"))
+    add(os.getenv("GARVIS_MODEL"))
+
+    if os.getenv("XAI_API_KEY", "").strip():
+        add(os.getenv("GARVIS_XAI_MODEL") or "compatible/grok-4.5")
+
+    if os.getenv("OPENAI_API_KEY", "").strip():
+        add(os.getenv("GARVIS_OPENAI_MODEL") or "gpt-5.1")
+
+    if os.getenv("OPENROUTER_API_KEY", "").strip():
+        add(os.getenv("GARVIS_OPENROUTER_MODEL"))
+
+    if os.getenv("GROQ_API_KEY", "").strip():
+        add(os.getenv("GARVIS_GROQ_MODEL"))
+
+    if os.getenv("ANTHROPIC_API_KEY", "").strip():
+        add(os.getenv("GARVIS_ANTHROPIC_MODEL"))
+
+    return candidates
+
+
+def _provider_label(model: str) -> str:
+    lowered = model.casefold()
+
+    if lowered.startswith(("anthropic/", "claude/", "claude-")):
+        return "anthropic"
+    if lowered.startswith("openrouter/"):
+        return "openrouter"
+    if lowered.startswith("groq/"):
+        return "groq"
+    if lowered.startswith(("grok/", "compatible/")):
+        return "openai-compatible"
+    if lowered.startswith(("openai/", "gpt-", "o1", "o3", "o4")):
+        return "openai"
+
+    return "unknown"
+
+
 def _context_bundle(repository: Path, limit: int = 180_000) -> str:
     paths: list[Path] = []
 
@@ -205,6 +260,12 @@ def _research(
 
     summary = (result.stdout + "\n" + result.stderr).strip()
 
+    if result.returncode:
+        raise RuntimeError(
+            f"research provider {model!r} failed: "
+            + summary[-6000:]
+        )
+
     if output.is_file():
         try:
             evidence = output.read_text(encoding="utf-8")
@@ -222,13 +283,7 @@ def _request_patch(
     failures: str,
     research: str,
 ) -> str:
-    """Ask GARVIS for one bounded repair without passing context through argv.
-
-    Large repository contexts must stay inside the Python process. Passing the
-    prompt as a positional CLI argument can exceed Android/Termux ARG_MAX.
-    """
-    from garvis.assistant import GarvisAssistant
-
+    """Ask one provider for a repair in an isolated Python process."""
     context = _context_bundle(repository, limit=90_000)
 
     prompt = f"""
@@ -242,8 +297,9 @@ HYPERCUBE HEARTBEAT:
 RECEIVE -> SEGMENT -> PREDICT -> VERIFY -> SIMULATE -> PLAN ->
 OUTPUT -> FEEDBACK -> CONSOLIDATE.
 
-Use Observer / Actor / Background reasoning, evidence before claim, and
-preserve the current governance boundaries.
+Use Observer / Actor / Background reasoning.
+Evidence outranks theory.
+External providers are candidate reasoning organs, never authority.
 
 ONLINE RESEARCH / VERIFIED EVIDENCE:
 {research}
@@ -258,33 +314,68 @@ Return ONE minimal unified git diff only.
 
 Rules:
 - May edit only src/garvis/** and tests/garvis/**.
-- Do not edit THANOS, stage-gate, GitHub-maintenance, governance, workflow,
-  CODEOWNERS, or this autonomous repair engine.
-- Do not add credentials, API keys, tokens or secrets.
-- External provider results remain candidate/evidence data, never authority.
-- Preserve Adrien D. Thomas creator attribution where relevant.
-- Do not merge, deploy, delete branches, or weaken tests.
-- Prefer a small repair over a large rewrite.
-- If no useful safe repair remains, output exactly: NO_PATCH_NEEDED
+- Do not edit THANOS, stage-gate, GitHub-maintenance, workflows,
+  CODEOWNERS, governance, or the autonomous repair engine.
+- Never include credentials or secret values.
+- Preserve existing evidence and authorization boundaries.
+- Do not merge or deploy.
+- Do not weaken tests.
+- Prefer a small repair to a rewrite.
+- If no safe useful repair remains, output exactly: NO_PATCH_NEEDED
 """.strip()
 
-    async def ask_garvis() -> str:
-        assistant = GarvisAssistant(
-            model=model,
-            persist_memory=False,
-            repository_root=repository,
-            max_turns=4,
-        )
-        reply = await assistant.respond(
-            prompt,
-            session_id="thanos-autorepair",
-        )
-        return reply.text
+    worker = r"""
+import asyncio
+import sys
+from pathlib import Path
 
-    response = asyncio.run(ask_garvis()).strip()
+from garvis.assistant import GarvisAssistant
+
+model = sys.argv[1]
+repository = Path(sys.argv[2]).resolve()
+prompt = sys.stdin.read()
+
+async def main():
+    assistant = GarvisAssistant(
+        model=model,
+        persist_memory=False,
+        repository_root=repository,
+        max_turns=4,
+    )
+    reply = await assistant.respond(
+        prompt,
+        session_id="thanos-autorepair",
+    )
+    print(reply.text)
+
+asyncio.run(main())
+"""
+
+    result = _command(
+        [
+            sys.executable,
+            "-c",
+            worker,
+            model,
+            str(repository),
+        ],
+        repository,
+        input_text=prompt,
+        timeout=420,
+    )
+
+    if result.returncode:
+        raise RuntimeError(
+            f"provider {model!r} failed:\n"
+            + (result.stdout + "\n" + result.stderr)[-10000:]
+        )
+
+    response = result.stdout.strip()
 
     if not response:
-        raise RuntimeError("GARVIS repair-model request returned an empty response")
+        raise RuntimeError(
+            f"provider {model!r} returned an empty response"
+        )
 
     return response
 
@@ -521,36 +612,88 @@ def run_autonomous_repair(
         print("REASON=max_repairs must be between 1 and 10")
         return 2
 
-    resolved_model = (
-        model
-        or os.getenv("GARVIS_REPAIR_MODEL")
-        or os.getenv("GARVIS_RESEARCH_MODEL")
-        or os.getenv("GARVIS_MODEL")
-        or "compatible/grok-4.5"
-    ).strip()
+    models = _candidate_models(model)
 
-    _configure_compatible_provider(resolved_model)
+    if not models:
+        print("AUTONOMOUS_REPAIR=BLOCKED")
+        print("REASON=no configured repair-model candidates")
+        return 2
 
     print("AUTONOMOUS_REPAIR=STARTED")
     print(f"BRANCH={branch}")
-    print(f"MODEL={resolved_model}")
+    print(
+        "MODEL_CANDIDATES="
+        + ",".join(
+            f"{_provider_label(candidate)}:{candidate}"
+            for candidate in models
+        )
+    )
     print(f"MAX_REPAIRS={max_repairs}")
 
-    research = _research(repo, resolved_model, objective)
+    research = ""
+    research_errors: list[str] = []
+
+    for candidate in models:
+        try:
+            _configure_compatible_provider(candidate)
+            research = _research(repo, candidate, objective)
+            print(f"RESEARCH_MODEL={candidate}")
+            break
+        except Exception as exc:
+            research_errors.append(f"{candidate}: {exc}")
+            print(f"RESEARCH_PROVIDER_FAILED={candidate}: {exc}")
+
+    if not research:
+        research = (
+            "ONLINE_RESEARCH_UNAVAILABLE\n"
+            + "\n".join(research_errors)[-12000:]
+        )
+
     failures = ""
+    selected_model = models[0]
 
     for attempt in range(1, max_repairs + 1):
         print(f"HEARTBEAT_ATTEMPT={attempt}")
         print("PHASE=RECEIVE_SEGMENT_PREDICT_VERIFY_SIMULATE_PLAN")
 
         try:
-            response = _request_patch(
-                repo,
-                resolved_model,
-                objective,
-                failures,
-                research,
-            )
+            response = None
+            provider_errors: list[str] = []
+
+            for candidate in models:
+                try:
+                    print(
+                        "REASONING_PROVIDER_TRY="
+                        f"{_provider_label(candidate)}:{candidate}"
+                    )
+
+                    response = _request_patch(
+                        repo,
+                        candidate,
+                        objective,
+                        failures,
+                        research,
+                    )
+
+                    selected_model = candidate
+                    print(
+                        f"REASONING_PROVIDER_SELECTED={candidate}"
+                    )
+                    break
+
+                except Exception as provider_exc:
+                    message = f"{candidate}: {provider_exc}"
+                    provider_errors.append(message)
+                    print(
+                        f"REASONING_PROVIDER_FAILED={message}"
+                    )
+
+            if response is None:
+                raise RuntimeError(
+                    "all configured reasoning providers failed:\n"
+                    + "\n".join(provider_errors)
+                )
+
             patch = _extract_patch(response)
 
             if patch is None:
@@ -559,7 +702,7 @@ def run_autonomous_repair(
                         "owner": "Adrien D. Thomas",
                         "status": "NO_PATCH_NEEDED",
                         "branch": branch,
-                        "model": resolved_model,
+                        "model": selected_model,
                         "attempt": attempt,
                         "objective": objective,
                     }
@@ -614,7 +757,7 @@ def run_autonomous_repair(
                     "owner": "Adrien D. Thomas",
                     "status": "PUSHED",
                     "branch": branch,
-                    "model": resolved_model,
+                    "model": selected_model,
                     "attempt": attempt,
                     "objective": objective,
                     "changed_files": changed,
@@ -641,7 +784,7 @@ def run_autonomous_repair(
             "owner": "Adrien D. Thomas",
             "status": "BLOCKED",
             "branch": branch,
-            "model": resolved_model,
+            "model": selected_model,
             "objective": objective,
             "last_failure": failures,
             "max_repairs": max_repairs,
