@@ -4,6 +4,7 @@ from garvis.universal_ai_registry import (
     AdapterKind,
     Authority,
     CandidateType,
+    android_app_organ,
     build_registry,
     identify_provider,
     remote_model_organ,
@@ -93,3 +94,16 @@ def test_safe_report_does_not_leak_configuration_values():
     )
     encoded = json.dumps(registry.safe_report(), sort_keys=True)
     assert "very-secret-value" not in encoded
+
+def test_android_app_cannot_self_declare_programmable_adapter():
+    manual = android_app_organ("com.example.manual")
+    assert manual.programmable is False
+    assert manual.adapter_supported is False
+    assert manual.adapter is AdapterKind.MANUAL_ONLY
+
+    try:
+        android_app_organ("com.example.unverified", programmable=True)
+    except ValueError as exc:
+        assert "verified integration adapter" in str(exc)
+    else:
+        raise AssertionError("unverified Android app became programmable")

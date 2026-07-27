@@ -274,16 +274,20 @@ def android_app_organ(
     declared_capabilities: Iterable[str] = (),
 ) -> AIOrgan:
     """Register an installed AI app without pretending GARVIS can control it."""
+    if programmable:
+        raise ValueError(
+            "Android app control requires a verified integration adapter"
+        )
     display = label or package_name
     return AIOrgan(
         organ_id=f"android:{package_name}",
         candidate_type=CandidateType.ANDROID_APP,
         provider_id=display,
         model=None,
-        adapter=AdapterKind.MANUAL_ONLY if not programmable else AdapterKind.INTERNAL,
+        adapter=AdapterKind.MANUAL_ONLY,
         configured=True,
-        programmable=programmable,
-        adapter_supported=programmable,
+        programmable=False,
+        adapter_supported=False,
         declared_capabilities=frozenset(declared_capabilities),
         verified_capabilities=frozenset(),
         authority=Authority.CANDIDATE_ONLY,

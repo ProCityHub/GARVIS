@@ -75,3 +75,8 @@ def test_reason_explicitly_preserves_verification_boundary():
     ranked = rank_remote_candidates(registry, {})
     assert ranked
     assert "verification" in ranked[0].reason
+
+def test_select_unblocked_non_positive_limit_returns_empty():
+    ranked = rank_remote_candidates(_registry(), {})
+    assert select_unblocked(ranked, limit=0) == ()
+    assert select_unblocked(ranked, limit=-1) == ()

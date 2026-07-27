@@ -94,6 +94,8 @@ def select_unblocked(
     *,
     limit: int = 3,
 ) -> Tuple[RoutedCandidate, ...]:
+    if limit <= 0:
+        return ()
     selected = []
     for item in ranked:
         if item.blocked:
