@@ -204,3 +204,49 @@ def test_local_no_patch_needed_survives_conversion(tmp_path) -> None:
         tmp_path,
         "NO_PATCH_NEEDED",
     ) == "NO_PATCH_NEEDED"
+
+def test_local_json_edit_becomes_patch(tmp_path) -> None:
+    from garvis.autonomous_repair_runner import _local_edit_to_patch
+
+    target = tmp_path / "src" / "garvis" / "provider_bridge.py"
+    target.parent.mkdir(parents=True)
+    target.write_text(
+        "alpha = 1\nbeta = 2\ngamma = 3\n",
+        encoding="utf-8",
+    )
+
+    response = (
+        '{"action":"replace",'
+        '"path":"src/garvis/provider_bridge.py",'
+        '"old":"beta = 2\\n",'
+        '"new":"beta = 4\\n"}'
+    )
+
+    patch = _local_edit_to_patch(tmp_path, response)
+
+    assert "-beta = 2" in patch
+    assert "+beta = 4" in patch
+
+
+def test_local_json_none_is_safe_noop(tmp_path) -> None:
+    from garvis.autonomous_repair_runner import _local_edit_to_patch
+
+    assert (
+        _local_edit_to_patch(
+            tmp_path,
+            '{"action":"none"}',
+        )
+        == "NO_PATCH_NEEDED"
+    )
+
+
+def test_local_json_rejects_non_string_old(tmp_path) -> None:
+    import pytest
+    from garvis.autonomous_repair_runner import _local_edit_to_patch
+
+    with pytest.raises(RuntimeError, match="string old/new"):
+        _local_edit_to_patch(
+            tmp_path,
+            '{"action":"replace","path":"src/garvis/x.py",'
+            '"old":5,"new":"x"}',
+        )

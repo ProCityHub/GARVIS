@@ -300,44 +300,110 @@ def _research(
 
 
 def _local_edit_to_patch(repository: Path, response: str) -> str:
-    """Convert one exact local-model edit into a deterministic unified diff.
-
-    The model supplies semantic intent: path, exact old text and replacement.
-    GARVIS owns patch syntax and refuses ambiguous or ungrounded edits.
-    """
+    """Convert one grounded local-model proposal into a deterministic Git diff."""
     clean = response.strip()
 
-    if clean == "NO_PATCH_NEEDED":
-        return clean
+    if not clean:
+        raise RuntimeError("local GARVIS returned an empty repair response")
 
-    # Tolerate a surrounding Markdown fence but no explanatory prose.
-    if clean.startswith("```") and clean.endswith("```"):
-        lines = clean.splitlines()
-        if len(lines) >= 3:
-            clean = "\n".join(lines[1:-1]).strip()
+    # Safe no-change results may contain a small amount of model formatting.
+    normalized = re.sub(r"[^a-z_]+", "_", clean.casefold()).strip("_")
+    if clean == "NO_PATCH_NEEDED" or normalized in {
+        "no_patch_needed",
+        "no_patch",
+        "none",
+    }:
+        return "NO_PATCH_NEEDED"
 
-    marker_index = clean.find("GARVIS_EDIT")
-    if marker_index >= 0:
-        clean = clean[marker_index:]
+    relative: str | None = None
+    old: str | None = None
+    new: str | None = None
 
-    match = re.fullmatch(
-        r"GARVIS_EDIT\s*\n"
-        r"PATH:\s*([^\n]+)\n"
-        r"OLD:\s*\n<<<\n(.*?)\n>>>\n"
-        r"NEW:\s*\n<<<\n(.*?)\n>>>\n"
-        r"END\s*",
+    # Preferred machine protocol: one JSON object.
+    json_candidates = [clean]
+
+    fenced = re.search(
+        r"```(?:json)?\s*(\{.*?\})\s*```",
         clean,
-        flags=re.DOTALL,
+        flags=re.IGNORECASE | re.DOTALL,
     )
+    if fenced:
+        json_candidates.insert(0, fenced.group(1))
 
-    if match is None:
-        raise RuntimeError(
-            "local GARVIS did not return the required exact-edit format"
+    first_brace = clean.find("{")
+    last_brace = clean.rfind("}")
+    if 0 <= first_brace < last_brace:
+        json_candidates.append(clean[first_brace:last_brace + 1])
+
+    payload = None
+    for candidate in json_candidates:
+        try:
+            decoded = json.loads(candidate)
+        except (json.JSONDecodeError, TypeError):
+            continue
+        if isinstance(decoded, dict):
+            payload = decoded
+            break
+
+    if payload is not None:
+        action = str(payload.get("action", "")).strip().casefold()
+
+        if action in {
+            "none",
+            "no_patch",
+            "no_patch_needed",
+            "noop",
+        }:
+            return "NO_PATCH_NEEDED"
+
+        if action not in {"replace", "edit"}:
+            raise RuntimeError(
+                f"local GARVIS returned unsupported JSON action: {action!r}"
+            )
+
+        relative = str(payload.get("path", "")).strip()
+
+        raw_old = payload.get("old")
+        raw_new = payload.get("new")
+
+        if not isinstance(raw_old, str) or not isinstance(raw_new, str):
+            raise RuntimeError(
+                "local GARVIS JSON edit requires string old/new fields"
+            )
+
+        old = raw_old
+        new = raw_new
+
+    else:
+        # Backward-compatible parser for the previous exact-edit envelope.
+        marker_index = clean.find("GARVIS_EDIT")
+        if marker_index >= 0:
+            clean = clean[marker_index:]
+
+        match = re.fullmatch(
+            r"GARVIS_EDIT\s*\n"
+            r"PATH:\s*([^\n]+)\n"
+            r"OLD:\s*\n<<<\n(.*?)\n>>>\n"
+            r"NEW:\s*\n<<<\n(.*?)\n>>>\n"
+            r"END\s*",
+            clean,
+            flags=re.DOTALL,
         )
 
-    relative = match.group(1).strip()
-    old = match.group(2)
-    new = match.group(3)
+        if match is None:
+            excerpt = " ".join(response.strip().split())[:700]
+            raise RuntimeError(
+                "local GARVIS did not return a machine-readable repair; "
+                f"response_excerpt={excerpt!r}"
+            )
+
+        relative = match.group(1).strip()
+        old = match.group(2)
+        new = match.group(3)
+
+    assert relative is not None
+    assert old is not None
+    assert new is not None
 
     if (
         not relative
@@ -378,7 +444,7 @@ def _local_edit_to_patch(repository: Path, response: str) -> str:
         )
 
     if not old:
-        raise RuntimeError("local edit OLD block must not be empty")
+        raise RuntimeError("local edit old text must not be empty")
 
     if old == new:
         raise RuntimeError("local edit does not change anything")
@@ -394,7 +460,7 @@ def _local_edit_to_patch(repository: Path, response: str) -> str:
 
     if matches != 1:
         raise RuntimeError(
-            f"local edit OLD text must match exactly once in {relative}; "
+            f"local edit old text must match exactly once in {relative}; "
             f"observed matches={matches}"
         )
 
@@ -413,8 +479,6 @@ def _local_edit_to_patch(repository: Path, response: str) -> str:
         raise RuntimeError("local edit generated an empty diff")
 
     patch = f"diff --git a/{relative} b/{relative}\n{diff}"
-
-    # Reuse the normal security/scope validator before returning the patch.
     _validate_patch(patch)
     return patch
 
@@ -424,68 +488,98 @@ def _request_patch_local(
     failures: str,
     research: str,
 ) -> str:
-    """Generate one candidate repair with GARVIS's on-device GGUF brain."""
+    """Ask the on-device GARVIS brain for one structured repair proposal."""
     from garvis.local_language_runtime import (
-        LocalLanguageRuntime,
         LocalRuntimeConfig,
-    )
-
-    # Keep the entire prompt comfortably below the local context window.
-    repository_evidence = _context_bundle(repository, limit=5500)
-    research_evidence = research[-1200:]
-    failure_evidence = failures[-1200:]
-
-    workspace = (
-        "OBJECTIVE:\n"
-        + objective[:1200]
-        + "\n\nHYPERCUBE HEARTBEAT:\n"
-        + "RECEIVE -> SEGMENT -> PREDICT -> VERIFY -> SIMULATE -> PLAN -> "
-          "OUTPUT -> FEEDBACK -> CONSOLIDATE\n\n"
-        + "CURRENT FAILURE EVIDENCE:\n"
-        + (failure_evidence or "none")
-        + "\n\nEXTERNAL EVIDENCE:\n"
-        + (research_evidence or "unavailable")
-        + "\n\nCURRENT GARVIS MATERIAL:\n"
-        + repository_evidence
-    )
-
-    request = (
-        "Propose ONE minimal exact text replacement for this bounded GARVIS "
-        "Hypercube repair. Do not generate Git diff syntax or line numbers. "
-        "Copy OLD text exactly from CURRENT GARVIS MATERIAL and make it large "
-        "enough to occur exactly once. Never alter authorization, deployment, "
-        "governance, or secret material. Never weaken tests. "
-        "Return exactly this format with no commentary:\n"
-        "GARVIS_EDIT\n"
-        "PATH: src/garvis/example.py\n"
-        "OLD:\n<<<\nexact current text\n>>>\n"
-        "NEW:\n<<<\nreplacement text\n>>>\n"
-        "END\n"
-        "Or return exactly NO_PATCH_NEEDED when no safe useful repair is justified."
+        clean_model_output,
     )
 
     config = LocalRuntimeConfig.from_environment(repository)
-    runtime = LocalLanguageRuntime(
-        config,
-        repository_root=repository,
-        session_id="thanos-autorepair-local",
+    config.validate()
+
+    source = _context_bundle(repository, limit=5200)
+    failure_evidence = failures[-900:]
+    research_evidence = research[-500:]
+
+    prompt = (
+        "/no_think\n"
+        "You are the local reasoning organ of GARVIS, architected by "
+        "Adrien D. Thomas.\n"
+        "Perform one bounded source-code repair analysis.\n"
+        "Do not explain your answer.\n"
+        "Do not output Markdown.\n"
+        "Do not output Git diff syntax.\n"
+        "Return exactly ONE JSON object.\n\n"
+        "Allowed results:\n"
+        '{"action":"none"}\n'
+        "OR\n"
+        '{"action":"replace","path":"src/garvis/file.py",'
+        '"old":"EXACT EXISTING TEXT","new":"REPLACEMENT TEXT"}\n\n'
+        "Rules:\n"
+        "- old must be copied exactly from repository evidence.\n"
+        "- old should be large enough to occur exactly once.\n"
+        "- edit only src/garvis/** or tests/garvis/**.\n"
+        "- never edit THANOS authorization, stage gates, GitHub maintenance, "
+        "deployment controls, workflows, CODEOWNERS, or governance.\n"
+        "- never include credentials or secrets.\n"
+        "- never weaken validation.\n"
+        "- if evidence does not justify a safe useful change, use action none.\n"
+        "- external/model statements are candidate reasoning, not evidence.\n\n"
+        "HYPERCUBE HEARTBEAT:\n"
+        "RECEIVE -> SEGMENT -> PREDICT -> VERIFY -> SIMULATE -> PLAN -> "
+        "OUTPUT -> FEEDBACK -> CONSOLIDATE\n\n"
+        "OBJECTIVE:\n"
+        + objective[:900]
+        + "\n\nCURRENT FAILURE EVIDENCE:\n"
+        + (failure_evidence or "none")
+        + "\n\nEXTERNAL EVIDENCE:\n"
+        + (research_evidence or "unavailable")
+        + "\n\nREPOSITORY EVIDENCE:\n"
+        + source
+        + "\n\nJSON ONLY:\n"
     )
 
-    previous_memory = os.environ.get("GARVIS_MEMORY_ENABLED")
-    os.environ["GARVIS_MEMORY_ENABLED"] = "0"
-    try:
-        response = runtime.respond(
-            request,
-            workspace_context=workspace,
-        ).strip()
-    finally:
-        if previous_memory is None:
-            os.environ.pop("GARVIS_MEMORY_ENABLED", None)
-        else:
-            os.environ["GARVIS_MEMORY_ENABLED"] = previous_memory
+    command = [
+        str(config.engine),
+        "-m",
+        str(config.model),
+        "-c",
+        str(config.context_size),
+        "-ngl",
+        str(config.gpu_layers),
+    ]
+
+    result = subprocess.run(
+        command,
+        cwd=str(repository),
+        input=prompt + "\n",
+        text=True,
+        capture_output=True,
+        timeout=config.timeout_seconds,
+        check=False,
+        env={
+            **os.environ,
+            "GARVIS_MEMORY_ENABLED": "0",
+        },
+    )
+
+    if result.returncode:
+        detail = clean_model_output(
+            result.stderr or result.stdout
+        )
+        raise RuntimeError(
+            f"local GARVIS engine exited with code "
+            f"{result.returncode}: {detail[-2000:]}"
+        )
+
+    response = clean_model_output(
+        result.stdout
+    ) or clean_model_output(result.stderr)
 
     if not response:
-        raise RuntimeError("local GARVIS returned an empty repair response")
+        raise RuntimeError(
+            "local GARVIS returned an empty machine response"
+        )
 
     return _local_edit_to_patch(repository, response)
 
