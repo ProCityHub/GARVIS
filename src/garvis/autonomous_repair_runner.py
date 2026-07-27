@@ -9,6 +9,7 @@ This module never merges or deploys.
 
 from __future__ import annotations
 
+import difflib
 import asyncio
 import importlib.util
 import json
@@ -297,6 +298,126 @@ def _research(
 
 
 
+
+def _local_edit_to_patch(repository: Path, response: str) -> str:
+    """Convert one exact local-model edit into a deterministic unified diff.
+
+    The model supplies semantic intent: path, exact old text and replacement.
+    GARVIS owns patch syntax and refuses ambiguous or ungrounded edits.
+    """
+    clean = response.strip()
+
+    if clean == "NO_PATCH_NEEDED":
+        return clean
+
+    # Tolerate a surrounding Markdown fence but no explanatory prose.
+    if clean.startswith("```") and clean.endswith("```"):
+        lines = clean.splitlines()
+        if len(lines) >= 3:
+            clean = "\n".join(lines[1:-1]).strip()
+
+    marker_index = clean.find("GARVIS_EDIT")
+    if marker_index >= 0:
+        clean = clean[marker_index:]
+
+    match = re.fullmatch(
+        r"GARVIS_EDIT\s*\n"
+        r"PATH:\s*([^\n]+)\n"
+        r"OLD:\s*\n<<<\n(.*?)\n>>>\n"
+        r"NEW:\s*\n<<<\n(.*?)\n>>>\n"
+        r"END\s*",
+        clean,
+        flags=re.DOTALL,
+    )
+
+    if match is None:
+        raise RuntimeError(
+            "local GARVIS did not return the required exact-edit format"
+        )
+
+    relative = match.group(1).strip()
+    old = match.group(2)
+    new = match.group(3)
+
+    if (
+        not relative
+        or Path(relative).is_absolute()
+        or relative.startswith("../")
+        or "/../" in relative
+    ):
+        raise RuntimeError(f"invalid local edit path: {relative!r}")
+
+    if relative in _BLOCKED_REPAIR_PATHS:
+        raise RuntimeError(
+            f"autonomous repair path is blocked: {relative}"
+        )
+
+    if is_protected_path(relative):
+        raise RuntimeError(
+            f"governance-protected path is blocked: {relative}"
+        )
+
+    if not relative.startswith(_ALLOWED_PREFIXES):
+        raise RuntimeError(
+            f"path outside autonomous repair scope: {relative}"
+        )
+
+    root = repository.resolve()
+    target = (root / relative).resolve()
+
+    try:
+        target.relative_to(root)
+    except ValueError as exc:
+        raise RuntimeError(
+            f"local edit escaped repository: {relative}"
+        ) from exc
+
+    if target.is_symlink() or not target.is_file():
+        raise RuntimeError(
+            f"local edit target is not a regular existing file: {relative}"
+        )
+
+    if not old:
+        raise RuntimeError("local edit OLD block must not be empty")
+
+    if old == new:
+        raise RuntimeError("local edit does not change anything")
+
+    for pattern in _SECRET_PATTERNS:
+        if pattern.search(new):
+            raise RuntimeError(
+                "local edit replacement appears to contain credential material"
+            )
+
+    existing = target.read_text(encoding="utf-8")
+    matches = existing.count(old)
+
+    if matches != 1:
+        raise RuntimeError(
+            f"local edit OLD text must match exactly once in {relative}; "
+            f"observed matches={matches}"
+        )
+
+    updated = existing.replace(old, new, 1)
+
+    diff = "".join(
+        difflib.unified_diff(
+            existing.splitlines(keepends=True),
+            updated.splitlines(keepends=True),
+            fromfile=f"a/{relative}",
+            tofile=f"b/{relative}",
+        )
+    )
+
+    if not diff:
+        raise RuntimeError("local edit generated an empty diff")
+
+    patch = f"diff --git a/{relative} b/{relative}\n{diff}"
+
+    # Reuse the normal security/scope validator before returning the patch.
+    _validate_patch(patch)
+    return patch
+
 def _request_patch_local(
     repository: Path,
     objective: str,
@@ -329,11 +450,18 @@ def _request_patch_local(
     )
 
     request = (
-        "Produce one minimal unified diff for this bounded GARVIS Hypercube "
-        "repair. Preserve evidence and authority boundaries. Never alter "
-        "authorization or deployment controls, never include secrets, never "
-        "merge or deploy, and never weaken validation. Return only the unified "
-        "diff, or exactly NO_PATCH_NEEDED if no safe useful alteration is justified."
+        "Propose ONE minimal exact text replacement for this bounded GARVIS "
+        "Hypercube repair. Do not generate Git diff syntax or line numbers. "
+        "Copy OLD text exactly from CURRENT GARVIS MATERIAL and make it large "
+        "enough to occur exactly once. Never alter authorization, deployment, "
+        "governance, or secret material. Never weaken tests. "
+        "Return exactly this format with no commentary:\n"
+        "GARVIS_EDIT\n"
+        "PATH: src/garvis/example.py\n"
+        "OLD:\n<<<\nexact current text\n>>>\n"
+        "NEW:\n<<<\nreplacement text\n>>>\n"
+        "END\n"
+        "Or return exactly NO_PATCH_NEEDED when no safe useful repair is justified."
     )
 
     config = LocalRuntimeConfig.from_environment(repository)
@@ -359,7 +487,7 @@ def _request_patch_local(
     if not response:
         raise RuntimeError("local GARVIS returned an empty repair response")
 
-    return response
+    return _local_edit_to_patch(repository, response)
 
 def _request_patch(
     repository: Path,

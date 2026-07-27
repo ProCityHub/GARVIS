@@ -140,3 +140,67 @@ def test_local_provider_label() -> None:
     from garvis.autonomous_repair_runner import _provider_label
 
     assert _provider_label("local") == "local"
+
+def test_local_exact_edit_becomes_deterministic_patch(tmp_path) -> None:
+    from garvis.autonomous_repair_runner import _local_edit_to_patch
+
+    target = tmp_path / "src" / "garvis" / "provider_bridge.py"
+    target.parent.mkdir(parents=True)
+    target.write_text(
+        "alpha = 1\nbeta = 2\ngamma = 3\n",
+        encoding="utf-8",
+    )
+
+    response = """GARVIS_EDIT
+PATH: src/garvis/provider_bridge.py
+OLD:
+<<<
+beta = 2
+>>>
+NEW:
+<<<
+beta = 4
+>>>
+END"""
+
+    patch = _local_edit_to_patch(tmp_path, response)
+
+    assert patch.startswith(
+        "diff --git a/src/garvis/provider_bridge.py "
+        "b/src/garvis/provider_bridge.py"
+    )
+    assert "-beta = 2" in patch
+    assert "+beta = 4" in patch
+
+
+def test_local_exact_edit_rejects_ambiguous_old_text(tmp_path) -> None:
+    import pytest
+    from garvis.autonomous_repair_runner import _local_edit_to_patch
+
+    target = tmp_path / "src" / "garvis" / "provider_bridge.py"
+    target.parent.mkdir(parents=True)
+    target.write_text("same\nsame\n", encoding="utf-8")
+
+    response = """GARVIS_EDIT
+PATH: src/garvis/provider_bridge.py
+OLD:
+<<<
+same
+>>>
+NEW:
+<<<
+different
+>>>
+END"""
+
+    with pytest.raises(RuntimeError, match="exactly once"):
+        _local_edit_to_patch(tmp_path, response)
+
+
+def test_local_no_patch_needed_survives_conversion(tmp_path) -> None:
+    from garvis.autonomous_repair_runner import _local_edit_to_patch
+
+    assert _local_edit_to_patch(
+        tmp_path,
+        "NO_PATCH_NEEDED",
+    ) == "NO_PATCH_NEEDED"
