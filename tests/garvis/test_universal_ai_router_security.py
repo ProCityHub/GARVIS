@@ -32,6 +32,7 @@ def test_unknown_provider_is_never_programmable_even_with_openai_key():
         env={"OPENAI_API_KEY": "secret"},
     )
     assert organ.provider_id == "unknown"
+    assert organ.configured is False
     assert organ.programmable is False
     assert organ.adapter_supported is False
     assert organ.authority is Authority.CANDIDATE_ONLY

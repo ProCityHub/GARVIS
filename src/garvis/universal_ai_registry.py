@@ -199,7 +199,11 @@ def remote_model_organ(
     verified_capabilities: Iterable[str] = (),
 ) -> AIOrgan:
     identity = identify_provider(model)
-    configured = configuration_present(identity, env)
+    configured = (
+        False
+        if identity.provider_id == "unknown"
+        else configuration_present(identity, env)
+    )
     notes: List[str] = []
     if identity.provider_id == "gemini":
         notes.append("provider discovered; dedicated GARVIS adapter not yet established")
