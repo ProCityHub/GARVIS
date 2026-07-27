@@ -89,3 +89,33 @@ def test_xai_becomes_candidate_when_configured(monkeypatch) -> None:
     monkeypatch.setenv("XAI_API_KEY", "configured-for-test")
 
     assert "compatible/grok-4.5" in _candidate_models()
+
+def test_candidate_models_are_deduplicated(monkeypatch) -> None:
+    from garvis.autonomous_repair_runner import _candidate_models
+
+    monkeypatch.setenv(
+        "GARVIS_REPAIR_MODELS",
+        "model/a,model/b,model/a",
+    )
+    monkeypatch.setenv("GARVIS_MODEL", "model/b")
+
+    assert _candidate_models("model/a")[:2] == [
+        "model/a",
+        "model/b",
+    ]
+
+
+def test_xai_becomes_candidate_when_configured(monkeypatch) -> None:
+    from garvis.autonomous_repair_runner import _candidate_models
+
+    for name in (
+        "GARVIS_REPAIR_MODELS",
+        "GARVIS_REPAIR_MODEL",
+        "GARVIS_RESEARCH_MODEL",
+        "GARVIS_MODEL",
+    ):
+        monkeypatch.delenv(name, raising=False)
+
+    monkeypatch.setenv("XAI_API_KEY", "configured-for-test")
+
+    assert "compatible/grok-4.5" in _candidate_models()
