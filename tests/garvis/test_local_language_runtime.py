@@ -38,8 +38,28 @@ class LocalLanguageRuntimeTests(unittest.TestCase):
         )
         prompt = render_local_prompt(envelope)
         self.assertTrue(prompt.startswith("/no_think "))
-        self.assertIn("GARVIS_FILING_ENVELOPE=", prompt)
-        self.assertIn('"destination": "engineering_registry"', prompt)
+        self.assertNotIn("GARVIS_FILING_ENVELOPE=", prompt)
+        self.assertIn("Operate with local response only permission", prompt)
+        self.assertIn('User request: "Test request"', prompt)
+        self.assertIn("focus on engineering registry", prompt)
+
+    def test_prompt_keeps_evidence_channels_separate(self) -> None:
+        envelope = FilingEnvelope(
+            destination="engineering_registry",
+            evidence_status="user_supplied",
+            authority="adrien_user_input",
+            permission="local_response_only",
+            request="Explain the code",
+        )
+        prompt = render_local_prompt(
+            envelope,
+            repository_context="--- src/garvis/cli.py ---\nACTIVE_CLI",
+            external_context="PUBLIC INTERNET RESEARCH CONTEXT",
+            workspace_context="APPROVED READ-ONLY LOCAL FILE EVIDENCE",
+        )
+        self.assertIn("read-only local repository evidence", prompt)
+        self.assertIn("external internet evidence", prompt)
+        self.assertIn("one-task approved local file evidence", prompt)
 
     def test_clean_output_removes_thinking(self) -> None:
         self.assertEqual(

@@ -1,0 +1,15 @@
+# GARVIS frozen evidence artifacts.
+#
+# Owner and final authority: Adrien D. Thomas (ProCityHub/GARVIS).
+#
+# Recorded outcomes and preregistered protocols. These do not change once
+# written. A result that can be edited after the fact is not a result.
+#
+# Unlike GOVERNED_FILES.txt there is no audit exception: a frozen artifact
+# is superseded by a new record and a RETRACTIONS.md entry, never rewritten.
+#
+# Read from the base branch. Editing this ledger in a pull request does not
+# unfreeze anything in that pull request.
+
+# (no frozen artifacts recorded yet -- add preregistrations and run
+#  outcomes here as they are produced)
