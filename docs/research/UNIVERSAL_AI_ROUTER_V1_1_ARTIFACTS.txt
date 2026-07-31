@@ -1,0 +1,11 @@
+Creator: Adrien D. Thomas
+Approval: APPROVE GARVIS UNIVERSAL AI ROUTER V1.1 PR STAGE
+Base: main
+Base SHA: 107470f1b41d627464b24e2b2d0cf7ed6812e495
+
+Approved standalone source/test hashes:
+c6a827a0b37c74aeb37945435d7c425427b902eaa1d345b378ce9f02de708280  /data/data/com.termux/files/home/garvis-prototypes/universal-ai-router-v1_1-20260727T012726Z/src/garvis/universal_ai_registry.py
+27d03bcdf76b29574cd6cc41f8095d83d2a9655b2c0f1d3315e0a3600e6c22ed  /data/data/com.termux/files/home/garvis-prototypes/universal-ai-router-v1_1-20260727T012726Z/src/garvis/health_aware_router.py
+c9f5c6742db5c24f026595c823b6d1ca11a347e0b197bec67d6d3a26302bcb1e  /data/data/com.termux/files/home/garvis-prototypes/universal-ai-router-v1_1-20260727T012726Z/tests/test_security_hardening.py
+15719dcdc168c40e4c9568a118f5b9ede8d2e50610ad1e80e5e031e48933f43c  /data/data/com.termux/files/home/garvis-prototypes/universal-ai-router-v1_1-20260727T012726Z/tests/test_health_aware_router.py
+4592bbc6e2a3a5309be8b3927a47352ad7510aaeffcb878aec694976cb59aa4d  /data/data/com.termux/files/home/garvis-prototypes/universal-ai-router-v1_1-tests-20260727T020233Z/test_router_adversarial.py

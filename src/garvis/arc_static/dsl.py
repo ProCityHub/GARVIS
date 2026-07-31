@@ -21,9 +21,10 @@ Framework design (DIRECTIVE-014), implemented under audit.
 from __future__ import annotations
 
 from collections import Counter
-from typing import Any, Callable, Dict, Sequence, Tuple
+from collections.abc import Sequence
+from typing import Any, Callable
 
-Grid = Tuple[Tuple[int, ...], ...]
+Grid = tuple[tuple[int, ...], ...]
 
 
 class DslError(ValueError):
@@ -160,7 +161,7 @@ def remove_color(g: Grid, color: int, fill: int = 0) -> Grid:
     return tuple(tuple(fill if v == color else v for v in row) for row in g)
 
 
-def map_colors(g: Grid, mapping: Dict[int, int]) -> Grid:
+def map_colors(g: Grid, mapping: dict[int, int]) -> Grid:
     g = as_grid(g)
     return tuple(tuple(mapping.get(v, v) for v in row) for row in g)
 
@@ -229,7 +230,7 @@ def gravity_down(g: Grid) -> Grid:
     return tuple(tuple(cols[c][r] for c in range(w)) for r in range(h))
 
 
-UNARY_PRIMITIVES: Dict[str, Callable[[Grid], Grid]] = {
+UNARY_PRIMITIVES: dict[str, Callable[[Grid], Grid]] = {
     "identity": identity,
     "rot90": rot90,
     "rot180": rot180,
@@ -250,7 +251,9 @@ UNARY_PRIMITIVES: Dict[str, Callable[[Grid], Grid]] = {
 }
 
 COLOR_RANGE = tuple(range(10))
-PARAM_FAMILIES = {
+ParamBuilder = Callable[..., Grid]
+ParamValues = tuple[tuple[int, ...], ...]
+PARAM_FAMILIES: dict[str, tuple[ParamBuilder, ParamValues]] = {
     "replace_color": (
         replace_color,
         tuple((o, n) for o in COLOR_RANGE for n in COLOR_RANGE if o != n),

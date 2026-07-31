@@ -31,7 +31,7 @@ class AnthropicConfigurationError(RuntimeError):
     """Raised when Anthropic mode is requested without valid configuration."""
 
 
-def is_anthropic_model(model: str) -> bool:
+def is_anthropic_model(model: object) -> bool:
     if not isinstance(model, str):
         return False
     name = model.strip().lower()

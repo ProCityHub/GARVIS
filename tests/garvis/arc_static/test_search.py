@@ -37,6 +37,7 @@ def test_verified_on_all_pairs_or_none():
 def test_deterministic_program_choice():
     train = pairs_from(rot90, [[[1, 2], [3, 4]]])
     a, b = synthesize(train), synthesize(train)
+    assert a is not None and b is not None
     assert a.names == b.names
 
 
