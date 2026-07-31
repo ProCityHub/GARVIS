@@ -6,7 +6,7 @@ search:
 
 ## API キーとクライアント
 
-デフォルトでは、SDK はインポートされるとすぐに LLM リクエストとトレーシングのために `OPENAI_API_KEY` 環境変数を探します。アプリ起動前にその環境変数を設定できない場合は、[set_default_openai_key() 関数][agents.set_default_openai_key]でキーを設定できます。
+デフォルトでは、SDK はインポートされた直後から LLM リクエストとトレーシングのために `OPENAI_API_KEY` 環境変数を探します。アプリ起動前にその環境変数を設定できない場合は、[set_default_openai_key()][agents.set_default_openai_key] 関数でキーを設定できます。
 
 ```python
 from agents import set_default_openai_key
@@ -14,7 +14,7 @@ from agents import set_default_openai_key
 set_default_openai_key("sk-...")
 ```
 
-また、使用する OpenAI クライアントを設定することもできます。デフォルトでは、SDK は環境変数または上で設定したデフォルトキーから API キーを用いて `AsyncOpenAI` インスタンスを作成します。これを変更するには、[set_default_openai_client() 関数][agents.set_default_openai_client]を使用します。
+また、使用する OpenAI クライアントを設定することもできます。デフォルトでは、SDK は環境変数の API キー、または上記で設定したデフォルトキーを使って `AsyncOpenAI` インスタンスを作成します。これを変更するには、[set_default_openai_client()][agents.set_default_openai_client] 関数を使用します。
 
 ```python
 from openai import AsyncOpenAI
@@ -24,7 +24,7 @@ custom_client = AsyncOpenAI(base_url="...", api_key="...")
 set_default_openai_client(custom_client)
 ```
 
-最後に、使用する OpenAI API をカスタマイズすることもできます。デフォルトでは OpenAI Responses API を使用します。これを上書きして Chat Completions API を使うには、[set_default_openai_api() 関数][agents.set_default_openai_api]を使用します。
+最後に、使用する OpenAI API をカスタマイズすることも可能です。デフォルトでは OpenAI Responses API を使用します。[set_default_openai_api()][agents.set_default_openai_api] 関数を使って上書きし、Chat Completions API を使用できます。
 
 ```python
 from agents import set_default_openai_api
@@ -42,7 +42,7 @@ from agents import set_tracing_export_api_key
 set_tracing_export_api_key("sk-...")
 ```
 
-[`set_tracing_disabled()`][agents.set_tracing_disabled] 関数を使用して、トレーシングを完全に無効化することもできます。
+[`set_tracing_disabled()`][agents.set_tracing_disabled] 関数を使って、トレーシングを完全に無効化することもできます。
 
 ```python
 from agents import set_tracing_disabled
@@ -50,11 +50,11 @@ from agents import set_tracing_disabled
 set_tracing_disabled(True)
 ```
 
-## デバッグロギング
+## デバッグログ
 
-SDK にはハンドラーが設定されていない Python のロガーが 2 つあります。デフォルトでは、これは警告とエラーが `stdout` に送られ、それ以外のログは抑制されることを意味します。
+SDK にはハンドラーが設定されていない Python ロガーが 2 つあります。デフォルトでは、これは警告とエラーが `stdout` に送られ、その他のログは抑制されることを意味します。
 
-詳細なロギングを有効にするには、[`enable_verbose_stdout_logging()`][agents.enable_verbose_stdout_logging] 関数を使用します。
+詳細なログ出力を有効にするには、[`enable_verbose_stdout_logging()`][agents.enable_verbose_stdout_logging] 関数を使用します。
 
 ```python
 from agents import enable_verbose_stdout_logging
@@ -81,17 +81,17 @@ logger.setLevel(logging.WARNING)
 logger.addHandler(logging.StreamHandler())
 ```
 
-### ログ内の機微情報
+### ログ内の機微データ
 
-一部のログには機微情報（例: ユーザー データ）が含まれる場合があります。これらのデータがログに記録されないようにするには、次の環境変数を設定してください。
+一部のログには機微なデータ（例: ユーザー データ）が含まれる場合があります。これらのデータをログに記録しないようにするには、次の環境変数を設定してください。
 
-LLM の入力と出力のロギングを無効化するには:
+LLM の入力と出力の記録を無効にするには:
 
 ```bash
 export OPENAI_AGENTS_DONT_LOG_MODEL_DATA=1
 ```
 
-ツールの入力と出力のロギングを無効化するには:
+ツールの入力と出力の記録を無効にするには:
 
 ```bash
 export OPENAI_AGENTS_DONT_LOG_TOOL_DATA=1
