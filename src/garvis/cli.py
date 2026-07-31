@@ -9,22 +9,16 @@ import os
 import sys
 from collections.abc import Sequence
 from pathlib import Path
-<<<<<<< HEAD
-from typing import Any, Optional, Sequence
-
-from .assistant import DEFAULT_MODEL, GarvisAssistant
-from .resilient_runtime import ResilientGarvisRuntime
-=======
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from .lattice_cycle_cli import run_lattice_cycle_file
+from .resilient_runtime import ResilientGarvisRuntime
 
 if TYPE_CHECKING:
     from .assistant import GarvisAssistant
     from .capability_runtime import CapabilityAwareRuntime
 
 DEFAULT_REMOTE_MODEL = "gpt-5.1"
->>>>>>> origin/main
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -251,15 +245,7 @@ def _check_configuration(model: str | None = None) -> str | None:
     return None
 
 
-<<<<<<< HEAD
-def _print_reply(
-    text: str,
-    requires_approval: bool,
-    approval_reason: Optional[str],
-) -> None:
-=======
 def _print_reply(text: str, requires_approval: bool, approval_reason: str | None) -> None:
->>>>>>> origin/main
     print(text)
     if requires_approval:
         print("\n[Execution status: approval required before any outside-world action.]")
