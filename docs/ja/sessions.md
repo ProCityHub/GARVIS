@@ -4,15 +4,9 @@ search:
 ---
 # セッション
 
-<<<<<<< HEAD
-Agents SDK はビルトインのセッションメモリを提供し、複数回のエージェント実行にまたがって会話履歴を自動的に保持します。これにより、ターン間で手動で `.to_input_list()` を扱う必要がなくなります。
-
-セッションは特定のセッションに対して会話履歴を保存し、明示的な手動メモリ管理なしでエージェントがコンテキストを維持できるようにします。これは、エージェントに以前のやり取りを記憶させたいチャットアプリケーションやマルチターンの会話を構築する際に特に有用です。
-=======
 Agents SDK は、複数のエージェント実行をまたいで会話履歴を自動的に維持する組み込みセッションメモリを提供し、ターン間で手動で `.to_input_list()` を扱う必要をなくします。
 
 セッションは特定のセッションに対する会話履歴を保存し、明示的な手動メモリ管理なしでエージェントがコンテキストを維持できるようにします。これは、エージェントに過去のやり取りを覚えさせたいチャットアプリケーションやマルチターンの会話を構築する際に特に有用です。
->>>>>>> origin/main
 
 ## クイックスタート
 
@@ -57,19 +51,11 @@ print(result.final_output)  # "Approximately 39 million"
 
 セッションメモリが有効な場合:
 
-<<<<<<< HEAD
-1. **各実行の前**: ランナーはセッションの会話履歴を自動的に取得し、入力アイテムの先頭に追加します。
-2. **各実行の後**: 実行中に生成された新しいアイテム（ユーザー入力、アシスタントの応答、ツール呼び出しなど）はすべて自動的にセッションへ保存されます。
-3. **コンテキストの保持**: 同じセッションでの後続の実行には完全な会話履歴が含まれ、エージェントがコンテキストを維持できます。
-
-これにより、ターン間で `.to_input_list()` を手動で呼び出したり、会話状態を管理したりする必要がなくなります。
-=======
 1. **各実行の前**: ランナーはそのセッションの会話履歴を自動的に取得し、入力アイテムの先頭に付加します。
 2. **各実行の後**: 実行中に生成されたすべての新しいアイテム（ユーザー入力、アシスタントの応答、ツール呼び出しなど）が自動的にセッションに保存されます。
 3. **コンテキストの保持**: 同じセッションでの以降の実行には完全な会話履歴が含まれ、エージェントがコンテキストを維持できます。
 
 これにより、`.to_input_list()` を手動で呼び出して実行間の会話状態を管理する必要がなくなります。
->>>>>>> origin/main
 
 ## メモリ操作
 
@@ -102,11 +88,7 @@ await session.clear_session()
 
 ### 訂正のための `pop_item` の使用
 
-<<<<<<< HEAD
-`pop_item` メソッドは、会話の最後のアイテムを取り消したり修正したりしたい場合に特に有用です:
-=======
 `pop_item` メソッドは、会話内の最後のアイテムを取り消したり修正したりしたい場合に特に便利です:
->>>>>>> origin/main
 
 ```python
 from agents import Agent, Runner, SQLiteSession
@@ -147,13 +129,8 @@ result = await Runner.run(agent, "Hello")
 ### OpenAI Conversations API メモリ
 
 [OpenAI Conversations API](https://platform.openai.com/docs/guides/conversational-agents/conversations-api) を使用して、
-<<<<<<< HEAD
-独自のデータベースを管理せずに会話状態を永続化します。これは、会話履歴の保存にすでに OpenAI がホストするインフラを
-利用している場合に役立ちます。
-=======
 独自のデータベースを管理せずに会話状態を永続化します。これは、会話履歴の保存に OpenAI がホストするインフラストラクチャに
 既に依存している場合に役立ちます。
->>>>>>> origin/main
 
 ```python
 from agents import OpenAIConversationsSession
@@ -218,11 +195,7 @@ result2 = await Runner.run(
 
 **例 1: インメモリ SQLite で `from_url` を使用する**
 
-<<<<<<< HEAD
-これは最も簡単な開始方法で、開発やテストに最適です。
-=======
 これは最も簡単な入門方法で、開発やテストに最適です。
->>>>>>> origin/main
 
 ```python
 import asyncio
@@ -331,19 +304,11 @@ result = await Runner.run(
 
 ### メモリの永続化
 
-<<<<<<< HEAD
-- 一時的な会話にはインメモリ SQLite（`SQLiteSession("session_id")`）を使用します
-- 永続的な会話にはファイルベースの SQLite（`SQLiteSession("session_id", "path/to/db.sqlite")`）を使用します
-- 既存のデータベースを使用する本番システムには SQLAlchemy ベースのセッション（`SQLAlchemySession("session_id", engine=engine, create_tables=True)`）を使用します
-- OpenAI Conversations API に履歴を保存したい場合は OpenAI がホストするストレージ（`OpenAIConversationsSession()`）を使用します
-- より高度なユースケースでは、他の本番システム（Redis、Django など）向けにカスタムセッションバックエンドの実装を検討します
-=======
 - 一時的な会話にはインメモリ SQLite（`SQLiteSession("session_id")`）を使用
 - 永続的な会話にはファイルベースの SQLite（`SQLiteSession("session_id", "path/to/db.sqlite")`）を使用
 - 既存のデータベースを持つ本番システムには SQLAlchemy 駆動のセッション（`SQLAlchemySession("session_id", engine=engine, create_tables=True)`）を使用
 - OpenAI がホストするストレージを利用したい場合は（`OpenAIConversationsSession()`）で OpenAI Conversations API に履歴を保存
 - より高度なユースケースでは、他の本番システム（Redis、Django など）向けのカスタムセッションバックエンドの実装を検討
->>>>>>> origin/main
 
 ### セッションの管理
 
