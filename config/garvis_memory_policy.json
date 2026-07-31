@@ -1,0 +1,15 @@
+{
+  "consolidate_threshold": 0.62,
+  "core_half_life_hours": 87600.0,
+  "episodic_half_life_hours": 720.0,
+  "latent_threshold": 0.28,
+  "maintenance_interval": 12,
+  "max_recall_items": 8,
+  "model_output_max_chars": 2400,
+  "procedural_half_life_hours": 8760.0,
+  "prompt_budget_chars": 1600,
+  "semantic_half_life_hours": 4320.0,
+  "trace_min_age_hours": 168.0,
+  "trace_threshold": 0.12,
+  "working_half_life_hours": 8.0
+}
