@@ -6,13 +6,13 @@ search:
 
 [エージェントのトレーシング](../tracing.md) と同様に、音声パイプラインも自動的にトレーシングされます。
 
-基本的なトレーシング情報については上記のドキュメントをご覧ください。さらに、[`VoicePipelineConfig`][agents.voice.pipeline_config.VoicePipelineConfig] を使用してパイプラインのトレーシングを構成できます。
+基本的なトレーシング情報については上記のドキュメントをご覧ください。加えて、[`VoicePipelineConfig`][agents.voice.pipeline_config.VoicePipelineConfig] を使ってパイプラインのトレーシングを設定できます。
 
-主なトレーシング関連フィールドは次のとおりです。
+トレーシングに関連する主なフィールドは次のとおりです。
 
--   [`tracing_disabled`][agents.voice.pipeline_config.VoicePipelineConfig.tracing_disabled]: トレーシングを無効にするかどうかを制御します。デフォルトではトレーシングは有効です。
--   [`trace_include_sensitive_data`][agents.voice.pipeline_config.VoicePipelineConfig.trace_include_sensitive_data]: 音声の文字起こしなど、潜在的に機微なデータをトレースに含めるかどうかを制御します。これは特に音声パイプラインに対する設定であり、Workflow の内部で行われることには適用されません。
--   [`trace_include_sensitive_audio_data`][agents.voice.pipeline_config.VoicePipelineConfig.trace_include_sensitive_audio_data]: トレースにオーディオデータを含めるかどうかを制御します。
--   [`workflow_name`][agents.voice.pipeline_config.VoicePipelineConfig.workflow_name]: トレースの Workflow 名です。
--   [`group_id`][agents.voice.pipeline_config.VoicePipelineConfig.group_id]: 複数のトレースをリンクできる、トレースの `group_id` です。
--   [`trace_metadata`][agents.voice.pipeline_config.VoicePipelineConfig.tracing_disabled]: トレースに含める追加メタデータです。
+-   [`tracing_disabled`][agents.voice.pipeline_config.VoicePipelineConfig.tracing_disabled]: トレーシングを無効にするかどうかを制御します。デフォルトでは有効です。
+-   [`trace_include_sensitive_data`][agents.voice.pipeline_config.VoicePipelineConfig.trace_include_sensitive_data]: 音声の書き起こしなど、機微なデータをトレースに含めるかどうかを制御します。これは音声パイプライン専用で、ワークフロー内部で行われる処理には適用されません。
+-   [`trace_include_sensitive_audio_data`][agents.voice.pipeline_config.VoicePipelineConfig.trace_include_sensitive_audio_data]: 音声データをトレースに含めるかどうかを制御します。
+-   [`workflow_name`][agents.voice.pipeline_config.VoicePipelineConfig.workflow_name]: トレースのワークフロー名です。
+-   [`group_id`][agents.voice.pipeline_config.VoicePipelineConfig.group_id]: 複数のトレースをリンクできるトレースの `group_id` です。
+-   [`trace_metadata`][agents.voice.pipeline_config.VoicePipelineConfig.tracing_disabled]: トレースに含める追加のメタデータです。
