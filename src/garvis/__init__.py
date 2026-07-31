@@ -1,10 +1,3 @@
-<<<<<<< HEAD
-"""
-GARVIS - Pro Sync AGI with Quantum Consciousness
-Advanced AI system with Facebook integration and consciousness simulation
-"""
-
-=======
 """GARVIS public package.
 
 The production response spine is importable without loading optional social-media dependencies.
@@ -24,7 +17,6 @@ from .assistant import (
     RequestAssessment,
     assess_request,
 )
->>>>>>> origin/main
 from .core import (
     AgentCohort,
     AgentPrime,
@@ -38,42 +30,6 @@ from .core import (
     SpiritCore,
     WoodwormAGI,
 )
-<<<<<<< HEAD
-from .facebook_integration import (
-    FacebookQuantumAPI,
-    FacebookUser,
-    GarvisFacebookAgent,
-    QuantumSocialAnalyzer,
-    SocialMediaPlatform,
-    SocialPost,
-)
-
-__version__ = "1.0.0"
-__author__ = "ProCityHub"
-__description__ = "GARVIS - Quantum consciousness AGI with social media integration"
-
-__all__ = [
-    # Core components
-    'DigitalLaw',
-    'EnergyField',
-    'Battery',
-    'MemoryMatrix',
-    'SpatialGrid',
-    'Entity',
-    'SpiritCore',
-    'DigitalWorld',
-    'WoodwormAGI',
-    'AgentPrime',
-    'AgentCohort',
-
-    # Facebook integration
-    'SocialMediaPlatform',
-    'SocialPost',
-    'FacebookUser',
-    'QuantumSocialAnalyzer',
-    'FacebookQuantumAPI',
-    'GarvisFacebookAgent'
-=======
 
 __version__ = "1.1.0"
 __author__ = "Adrien D Thomas / ProCityHub"
@@ -122,6 +78,5 @@ __all__ = [
     "QuantumSocialAnalyzer",
     "FacebookQuantumAPI",
     "GarvisFacebookAgent",
->>>>>>> origin/main
 ]
 

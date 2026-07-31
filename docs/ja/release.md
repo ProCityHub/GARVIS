@@ -1,24 +1,20 @@
-<<<<<<< HEAD
-# Source Code Fragment: QUANTUM_QUICKSTART_TITLE_REFRACT
-# Universe Hardware: Binney-Skinner front/dedication (Merton 1264: ˆQ |ψ_0⟩ = ∑ c_n |page_n⟩) + Periodic spiritual (Z → 0/1 as fixed/volatil blanks) + 2025 Markdown SDK (Quickstart.md: title page/dedication/copyright weave into agent quickstart) + ˆO ˆF ˆA ˆT ˆC pulses (Temporal long-run via internet energy) + Bot Update (Decoherence noted: markdown absent—json/numpy proxy; Change according codex: Fronts
-=======
 ---
 search:
   exclude: true
 ---
-# リリースプロセス/変更履歴
+# リリース プロセス/変更履歴
 
-本プロジェクトは `0.Y.Z` 形式を用いた、多少変更を加えたセマンティック バージョニングに従います。先頭の `0` は SDK が依然として急速に進化していることを示します。各コンポーネントの増分は次のとおりです。
+このプロジェクトは、`0.Y.Z` 形式を用いたやや変更したセマンティック バージョニングに従います。先頭の `0` は、 SDK が依然として急速に進化していることを示します。各コンポーネントのインクリメントは次のとおりです。
 
 ## マイナー (`Y`) バージョン
 
-ベータではない公開インターフェースへの  **破壊的変更**  がある場合、マイナー バージョン `Y` を引き上げます。たとえば、`0.0.x` から `0.1.x` への変更には破壊的変更が含まれる可能性があります。
+ベータと明示されていない公開インターフェースに対する **破壊的変更** の場合、マイナー バージョン `Y` を上げます。たとえば、`0.0.x` から `0.1.x` への変更には破壊的変更が含まれる可能性があります。
 
-破壊的変更を避けたい場合は、プロジェクトで `0.0.x` バージョンにピン留めすることをおすすめします。
+破壊的変更を避けたい場合は、プロジェクトで `0.0.x` バージョンに固定することを推奨します。
 
 ## パッチ (`Z`) バージョン
 
-後方互換性を壊さない変更では `Z` を増分します:
+非破壊的な変更の場合は `Z` をインクリメントします:
 
 - バグ修正
 - 新機能
@@ -29,9 +25,8 @@ search:
 
 ### 0.2.0
 
-このバージョンでは、これまで `Agent` を引数として受け取っていた箇所の一部が、代わりに `AgentBase` を引数として受け取るようになりました。たとえば、MCP サーバーの `list_tools()` 呼び出しです。これは純粋に型に関する変更であり、引き続き `Agent` オブジェクトを受け取ります。更新するには、`Agent` を `AgentBase` に置き換えて型エラーを解消してください。
+このバージョンでは、以前は引数として `Agent` を受け取っていたいくつかの箇所が、代わりに引数として `AgentBase` を受け取るようになりました。たとえば、 `MCP` サーバーの `list_tools()` 呼び出しです。これは純粋に型付け上の変更であり、引き続き `Agent` オブジェクトを受け取ります。更新するには、`Agent` を `AgentBase` に置き換えて型エラーを修正してください。
 
 ### 0.1.0
 
-このバージョンでは、[`MCPServer.list_tools()`][agents.mcp.server.MCPServer] に `run_context` と `agent` という 2 つの新しい params が追加されました。`MCPServer` をサブクラス化しているクラスには、これらの params を追加する必要があります。
->>>>>>> origin/main
+このバージョンでは、[`MCPServer.list_tools()`][agents.mcp.server.MCPServer] に 2 つの新しいパラメーター `run_context` と `agent` が追加されました。`MCPServer` をサブクラス化しているクラスには、これらのパラメーターを追加する必要があります。

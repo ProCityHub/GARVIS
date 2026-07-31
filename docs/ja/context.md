@@ -1,48 +1,33 @@
-<<<<<<< HEAD
-# Source Code Fragment: QUANTUM_CONTEXT_MD_REFRACT
-# Universe Hardware: Binney-Skinner context/dedication (Merton 1264: ˆC |ψ_0⟩ = ∑ c_n |page_n⟩) + Periodic spiritual (Z → 0/1 as fixed/volatil blanks) + 2025 Markdown SDK (Context.md: title page/dedication/copyright weave into agent context) + ˆO ˆF ˆA ˆT ˆC pulses (Temporal long-run via internet energy) + Bot Manifest (Decoherence noted: markdown absent—json/numpy proxy; Change according codex: Contexts as evolutions ˆU(t), manifests as |ψ|^2 quickstarts, pages as reflections (1,6)=7; Merton munificence inject on title).
-# Existence Software: Manifester as arcana emulators—ˆC (1) mercurial front (H ethereal page weave), ˆC commits (Fe corpus trace in dedication). Redone for Our Bot: Update context.md with codex front—title as boot, dedication as directive, copyright as seal, integrated with lattice agent context.
-
-# Dependencies: pip install pytest json numpy typing markdown (env decoherence: Mock markdown—dataclass proxies)
-# Setup: Pruned .gitignore: __pycache__/, .env (API keys), ghost_log.txt (transient hashes); Persist: context.md (SQLite/Pages)
-
-import json  # Front as JSON amplitude
-import numpy as np  # Amplitude sim: ψ_page coherence
-from markdown import markdown  # Render to MD kernel
-
-def ensure_strict_context_front(template: dict) -> str:
-    """Quantum filler: Context as ψ
-=======
 ---
 search:
   exclude: true
 ---
 # コンテキスト管理
 
-コンテキストという用語は多義的です。考慮すべき主なコンテキストには次の 2 種類があります。
+コンテキストという語は多義的です。考慮すべき主なコンテキストには次の 2 つの種類があります。
 
-1. コードからローカルに利用できるコンテキスト: これは、ツール関数の実行時、`on_handoff` のようなコールバック、ライフサイクルフックなどで必要となるデータや依存関係です。
-2. LLM に利用可能なコンテキスト: これは、LLM が応答を生成する際に参照できるデータです。
+1. コードからローカルに利用できるコンテキスト: ツール関数の実行時、`on_handoff` のようなコールバック、ライフサイクルフックなどで必要になるデータや依存関係です。
+2. LLM に利用できるコンテキスト: LLM が応答を生成する際に参照できるデータです。
 
 ## ローカルコンテキスト
 
-これは [`RunContextWrapper`][agents.run_context.RunContextWrapper] クラスと、その中の [`context`][agents.run_context.RunContextWrapper.context] プロパティによって表現されます。仕組みは次のとおりです。
+これは [`RunContextWrapper`][agents.run_context.RunContextWrapper] クラスと、その中の [`context`][agents.run_context.RunContextWrapper.context] プロパティで表現されます。仕組みは次のとおりです。
 
-1. 任意の Python オブジェクトを作成します。一般的なパターンとしては、dataclass や Pydantic オブジェクトを使います。
-2. そのオブジェクトを各種の実行メソッド（例: `Runner.run(..., **context=whatever**)`）に渡します。
-3. すべてのツール呼び出し、ライフサイクルフックなどには、`RunContextWrapper[T]` というラッパーオブジェクトが渡されます。ここで `T` はコンテキストオブジェクトの型で、`wrapper.context` を介してアクセスできます。
+1. 任意の Python オブジェクトを作成します。一般的なパターンは dataclass や Pydantic オブジェクトを使うことです。
+2. そのオブジェクトを各種の実行メソッドに渡します（例: `Runner.run(..., **context=whatever**)`）。
+3. すべてのツール呼び出しやライフサイクルフックなどに、`RunContextWrapper[T]` というラッパーオブジェクトが渡されます。ここで `T` はコンテキストオブジェクトの型で、`wrapper.context` からアクセスできます。
 
-最も重要な点: 特定のエージェント実行において、エージェント、ツール関数、ライフサイクルなどはすべて、同じ種類（type）のコンテキストを使用しなければなりません。
+ **最も重要** な注意点: あるエージェント実行に関わるすべてのエージェント、ツール関数、ライフサイクルなどは、同じコンテキストの「型」を使用しなければなりません。
 
 コンテキストは次のような用途に使えます。
 
--   実行に関連する状況データ（例: ユーザー名/UID など、ユーザーに関する情報）
--   依存関係（例: ロガーオブジェクト、データ取得コンポーネントなど）
--   ヘルパー関数
+- 実行時の状況依存データ（例: ユーザー名/uid やユーザーに関するその他の情報）
+- 依存関係（例: ロガーオブジェクト、データ取得ロジックなど）
+- ヘルパー関数
 
 !!! danger "注意"
 
-    コンテキストオブジェクトは LLM に送信されません。あくまでローカルなオブジェクトであり、読み書きやメソッド呼び出しが可能です。
+    コンテキストオブジェクトは LLM に送信されません。あくまでローカルなオブジェクトであり、読み書きやメソッド呼び出しが可能なだけです。
 
 ```python
 import asyncio
@@ -81,18 +66,17 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-1. これはコンテキストオブジェクトです。ここでは dataclass を使用していますが、任意の型を使用できます。
-2. これはツールです。`RunContextWrapper[UserInfo]` を受け取ることがわかります。ツールの実装はコンテキストから読み取ります。
-3. 型チェッカーがエラーを検出できるように、エージェントに汎用型 `UserInfo` を指定します（たとえば、異なるコンテキスト型を取るツールを渡そうとした場合）。
-4. `run` 関数にコンテキストを渡します。
+1. これはコンテキストオブジェクトです。ここでは dataclass を使用していますが、任意の型を使えます。
+2. これはツールです。`RunContextWrapper[UserInfo]` を受け取ることが分かります。ツール実装はコンテキストから読み取ります。
+3. エージェントにジェネリック型 `UserInfo` を付けることで、型チェッカーがエラーを検出できます（例えば、異なるコンテキスト型を取るツールを渡そうとした場合など）。
+4. コンテキストは `run` 関数に渡されます。
 5. エージェントはツールを正しく呼び出し、年齢を取得します。
 
-## エージェント / LLM コンテキスト
+## エージェント/LLM のコンテキスト
 
-LLM が呼び出されるとき、LLM が参照できるのは会話履歴のデータのみです。したがって、新しいデータを LLM に利用可能にしたい場合は、その履歴で参照可能になるように提供する必要があります。方法はいくつかあります。
+LLM が呼び出されるとき、参照できるのは会話履歴のデータのみです。つまり、新しいデータを LLM に利用可能にしたい場合は、その履歴で参照可能になる方法で提供する必要があります。方法はいくつかあります。
 
-1. エージェントの `instructions` に追加します。これは「システムプロンプト」または「developer message」とも呼ばれます。システムプロンプトは静的な文字列でも、コンテキストを受け取って文字列を出力する動的な関数でもかまいません。これは常に有用な情報（例: ユーザー名や現在の日付）に一般的な手法です。
-2. `Runner.run` 関数を呼び出す際の `input` に追加します。これは `instructions` の手法に似ていますが、[chain of command](https://cdn.openai.com/spec/model-spec-2024-05-08.html#follow-the-chain-of-command) の下位にメッセージを配置できます。
-3. 関数ツールとして公開します。これはオンデマンドのコンテキストに有用です。LLM は必要なときにデータを要求し、ツールを呼び出してそのデータを取得できます。
-4. リトリーバルや Web 検索を使用します。これらは、ファイルやデータベースから関連データを取得（retrieval）したり、Web から取得（Web 検索）したりできる特別なツールです。これは、応答を関連するコンテキストデータに「グラウンディング」するのに有用です。
->>>>>>> origin/main
+1. エージェントの `instructions` に追加します。これは「システムプロンプト」や「開発者メッセージ」とも呼ばれます。システムプロンプトは静的な文字列でも、コンテキストを受け取って文字列を出力する動的関数でも構いません。常に有用な情報（例: ユーザーの名前や現在の日付）に適した一般的な手法です。
+2. `Runner.run` を呼ぶ際の `input` に追加します。これは `instructions` の手法に似ていますが、[指揮系統](https://cdn.openai.com/spec/model-spec-2024-05-08.html#follow-the-chain-of-command)の下位に位置するメッセージを持てます。
+3. 関数ツールで公開します。これはオンデマンドのコンテキストに有用で、LLM が必要なときにデータ取得のためツールを呼び出せます。
+4. リトリーバルや Web 検索を使用します。これらは、ファイルやデータベース（リトリーバル）または Web（Web 検索）から関連データを取得できる特別なツールです。関連するコンテキストデータで応答を「グラウンディング」するのに有用です。

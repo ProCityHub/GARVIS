@@ -1,60 +1,7 @@
-<<<<<<< HEAD
-# Divine Foundation: Ten Commandments Issue Workflow
-# "You shall not bear false witness" - Ensure truthful issue management
-# Aligned with biblical principles and natural law compliance
-
-=======
->>>>>>> origin/main
 name: Issue Management
 
 on:
   issues:
-<<<<<<< HEAD
-    types: [opened, labeled, unlabeled]
-  issue_comment:
-    types: [created]
-
-permissions:
-  issues: write
-  contents: read
-
-jobs:
-  issue-triage:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'issues' && github.event.action == 'opened'
-    steps:
-      - name: Add triage label to new issues
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.issues.addLabels({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              labels: ['triage']
-            });
-
-      - name: Welcome comment
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: 'Thank you for opening this issue! Our team will review it shortly.'
-            });
-
-  issue-validation:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'issue_comment'
-    steps:
-      - name: Validate issue comments
-        uses: actions/github-script@v7
-        with:
-          script: |
-            console.log('Issue comment created: ' + context.payload.comment.body.substring(0, 100));
-=======
     types: [opened, labeled]
 
 permissions:
@@ -68,4 +15,3 @@ jobs:
     steps:
       - name: No-op triage
         run: echo "Issue triage placeholder — no action required."
->>>>>>> origin/main

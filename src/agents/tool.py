@@ -295,10 +295,6 @@ Tool = Union[
 """A tool that can be used in an agent."""
 
 
-<<<<<<< HEAD
-def default_tool_error_function(ctx: RunContextWrapper[Any], error: Exception) -> str:
-    """The default tool error function, which just returns a generic error message."""
-=======
 def _extract_json_decode_error(error: BaseException) -> json.JSONDecodeError | None:
     current: BaseException | None = error
     while current is not None:
@@ -325,7 +321,6 @@ def default_tool_error_function(ctx: RunContextWrapper[Any], error: Exception) -
             "Please try again with valid JSON. "
             f"Error: {json_decode_error}"
         )
->>>>>>> origin/main
     return f"An error occurred while running the tool. Please try again. Error: {str(error)}"
 
 
@@ -476,14 +471,6 @@ def function_tool(
                 if inspect.isawaitable(result):
                     return await result
 
-<<<<<<< HEAD
-                _error_tracing.attach_error_to_current_span(
-                    SpanError(
-                        message="Error running tool (non-fatal)",
-                        data={
-                            "tool_name": schema.name,
-                            "error": str(e),
-=======
                 json_decode_error = _extract_tool_argument_json_error(e)
                 if json_decode_error is not None:
                     span_message = "Error running tool"
@@ -497,7 +484,6 @@ def function_tool(
                         data={
                             "tool_name": schema.name,
                             "error": span_error_detail,
->>>>>>> origin/main
                         },
                     )
                 )

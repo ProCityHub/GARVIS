@@ -1,10 +1,7 @@
 from __future__ import annotations
 
-<<<<<<< HEAD
-=======
 from typing import get_args
 
->>>>>>> origin/main
 import graphviz  # type: ignore
 
 from agents import Agent
@@ -86,22 +83,14 @@ def get_all_nodes(
         if isinstance(handoff, Handoff):
             parts.append(
                 f'"{handoff.agent_name}" [label="{handoff.agent_name}", '
-<<<<<<< HEAD
-                f"shape=box, style=filled, style=rounded, "
-=======
                 f'shape=box, style="filled,rounded", '
->>>>>>> origin/main
                 f"fillcolor=lightyellow, width=1.5, height=0.8];"
             )
         if isinstance(handoff, Agent):
             if handoff.name not in visited:
                 parts.append(
                     f'"{handoff.name}" [label="{handoff.name}", '
-<<<<<<< HEAD
-                    f"shape=box, style=filled, style=rounded, "
-=======
                     f'shape=box, style="filled,rounded", '
->>>>>>> origin/main
                     f"fillcolor=lightyellow, width=1.5, height=0.8];"
                 )
             parts.append(get_all_nodes(handoff, agent, visited))
@@ -152,11 +141,7 @@ def get_all_edges(
             "{agent.name}" -> "{handoff.name}";""")
             parts.append(get_all_edges(handoff, agent, visited))
 
-<<<<<<< HEAD
-    if not agent.handoffs and not isinstance(agent, Tool):  # type: ignore
-=======
     if not agent.handoffs and not isinstance(agent, get_args(Tool)):
->>>>>>> origin/main
         parts.append(f'"{agent.name}" -> "__end__";')
 
     return "".join(parts)
