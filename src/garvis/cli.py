@@ -116,12 +116,39 @@ def _run_local_lattice_cycle(args: argparse.Namespace) -> int:
     return 0
 
 
-def _build_local_runtime() -> CapabilityAwareRuntime:
+def _build_local_runtime(session_id: str = "default") -> CapabilityAwareRuntime:
     from .capability_runtime import CapabilityAwareRuntime
     from .local_language_runtime import LocalLanguageRuntime, LocalRuntimeConfig
 
-    local = LocalLanguageRuntime(LocalRuntimeConfig.from_environment(Path.cwd()))
-    return CapabilityAwareRuntime(local)
+    normalized_session_id = session_id.strip() or "default"
+
+    local = LocalLanguageRuntime(
+        LocalRuntimeConfig.from_environment(Path.cwd()),
+        session_id=normalized_session_id,
+    )
+
+    previous_network_mode = os.environ.get(
+        "GARVIS_NETWORK_MODE"
+    )
+
+    if previous_network_mode is None:
+        os.environ["GARVIS_NETWORK_MODE"] = "thanos"
+
+    try:
+        return CapabilityAwareRuntime(
+            local,
+            session_id=normalized_session_id,
+        )
+    finally:
+        if previous_network_mode is None:
+            os.environ.pop(
+                "GARVIS_NETWORK_MODE",
+                None,
+            )
+        else:
+            os.environ["GARVIS_NETWORK_MODE"] = (
+                previous_network_mode
+            )
 
 
 def _configure_local_memory(args: argparse.Namespace) -> None:
@@ -158,7 +185,7 @@ def _run_local(args: argparse.Namespace) -> int:
     _configure_local_memory(args)
 
     try:
-        runtime = _build_local_runtime()
+        runtime = _build_local_runtime(args.session)
     except Exception as exc:
         print(f"GARVIS local configuration error: {exc}", file=sys.stderr)
         return 2
@@ -191,6 +218,10 @@ def _run_local(args: argparse.Namespace) -> int:
 
 def _check_configuration(model: str | None = None) -> str | None:
     from .anthropic_backend import is_anthropic_model
+    from .provider_bridge import (
+        is_openai_compatible_model,
+        provider_configuration_error,
+    )
 
     resolved = model or os.getenv("GARVIS_MODEL", DEFAULT_REMOTE_MODEL)
     if is_anthropic_model(resolved):
@@ -201,6 +232,8 @@ def _check_configuration(model: str | None = None) -> str | None:
                 "the repository."
             )
         return None
+    if is_openai_compatible_model(resolved):
+        return provider_configuration_error(resolved)
     if resolved.strip().lower().startswith("litellm/"):
         return None  # provider-specific keys; litellm reports its own errors
     if not os.getenv("OPENAI_API_KEY"):

@@ -291,6 +291,46 @@ def _iter_safe_files(
         yield path
 
 
+def _list_safe_entries(
+    directory: Path,
+    roots: tuple[Path, ...],
+    *,
+    limit: int = 150,
+    max_context_chars: int = 5_000,
+) -> str:
+    # Return a bounded top-level listing without opening file contents.
+    entries: list[str] = []
+    used = 0
+    try:
+        candidates = sorted(directory.iterdir(), key=lambda item: item.name.casefold())
+    except OSError as exc:
+        raise LocalAccessError(f"Could not list target directory: {exc}") from exc
+
+    for path in candidates:
+        if len(entries) >= limit:
+            break
+        if path.is_symlink() or _is_sensitive(path):
+            continue
+        try:
+            resolved = path.resolve()
+        except OSError:
+            continue
+        if not _inside_allowed(resolved, roots):
+            continue
+        if path.is_dir():
+            rendered = f"{path.name}/"
+        elif path.is_file():
+            rendered = path.name
+        else:
+            continue
+        if used + len(rendered) + 1 > max_context_chars:
+            break
+        entries.append(rendered)
+        used += len(rendered) + 1
+
+    return "\n".join(entries) if entries else "No visible, non-sensitive entries found."
+
+
 def execute_local_access(
     request: LocalAccessRequest,
     repository_root: Path,
@@ -307,6 +347,14 @@ def execute_local_access(
 
     if not target.is_dir():
         raise LocalAccessError("Target is neither a regular file nor a directory")
+
+    if request.operation == "list":
+        content = _list_safe_entries(
+            target,
+            approved_roots,
+            max_context_chars=max_context_chars,
+        )
+        return LocalAccessReport(str(target), "list", content)
 
     if request.operation == "search":
         query = request.search_query.casefold()
@@ -332,15 +380,11 @@ def execute_local_access(
         content = "\n".join(matches) if matches else "No matching text found."
         return LocalAccessReport(str(target), "search", content)
 
-    entries: list[str] = []
-    used = 0
-    for path in _iter_safe_files(target, approved_roots, limit=150):
-        rendered = path.relative_to(target).as_posix()
-        if used + len(rendered) + 1 > max_context_chars:
-            break
-        entries.append(rendered)
-        used += len(rendered) + 1
-    content = "\n".join(entries) if entries else "No readable, non-sensitive text files found."
+    content = _list_safe_entries(
+        target,
+        approved_roots,
+        max_context_chars=max_context_chars,
+    )
     return LocalAccessReport(str(target), "list", content)
 
 
