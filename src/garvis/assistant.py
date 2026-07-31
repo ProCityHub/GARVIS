@@ -18,6 +18,11 @@ from agents import Agent, Runner, SQLiteSession
 
 from .anthropic_backend import configure_anthropic, is_anthropic_model
 from .bounded_session import BoundedSession
+from .core_memory import core_identity_prompt
+from .provider_bridge import (
+    configure_openai_compatible,
+    is_openai_compatible_model,
+)
 from .repository_context import ground_message, should_ground_repository
 
 DEFAULT_MODEL = "gpt-5.1"
@@ -43,6 +48,7 @@ Follow this response spine:
 6. Keep answers clear and professional. Preserve the user's terminology where it helps, but do not
    let internal routing labels or safety architecture dominate the response.
 """.strip()
+GARVIS_INSTRUCTIONS = GARVIS_INSTRUCTIONS + "\n\n" + core_identity_prompt()
 
 
 class ApprovalRequirement(str, Enum):
@@ -191,6 +197,8 @@ class GarvisAssistant:
         self.model = model or os.getenv("GARVIS_MODEL", DEFAULT_MODEL)
         if is_anthropic_model(self.model):
             self.model = configure_anthropic(self.model)
+        elif is_openai_compatible_model(self.model):
+            self.model = configure_openai_compatible(self.model)
         self.max_turns = max_turns
         self.persist_memory = persist_memory
         self.session_db = session_db or self._default_session_db()

@@ -6,7 +6,7 @@ search:
 
 ## プロジェクトと仮想環境の作成
 
-この作業は最初の一度だけで大丈夫です。
+この操作は一度だけで大丈夫です。
 
 ```bash
 mkdir my_project
@@ -38,7 +38,7 @@ export OPENAI_API_KEY=sk-...
 
 ## 最初のエージェントの作成
 
-エージェントは instructions、名前、オプションの設定（`model_config` など）で定義します。
+エージェントは instructions、名前、そしてオプションの設定（`model_config` など）で定義します。
 
 ```python
 from agents import Agent
@@ -49,9 +49,9 @@ agent = Agent(
 )
 ```
 
-## いくつかのエージェントの追加
+## いくつかのエージェントを追加
 
-追加のエージェントも同様に定義できます。`handoff_descriptions` はハンドオフの経路決定に役立つ追加コンテキストを提供します。
+追加のエージェントも同様に定義できます。`handoff_descriptions` は、ハンドオフのルーティングを判断するための追加コンテキストを提供します。
 
 ```python
 from agents import Agent
@@ -71,7 +71,7 @@ math_tutor_agent = Agent(
 
 ## ハンドオフの定義
 
-各エージェントで、タスクを前進させるために選択できる送信側のハンドオフ候補の一覧を定義できます。
+各エージェントで、タスクを前進させるために選択できる送信側ハンドオフオプションの在庫を定義できます。
 
 ```python
 triage_agent = Agent(
@@ -81,9 +81,9 @@ triage_agent = Agent(
 )
 ```
 
-## エージェントオーケストレーションの実行
+## エージェントのオーケストレーションの実行
 
-ワークフローが実行され、トリアージ用エージェントが 2 つの専門エージェント間で正しくルーティングすることを確認しましょう。
+ワークフローが実行され、トリアージ エージェントが 2 つの専門エージェント間を正しくルーティングすることを確認しましょう。
 
 ```python
 from agents import Runner
@@ -95,7 +95,7 @@ async def main():
 
 ## ガードレールの追加
 
-入力または出力に対して実行するカスタムガードレールを定義できます。
+入力または出力に対して実行するカスタム ガードレールを定義できます。
 
 ```python
 from agents import GuardrailFunctionOutput, Agent, Runner
@@ -121,9 +121,9 @@ async def homework_guardrail(ctx, agent, input_data):
     )
 ```
 
-## 統合
+## すべてをまとめる
 
-ハンドオフと入力ガードレールを使って、ワークフロー全体をまとめて実行しましょう。
+ハンドオフと入力ガードレールを使用して、ワークフロー全体をまとめて実行してみましょう。
 
 ```python
 from agents import Agent, InputGuardrail, GuardrailFunctionOutput, Runner
@@ -192,12 +192,12 @@ if __name__ == "__main__":
 
 ## トレースの表示
 
-エージェント実行中に何が起きたかを確認するには、[OpenAI ダッシュボードの Trace viewer](https://platform.openai.com/traces) に移動して、エージェント実行のトレースを表示します。
+エージェント実行中に何が起きたかを確認するには、[OpenAI ダッシュボードの Trace ビューアー](https://platform.openai.com/traces)に移動して、エージェント実行のトレースを表示します。
 
 ## 次のステップ
 
 より複雑なエージェントフローの構築方法を学びましょう:
 
-- Learn about how to configure [Agents](agents.md).
-- Learn about [running agents](running_agents.md).
-- Learn about [tools](tools.md), [guardrails](guardrails.md) and [models](models/index.md).
+- Learn about how to configure [エージェント](agents.md)。
+- Learn about [エージェントの実行](running_agents.md)。
+- Learn about [ツール](tools.md)、[ガードレール](guardrails.md)、[モデル](models/index.md)。

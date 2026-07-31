@@ -1,0 +1,28 @@
+name: Guard
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  guard:
+    name: Repository guard
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Full history: the guard needs a merge base with the target branch.
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run repository guard
+        env:
+          GITHUB_BASE_REF: ${{ github.base_ref || 'main' }}
+        run: python .github/scripts/guard_check.py

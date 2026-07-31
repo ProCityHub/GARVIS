@@ -83,7 +83,8 @@ def test_irregular_shape_bbox_and_centroid():
     assert (o.bounding_box.min_row, o.bounding_box.min_col) == (0, 0)
     assert (o.bounding_box.max_row, o.bounding_box.max_col) == (1, 1)
     assert o.bounding_box.height == 2 and o.bounding_box.width == 2
-    assert o.centroid == (pytest.approx(2 / 3), pytest.approx(2 / 3))
+    assert o.centroid[0] == pytest.approx(2 / 3)
+    assert o.centroid[1] == pytest.approx(2 / 3)
 
 
 def test_boundary_contact():
