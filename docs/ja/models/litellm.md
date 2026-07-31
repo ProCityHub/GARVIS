@@ -20,7 +20,7 @@ pip install "openai-agents[litellm]"
 
 完了したら、任意の エージェント で [`LitellmModel`][agents.extensions.models.litellm_model.LitellmModel] を使用できます。
 
-## コード例
+## 例
 
 これは完全に動作する例です。実行すると、モデル名と API キーの入力を求められます。例えば次のように入力できます。
 
@@ -28,7 +28,7 @@ pip install "openai-agents[litellm]"
 -   モデルに `anthropic/claude-3-5-sonnet-20240620`、API キーに Anthropic の API キー
 -   など
 
-LiteLLM がサポートするモデルの全一覧は、[litellm providers docs](https://docs.litellm.ai/docs/providers) を参照してください。
+LiteLLM でサポートされているモデルの全一覧は、[litellm providers docs](https://docs.litellm.ai/docs/providers) を参照してください。
 
 ```python
 from __future__ import annotations
@@ -76,7 +76,7 @@ if __name__ == "__main__":
     asyncio.run(main(model, api_key))
 ```
 
-## 使用状況データのトラッキング
+## 使用状況データの追跡
 
 LiteLLM のレスポンスで Agents SDK の使用状況メトリクスを集計したい場合は、エージェント作成時に `ModelSettings(include_usage=True)` を渡してください。
 

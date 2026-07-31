@@ -45,7 +45,7 @@ graph LR
 
 ## パイプラインの実行
 
-パイプラインは [`run()`][agents.voice.pipeline.VoicePipeline.run] メソッドで実行できます。音声入力は次の 2 つの形式で渡せます。
+パイプラインは [`run()`][agents.voice.pipeline.VoicePipeline.run] メソッドで実行でき、音声入力を次の 2 つの形式で渡せます。
 
 1. [`AudioInput`][agents.voice.input.AudioInput]: 音声全体の文字起こしがあり、その結果だけを生成したい場合に使用します。発話の終了検知が不要なケース、たとえば録音済み音声や、ユーザーの発話終了が明確なプッシュ・トゥ・トーク アプリで有用です。
 2. [`StreamedAudioInput`][agents.voice.input.StreamedAudioInput]: ユーザーの発話終了を検知する必要がある場合に使用します。検出された音声チャンクを順次プッシュでき、音声パイプラインは「activity detection」と呼ばれるプロセスを通じて、適切なタイミングで自動的にエージェント ワークフローを実行します。

@@ -12,7 +12,7 @@ Agents SDK の基本的な[クイックスタート手順](../quickstart.md)に�
 pip install 'openai-agents[voice]'
 ```
 
-## コンセプト
+## 概念
 
 主な概念は [`VoicePipeline`][agents.voice.pipeline.VoicePipeline] で、これは 3 段階のプロセスです:
 

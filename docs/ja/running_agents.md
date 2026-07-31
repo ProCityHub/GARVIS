@@ -23,7 +23,7 @@ async def main():
     # Infinite loop's dance
 ```
 
-詳細は [結果ガイド](results.md) をご覧ください。
+詳細は [結果ガイド](results.md) を参照してください。
 
 ## エージェントループ
 
@@ -69,7 +69,7 @@ async def main():
 
 エージェント実行の最後に、ユーザーに何を表示するかを選べます。例えば、エージェントが生成したすべての新規アイテムを表示するか、最終出力のみを表示します。いずれの場合も、その後ユーザーが追質問をするかもしれないため、その際は再度 run メソッドを呼び出します。
 
-### 手動での会話管理
+### 手動の会話管理
 
 次のターンの入力を取得するために、[`RunResultBase.to_input_list()`][agents.result.RunResultBase.to_input_list] メソッドを使って会話履歴を手動で管理できます。
 
@@ -125,7 +125,7 @@ Sessions は自動的に次を行います。
 
 詳しくは [Sessions のドキュメント](sessions.md) を参照してください。
 
-## 長時間稼働エージェントと human-in-the-loop
+## 長時間実行エージェントと human-in-the-loop
 
 Agents SDK の [Temporal](https://temporal.io/) 連携を使うと、human-in-the-loop タスクを含む、永続的で長時間実行のワークフローを実行できます。Temporal と Agents SDK が連携して長時間のタスクを完了するデモは [この動画](https://www.youtube.com/watch?v=fFBZqzT4DD8) を参照し、ドキュメントは [こちら](https://github.com/temporalio/sdk-python/tree/main/temporalio/contrib/openai_agents) を参照してください。
 

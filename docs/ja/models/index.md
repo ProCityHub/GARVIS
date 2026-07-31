@@ -122,7 +122,7 @@ async def main():
     print(result.final_output)
 ```
 
-1. OpenAI モデルの名前を直接設定します。
+1. OpenAI のモデル名を直接設定します。
 2. [`Model`][agents.models.interface.Model] 実装を提供します。
 
 エージェント で使用するモデルをさらに構成したい場合は、温度などの任意のモデル構成 パラメーター を提供する [`ModelSettings`][agents.models.interface.ModelSettings] を渡せます。

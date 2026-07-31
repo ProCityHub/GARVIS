@@ -16,7 +16,7 @@ Agents SDK が提供する [`handoff()`][agents.handoffs.handoff] 関数を使�
 
 ### 基本的な使い方
 
-簡単なハンドオフの作り方は次のとおりです。
+シンプルなハンドオフの作成方法は次のとおりです。
 
 ```python
 from agents import Agent, handoff
@@ -100,7 +100,7 @@ handoff_obj = handoff(
 )
 ```
 
-1. これにより、`FAQ agent` が呼び出されたときに履歴から自動的にすべてのツールが削除されます。
+1. これは、`FAQ agent` が呼び出されたときに履歴からすべてのツールを自動的に削除します。
 
 ## 推奨プロンプト
 

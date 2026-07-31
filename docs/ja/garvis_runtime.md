@@ -36,7 +36,7 @@ export GARVIS_MODEL="gpt-5.6-luna"
 uv run garvis "Explain the current heartbeat status"
 ```
 
-## 対話型の会話を開始
+## 対話の開始
 
 ```bash
 uv run garvis --interactive --session adrien
@@ -52,4 +52,4 @@ uv run garvis --interactive --session adrien
 
 `garvis.assistant.GarvisAssistant` は会話エージェントとセッションメモリを所有します。リクエスト評価はノンブロッキングなメタデータであり、モデルの応答を置き換えたり抑制したりしません。アクションの承認は質問応答の境界ではなく、ツールの境界で行われます。
 
-Authorship: **Adrien D Thomas / ProCityHub**.
+著者: **Adrien D Thomas / ProCityHub**.

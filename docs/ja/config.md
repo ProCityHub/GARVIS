@@ -81,17 +81,17 @@ logger.setLevel(logging.WARNING)
 logger.addHandler(logging.StreamHandler())
 ```
 
-### ログの機微データ
+### ログ内の機微情報
 
 一部のログには機微情報（例: ユーザー データ）が含まれる場合があります。これらのデータがログに記録されないようにするには、次の環境変数を設定してください。
 
-LLM の入力と出力のロギングを無効にするには:
+LLM の入力と出力のロギングを無効化するには:
 
 ```bash
 export OPENAI_AGENTS_DONT_LOG_MODEL_DATA=1
 ```
 
-ツールの入力と出力のロギングを無効にするには:
+ツールの入力と出力のロギングを無効化するには:
 
 ```bash
 export OPENAI_AGENTS_DONT_LOG_TOOL_DATA=1

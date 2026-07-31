@@ -73,7 +73,7 @@ async for event in result.stream_events():
 print(result.final_output)
 ```
 
-### Optional approval flows
+### 任意の承認フロー
 
 サーバーが機微な操作を実行できる場合、各ツール実行前に人間またはプログラムによる承認を要求できます。`tool_config` の `require_approval` を単一のポリシー（`"always"`、`"never"`）またはツール名からポリシーへの dict で設定します。Python 内で判断するには、`on_approval_request` コールバックを指定します。
 
@@ -280,7 +280,7 @@ async with MCPServerStdio(
 
 フィルタコンテキストは、アクティブな `run_context`、ツールを要求している `agent`、および `server_name` を公開します。
 
-## Prompts
+## プロンプト
 
 MCP サーバーは、エージェント の instructions を動的に生成するプロンプトも提供できます。プロンプトをサポートするサーバーは、次の 2 つのメソッドを公開します:
 
@@ -303,11 +303,11 @@ agent = Agent(
 )
 ```
 
-## Caching
+## キャッシュ
 
 すべてのエージェント実行は、各 MCP サーバーに対して `list_tools()` を呼び出します。リモートサーバーは顕著なレイテンシをもたらす可能性があるため、すべての MCP サーバークラスは `cache_tools_list` オプションを公開しています。ツール定義が頻繁に変わらないと確信できる場合にのみ、これを `True` に設定してください。あとで新しい一覧を強制するには、サーバーインスタンス上で `invalidate_tools_cache()` を呼び出します。
 
-## Tracing
+## トレーシング
 
 [Tracing](./tracing.md) は MCP のアクティビティを自動的に捕捉します。含まれる内容は次のとおりです:
 
@@ -316,7 +316,7 @@ agent = Agent(
 
 ![MCP トレーシングのスクリーンショット](../assets/images/mcp-tracing.jpg)
 
-## Further reading
+## 参考資料
 
 - [Model Context Protocol](https://modelcontextprotocol.io/) – 仕様および設計ガイド。
 - [examples/mcp](https://github.com/openai/openai-agents-python/tree/main/examples/mcp) – 実行可能な stdio、SSE、Streamable HTTP のサンプル。

@@ -52,8 +52,6 @@ RealtimeAgent は通常の Agent クラスと同様に動作しますが、い�
 
 ### マデル設定
 
-音声設定は、セッションが音声入力と出力をどのように扱うかを制御します。 Whisper などのモデルを使用して入力音声の書き起こしを設定し、言語設定を指定し、ドメイン固有用語の精度を高めるために書き起こしプロンプトを提供できます。ターン検出の設定により、エージェントがいつ応答を開始・終了するかを制御でき、音声活動検出のしきい値、無音時間、検出された発話の前後パディングなどを指定できます。
-=======
 セッション構成では、基盤となる realtime モデルの動作を制御できます。モデル名（`gpt-realtime` など）、音声の選択（alloy、echo、fable、onyx、nova、shimmer）、および対応するモダリティ（テキストや音声）を設定できます。音声の入出力それぞれのフォーマットを設定でき、既定は PCM16 です。
 
 ### 音声設定
@@ -156,7 +154,7 @@ agent = RealtimeAgent(
 
 ガードレールがトリガーされると、`guardrail_tripped` イベントが生成され、エージェントの現在の応答を中断できる場合があります。デバウンス動作により、安全性とリアルタイム性能要件のバランスが取られます。テキスト エージェントと異なり、realtime エージェントはガードレールがトリップしても Exception を送出しません。
 
-## オーディオ処理
+## 音声処理
 
 [`session.send_audio(audio_bytes)`][agents.realtime.session.RealtimeSession.send_audio] を使用して音声をセッションに送信するか、[`session.send_message()`][agents.realtime.session.RealtimeSession.send_message] を使用してテキストを送信します。
 

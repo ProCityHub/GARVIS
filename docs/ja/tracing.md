@@ -29,7 +29,7 @@ Agents SDK にはトレーシングが組み込まれており、エージェン
     -  親スパンを指す `parent_id`（ある場合）
     -  `span_data`: スパンに関する情報。たとえば、`AgentSpanData` はエージェントに関する情報、`GenerationSpanData` は LLM 生成に関する情報など。
 
-## 既定のトレーシング
+## デフォルトのトレーシング
 
 デフォルトで、SDK は次をトレースします:
 
@@ -89,7 +89,7 @@ async def main():
 
 同様に、音声スパンにはデフォルトで入力および出力音声の base64 エンコードされた PCM データが含まれます。[`VoicePipelineConfig.trace_include_sensitive_audio_data`][agents.voice.pipeline_config.VoicePipelineConfig.trace_include_sensitive_audio_data] を設定することで、この音声データの取得を無効化できます。
 
-## カスタムトレーシングプロセッサ
+## カスタム トレーシング プロセッサー
 
 トレーシングの高レベルなアーキテクチャは次のとおりです:
 
@@ -101,7 +101,7 @@ async def main():
 1. [`add_trace_processor()`][agents.tracing.add_trace_processor] は、トレースやスパンが準備でき次第受け取る、追加のトレースプロセッサーを追加できます。これにより、OpenAI のバックエンドへの送信に加えて、独自の処理を実行できます。
 2. [`set_trace_processors()`][agents.tracing.set_trace_processors] は、デフォルトのプロセッサーを独自のトレースプロセッサーに置き換えます。これは、OpenAI のバックエンドへトレースが送信されなくなることを意味します（そのために送信する `TracingProcessor` を含めない限り）。
 
-## OpenAI 以外のモデルでのトレーシング
+## 非 OpenAI モデルでのトレーシング
 
 OpenAI の API キーを非 OpenAI モデルと併用して、トレーシングを無効化することなく、OpenAI Traces ダッシュボードで無料のトレーシングを有効にできます。
 
@@ -127,7 +127,7 @@ agent = Agent(
 ## 注記
 - OpenAI Traces ダッシュボードで無料のトレースを表示します。
 
-## 外部トレーシングプロセッサ一覧
+## 外部トレーシング プロセッサー一覧
 
 - [Weights & Biases](https://weave-docs.wandb.ai/guides/integrations/openai_agents)
 - [Arize-Phoenix](https://docs.arize.com/phoenix/tracing/integrations-tracing/openai-agents-sdk)

@@ -15,8 +15,8 @@ search:
 
 [`final_output`][agents.result.RunResultBase.final_output] プロパティには、最後に実行されたエージェントの最終出力が含まれます。これは以下のいずれかです:
 
-- `str`（最後のエージェントに `output_type` が定義されていない場合）
-- `last_agent.output_type` 型のオブジェクト（エージェントに出力タイプが定義されている場合）
+- エージェントに `output_type` が定義されていない場合は `str`
+- エージェントに出力タイプが定義されている場合は `last_agent.output_type` 型のオブジェクト
 
 !!! note
 
