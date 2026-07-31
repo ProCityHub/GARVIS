@@ -6,7 +6,11 @@ from agents.models import _openai_shared
 from agents.models.openai_chatcompletions import OpenAIChatCompletionsModel
 from agents.models.openai_responses import OpenAIResponsesModel
 from agents.run import set_default_agent_runner
+<<<<<<< HEAD
 from agents.tracing import set_trace_processors
+=======
+from agents.tracing import set_trace_processors, set_tracing_disabled
+>>>>>>> origin/main
 from agents.tracing.setup import get_trace_provider
 
 from .testing_processor import SPAN_PROCESSOR_TESTING
@@ -29,11 +33,25 @@ def ensure_openai_api_key():
         os.environ["OPENAI_API_KEY"] = "test_key"
 
 
+<<<<<<< HEAD
 # This fixture will run before each test
 @pytest.fixture(autouse=True)
 def clear_span_processor():
     SPAN_PROCESSOR_TESTING.force_flush()
     SPAN_PROCESSOR_TESTING.shutdown()
+=======
+# Restore tracing before and after every test so global state cannot leak.
+@pytest.fixture(autouse=True)
+def isolate_global_tracing_state():
+    set_tracing_disabled(False)
+    set_trace_processors([SPAN_PROCESSOR_TESTING])
+    SPAN_PROCESSOR_TESTING.clear()
+
+    yield
+
+    set_tracing_disabled(False)
+    set_trace_processors([SPAN_PROCESSOR_TESTING])
+>>>>>>> origin/main
     SPAN_PROCESSOR_TESTING.clear()
 
 

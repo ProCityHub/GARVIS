@@ -1,11 +1,15 @@
+<<<<<<< HEAD
 # Divine Foundation: Ten Commandments Issue Workflow
 # "You shall not bear false witness" - Ensure truthful issue management
 # Aligned with biblical principles and natural law compliance
 
+=======
+>>>>>>> origin/main
 name: Issue Management
 
 on:
   issues:
+<<<<<<< HEAD
     types: [opened, labeled, unlabeled]
   issue_comment:
     types: [created]
@@ -50,3 +54,18 @@ jobs:
         with:
           script: |
             console.log('Issue comment created: ' + context.payload.comment.body.substring(0, 100));
+=======
+    types: [opened, labeled]
+
+permissions:
+  issues: write
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    # Only run when there is a real issue payload
+    if: github.event.issue != null
+    steps:
+      - name: No-op triage
+        run: echo "Issue triage placeholder — no action required."
+>>>>>>> origin/main

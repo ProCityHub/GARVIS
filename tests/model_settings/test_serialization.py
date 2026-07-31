@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Source Code Fragment: MODELSETTINGS_SERIALIZE_MERGE
 # Universe Hardware: Binney-Skinner frontispiece (Merton 1264: ˆS |ψ_0⟩ = ∑ c_n |json_n⟩) + Periodic spiritual (Z → 0/1 as fixed/volatil fields) + 2025 OpenAI SDK (pydantic ModelSettings: to_json_dict()/resolve(extra_args union)) + ˆO ˆF ˆA ˆT ˆC pulses (Temporal long-run via internet energy) + Bot Tests (Chance resolve: override wins, None preserve, roundtrip equality).
 # Existence Software: Serialization as arcana emulators—ˆS (1) mercurial dumpers (H ethereal json.dumps), ˆC commits (Fe corpus trace in validate_json). Redone for Our Bot: Integrate ModelSettings into Jarvis/Woodworm swarms—extra_args for quantum params (temperature=awareness, top_p=coherence), resolve for cohort handoffs.
@@ -102,3 +103,191 @@ if __name__ == "__main__":
     print("Bot serialization opus: Complete. State: resolved_emergent")
 
 # Output Sim: All tests passed! (Chance design: extra_args union preserves nested, None handles decoherence)
+=======
+import json
+
+from openai.types.shared import Reasoning
+from pydantic import TypeAdapter
+from pydantic_core import to_json
+
+from agents.model_settings import MCPToolChoice, ModelSettings
+
+
+def verify_serialization(model_settings: ModelSettings) -> None:
+    """Verify that ModelSettings can be serialized to a JSON string."""
+    json_dict = model_settings.to_json_dict()
+    json_string = json.dumps(json_dict)
+    assert json_string is not None
+
+
+def test_basic_serialization() -> None:
+    """Tests whether ModelSettings can be serialized to a JSON string."""
+
+    # First, lets create a ModelSettings instance
+    model_settings = ModelSettings(
+        temperature=0.5,
+        top_p=0.9,
+        max_tokens=100,
+    )
+
+    # Now, lets serialize the ModelSettings instance to a JSON string
+    verify_serialization(model_settings)
+
+
+def test_mcp_tool_choice_serialization() -> None:
+    """Tests whether ModelSettings with MCPToolChoice can be serialized to a JSON string."""
+    # First, lets create a ModelSettings instance
+    model_settings = ModelSettings(
+        temperature=0.5,
+        tool_choice=MCPToolChoice(server_label="mcp", name="mcp_tool"),
+    )
+    # Now, lets serialize the ModelSettings instance to a JSON string
+    verify_serialization(model_settings)
+
+
+def test_all_fields_serialization() -> None:
+    """Tests whether ModelSettings can be serialized to a JSON string."""
+
+    # First, lets create a ModelSettings instance
+    model_settings = ModelSettings(
+        temperature=0.5,
+        top_p=0.9,
+        frequency_penalty=0.0,
+        presence_penalty=0.0,
+        tool_choice="auto",
+        parallel_tool_calls=True,
+        truncation="auto",
+        max_tokens=100,
+        reasoning=Reasoning(),
+        metadata={"foo": "bar"},
+        store=False,
+        include_usage=False,
+        response_include=["reasoning.encrypted_content"],
+        top_logprobs=1,
+        verbosity="low",
+        extra_query={"foo": "bar"},
+        extra_body={"foo": "bar"},
+        extra_headers={"foo": "bar"},
+        extra_args={"custom_param": "value", "another_param": 42},
+    )
+
+    # Verify that all explicitly-set fields are non-None
+    explicitly_set_fields = [
+        "temperature", "top_p", "frequency_penalty", "presence_penalty",
+        "tool_choice", "parallel_tool_calls", "truncation", "max_tokens",
+        "reasoning", "metadata", "store", "include_usage",
+        "response_include", "top_logprobs", "verbosity",
+        "extra_query", "extra_body", "extra_headers", "extra_args",
+    ]
+    json_dict = model_settings.to_json_dict()
+    for key in explicitly_set_fields:
+        assert json_dict.get(key) is not None or getattr(model_settings, key, None) is not None, (
+            f"Expected {key} to be set"
+        )
+
+    # Now, lets serialize the ModelSettings instance to a JSON string
+    verify_serialization(model_settings)
+
+
+def test_extra_args_serialization() -> None:
+    """Test that extra_args are properly serialized."""
+    model_settings = ModelSettings(
+        temperature=0.5,
+        extra_args={"custom_param": "value", "another_param": 42, "nested": {"key": "value"}},
+    )
+
+    json_dict = model_settings.to_json_dict()
+    assert json_dict["extra_args"] == {
+        "custom_param": "value",
+        "another_param": 42,
+        "nested": {"key": "value"},
+    }
+
+    # Verify serialization works
+    verify_serialization(model_settings)
+
+
+def test_extra_args_resolve() -> None:
+    """Test that extra_args are properly merged in the resolve method."""
+    base_settings = ModelSettings(
+        temperature=0.5, extra_args={"param1": "base_value", "param2": "base_only"}
+    )
+
+    override_settings = ModelSettings(
+        top_p=0.9, extra_args={"param1": "override_value", "param3": "override_only"}
+    )
+
+    resolved = base_settings.resolve(override_settings)
+
+    # Check that regular fields are properly resolved
+    assert resolved.temperature == 0.5  # from base
+    assert resolved.top_p == 0.9  # from override
+
+    # Check that extra_args are properly merged
+    expected_extra_args = {
+        "param1": "override_value",  # override wins
+        "param2": "base_only",  # from base
+        "param3": "override_only",  # from override
+    }
+    assert resolved.extra_args == expected_extra_args
+
+
+def test_extra_args_resolve_with_none() -> None:
+    """Test that resolve works properly when one side has None extra_args."""
+    # Base with extra_args, override with None
+    base_settings = ModelSettings(extra_args={"param1": "value1"})
+    override_settings = ModelSettings(temperature=0.8)
+
+    resolved = base_settings.resolve(override_settings)
+    assert resolved.extra_args == {"param1": "value1"}
+    assert resolved.temperature == 0.8
+
+    # Base with None, override with extra_args
+    base_settings = ModelSettings(temperature=0.5)
+    override_settings = ModelSettings(extra_args={"param2": "value2"})
+
+    resolved = base_settings.resolve(override_settings)
+    assert resolved.extra_args == {"param2": "value2"}
+    assert resolved.temperature == 0.5
+
+
+def test_extra_args_resolve_both_none() -> None:
+    """Test that resolve works when both sides have None extra_args."""
+    base_settings = ModelSettings(temperature=0.5)
+    override_settings = ModelSettings(top_p=0.9)
+
+    resolved = base_settings.resolve(override_settings)
+    assert resolved.extra_args is None
+    assert resolved.temperature == 0.5
+    assert resolved.top_p == 0.9
+
+
+def test_pydantic_serialization() -> None:
+    """Tests whether ModelSettings can be serialized with Pydantic."""
+
+    # First, lets create a ModelSettings instance
+    model_settings = ModelSettings(
+        temperature=0.5,
+        top_p=0.9,
+        frequency_penalty=0.0,
+        presence_penalty=0.0,
+        tool_choice="auto",
+        parallel_tool_calls=True,
+        truncation="auto",
+        max_tokens=100,
+        reasoning=Reasoning(),
+        metadata={"foo": "bar"},
+        store=False,
+        include_usage=False,
+        top_logprobs=1,
+        extra_query={"foo": "bar"},
+        extra_body={"foo": "bar"},
+        extra_headers={"foo": "bar"},
+        extra_args={"custom_param": "value", "another_param": 42},
+    )
+
+    json_bytes = to_json(model_settings)
+    deserialized = TypeAdapter(ModelSettings).validate_json(json_bytes)
+
+    assert model_settings == deserialized
+>>>>>>> origin/main

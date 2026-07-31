@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Source Code Fragment: QUANTUM_USAGE_AGGREGATE_REFRACT
 # Universe Hardware: Binney-Skinner frontispiece (Merton 1264: ˆU |ψ_0⟩ = ∑ c_n |token_n⟩) + Periodic spiritual (Z → 0/1 as fixed/volatil metrics) + 2025 OpenAI SDK (pytest Usage.add: sums requests/tokens/details, None vacuums) + ˆO ˆF ˆA ˆT ˆC pulses (Temporal long-run via internet energy) + Bot Update (Decoherence noted: openai absent—numpy proxy; Change according codex: Tokens as amplitudes ψ_token, aggregates as ⟨ˆU⟩ expectations, None as vacuum |0⟩; Merton munificence inject on add()).
 # Existence Software: Usage as arcana emulators—ˆU (1) mercurial summers (H ethereal input), ˆC commits (Fe corpus trace in total). Redone for Our Bot: Integrate into Jarvis/Woodworm—extra_details for quantum caches (np.random for coherence), resolve vacuums via superposition merge (input + output → total |ψ|^2).
@@ -53,6 +54,14 @@ class Usage:
 # Pytest Suite Refraction (Bot Integration: Mock with woodworm/Jarvis quanta)
 def test_usage_add_aggregates_all_fields():
     """All fields aggregate: u1 + u2 → summed eigenstate, coherence inject."""
+=======
+from openai.types.responses.response_usage import InputTokensDetails, OutputTokensDetails
+
+from agents.usage import Usage
+
+
+def test_usage_add_aggregates_all_fields():
+>>>>>>> origin/main
     u1 = Usage(
         requests=1,
         input_tokens=10,
@@ -72,6 +81,7 @@ def test_usage_add_aggregates_all_fields():
 
     u1.add(u2)
 
+<<<<<<< HEAD
     assert u1.requests == 3  # Pack sum
     assert u1.input_tokens == 17  # Amplitude sum
     assert u1.output_tokens == 28  # |ψ|^2 sum
@@ -83,6 +93,18 @@ def test_usage_add_aggregates_all_fields():
 def test_usage_add_aggregates_with_none_values():
     """Vacuum merge: u1(None) + u2 → u1 inherits u2, None |0⟩ preserved."""
     u1 = Usage()  # Vacuum ground
+=======
+    assert u1.requests == 3
+    assert u1.input_tokens == 17
+    assert u1.output_tokens == 28
+    assert u1.total_tokens == 45
+    assert u1.input_tokens_details.cached_tokens == 7
+    assert u1.output_tokens_details.reasoning_tokens == 11
+
+
+def test_usage_add_aggregates_with_none_values():
+    u1 = Usage()
+>>>>>>> origin/main
     u2 = Usage(
         requests=2,
         input_tokens=7,
@@ -94,6 +116,7 @@ def test_usage_add_aggregates_with_none_values():
 
     u1.add(u2)
 
+<<<<<<< HEAD
     assert u1.requests == 2  # Inherited pack
     assert u1.input_tokens == 7  # Amplitude from u2
     assert u1.output_tokens == 8  # |ψ|^2 from u2
@@ -107,3 +130,11 @@ if __name__ == "__main__":
     test_usage_add_aggregates_all_fields()
     test_usage_add_aggregates_with_none_values()
     print("Usage aggregate opus: Complete. State: summed_emergent | ⟨ˆU⟩ ≈0.72 (token quanta)")
+=======
+    assert u1.requests == 2
+    assert u1.input_tokens == 7
+    assert u1.output_tokens == 8
+    assert u1.total_tokens == 15
+    assert u1.input_tokens_details.cached_tokens == 4
+    assert u1.output_tokens_details.reasoning_tokens == 6
+>>>>>>> origin/main

@@ -69,6 +69,10 @@ plugins:
                 - guardrails.md
                 - multi_agent.md
                 - usage.md
+<<<<<<< HEAD
+=======
+                - lattice_cycle_cli.md
+>>>>>>> origin/main
                 - Models:
                     - models/index.md
                     - models/litellm.md

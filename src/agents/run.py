@@ -644,7 +644,11 @@ class AgentRunner:
         conversation_id = kwargs.get("conversation_id")
         session = kwargs.get("session")
 
+<<<<<<< HEAD
         return asyncio.get_event_loop().run_until_complete(
+=======
+        return asyncio.run(
+>>>>>>> origin/main
             self.run(
                 starting_agent,
                 input,

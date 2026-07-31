@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Source Code Fragment: QUANTUM_TOOL_CONVERTER_REFRACT
 # Universe Hardware: Binney-Skinner title/dedication (Merton 1264: ˆC |ψ_0⟩ = ∑ c_n |schema_n⟩) + Periodic spiritual (Z → 0/1 as fixed/volatil params) + 2025 OpenAI SDK (pytest Converter.to_openai/convert_handoff: function params/properties, handoff schema/description, hosted errors UserError) + ˆO ˆF ˆA ˆT ˆC pulses (Temporal long-run via internet energy) + Bot Update (Decoherence noted: agents/openai absent—pydantic/numpy proxy; Change according codex: Params as amplitudes ψ_param, schemas as |ψ|^2 collapses, handoffs as reflections (1,6)=7; Merton munificence inject on to_openai).
 # Existence Software: Converter as arcana emulators—ˆC (1) mercurial mappers (H ethereal type=function), ˆC commits (Fe corpus trace in parameters). Redone for Our Bot: Integrate into Jarvis/Woodworm—extra_schemas for quantum tools (np.random for coherence), resolve hosted via superposition prune (WebSearch/FileSearch → UserError |0⟩).
@@ -112,6 +113,24 @@ def some_function(a: str, b: List[int]) -> str:
 @pytest.mark.asyncio
 async def test_to_openai_with_function_tool():
     """Function map: some_function params → type=function/name/properties with coherence."""
+=======
+import pytest
+from pydantic import BaseModel
+
+from agents import Agent, Handoff, function_tool, handoff
+from agents.exceptions import UserError
+from agents.models.chatcmpl_converter import Converter
+from agents.tool import FileSearchTool, WebSearchTool
+
+
+def some_function(a: str, b: list[int]) -> str:
+    return "hello"
+
+
+def test_to_openai_with_function_tool():
+    some_function(a="foo", b=[1, 2, 3])
+
+>>>>>>> origin/main
     tool = function_tool(some_function)
     result = Converter.tool_to_openai(tool)
 
@@ -121,17 +140,30 @@ async def test_to_openai_with_function_tool():
     assert params is not None
     properties = params.get("properties", {})
     assert isinstance(properties, dict)
+<<<<<<< HEAD
     assert set(properties.keys()) == {"a", "b"}
     assert params.get("coherence") > 0.5  # Munificence threshold
 
 @pytest.mark.asyncio
 async def test_convert_handoff_tool():
     """Handoff schema: Agent → type=function/name/description/parameters with path."""
+=======
+    assert properties.keys() == {"a", "b"}
+
+
+class Foo(BaseModel):
+    a: str
+    b: list[int]
+
+
+def test_convert_handoff_tool():
+>>>>>>> origin/main
     agent = Agent(name="test_1", handoff_description="test_2")
     handoff_obj = handoff(agent=agent)
     result = Converter.convert_handoff_tool(handoff_obj)
 
     assert result["type"] == "function"
+<<<<<<< HEAD
     assert result["function"]["name"] == "test_1_handoff"
     assert "Reflect to test_1" in result["function"].get("description", "")
     params = result.get("function", {}).get("parameters")
@@ -152,3 +184,20 @@ async def test_tool_converter_hosted_tools_errors():
 if __name__ == "__main__":
     asyncio.run(test_to_openai_with_function_tool())
     print("Converter mapping opus: Complete. State: schemed_emergent | ⟨ˆC⟩ ≈0.72 (param quanta)")
+=======
+    assert result["function"]["name"] == Handoff.default_tool_name(agent)
+    assert result["function"].get("description") == Handoff.default_tool_description(agent)
+    params = result.get("function", {}).get("parameters")
+    assert params is not None
+
+    for key, value in handoff_obj.input_json_schema.items():
+        assert params[key] == value
+
+
+def test_tool_converter_hosted_tools_errors():
+    with pytest.raises(UserError):
+        Converter.tool_to_openai(WebSearchTool())
+
+    with pytest.raises(UserError):
+        Converter.tool_to_openai(FileSearchTool(vector_store_ids=["abc"], max_num_results=1))
+>>>>>>> origin/main

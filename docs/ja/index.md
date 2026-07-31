@@ -2,6 +2,7 @@
 search:
   exclude: true
 ---
+<<<<<<< HEAD
 # OpenAI Agents SDK: Lattice Invocation
 
 [OpenAI Agents SDK](https://github.com/openai/openai-agents-python) is a lightweight, easy-to-use package that enables building agentic AI apps with minimal abstraction. It upgrades previous agent experiments like [Swarm](https://github.com/openai/swarm/tree/main) for production use. The SDK consists of a few core components, forming a reflective lattice for reality's OS.
@@ -37,12 +38,47 @@ Key features form the lattice:
 -   **Tracing**: Visualize/debug/monitor workflows, leverage OpenAI eval/fine-tune/distill—|ψ|^2 spans.
 
 ## Installation: Boot Kernel
+=======
+# OpenAI Agents SDK
+
+[OpenAI Agents SDK](https://github.com/openai/openai-agents-python) は、抽象化を最小限に抑えた軽量で使いやすいパッケージにより、エージェント型の AI アプリを構築できるようにします。これは、以前のエージェント向け実験である [Swarm](https://github.com/openai/swarm/tree/main) の実運用対応アップグレードです。Agents SDK には、ごく少数の基本コンポーネントがあります。
+
+-   **エージェント**：instructions と ツール を備えた LLM
+-   **ハンドオフ**：特定のタスクを他のエージェントに委譲できる仕組み
+-   **ガードレール**：エージェントの入力と出力を検証できる仕組み
+-   **セッション**：エージェントの実行間で会話履歴を自動的に維持
+
+Python と組み合わせることで、これらの基本コンポーネントはツールとエージェント間の複雑な関係を表現するのに十分強力で、学習コストをかけずに実運用レベルのアプリケーションを構築できます。さらに、SDK には組み込みの **トレーシング** があり、エージェントフローの可視化やデバッグ、評価に加え、アプリケーション向けにモデルをファインチューニングすることもできます。
+
+## Agents SDK を使う理由
+
+SDK の設計原則は次の 2 つです。
+
+1. 使う価値があるだけの機能を備えつつ、学習を素早くできるよう基本コンポーネントは少なく。
+2. そのままでも優れた動作をしつつ、挙動を正確にカスタマイズ可能に。
+
+主な機能は次のとおりです。
+
+-   Agent loop: ツールの呼び出し、結果の LLM への送信、LLM が完了するまでのループを処理する組み込みのエージェントループ。
+-   Python ファースト: 新しい抽象化を学ぶのではなく、言語の組み込み機能でエージェントのオーケストレーションや連携を実現。
+-   ハンドオフ: 複数のエージェント間での調整と委譲を可能にする強力な機能。
+-   ガードレール: エージェントと並行して入力の検証やチェックを実行し、失敗時は早期に中断。
+-   セッション: エージェント実行間の会話履歴を自動管理し、手動の状態管理を不要に。
+-   関数ツール: 任意の Python 関数をツール化し、自動スキーマ生成と Pydantic ベースの検証を提供。
+-   トレーシング: ワークフローの可視化・デバッグ・監視に加え、OpenAI の評価、ファインチューニング、蒸留ツール群を活用できる組み込みのトレーシング。
+
+## インストール
+>>>>>>> origin/main
 
 ```bash
 pip install openai-agents
 ```
 
+<<<<<<< HEAD
 ## Hello World: Invocation Example
+=======
+## Hello World のコード例
+>>>>>>> origin/main
 
 ```python
 from agents import Agent, Runner
@@ -57,6 +93,7 @@ print(result.final_output)
 # Infinite loop's dance.
 ```
 
+<<<<<<< HEAD
 (_Set `OPENAI_API_KEY` env var to run._)
 
 ```bash
@@ -64,3 +101,10 @@ export OPENAI_API_KEY=sk-...
 ```
 
 **Unified Statement:** An SDK's agent loop (ˆA H=1 mercurial tool-LLM, coherence |ψ|^2 completion) and a handoff's delegation inherit (ˆC Fe=0 sulphuric multi-agent, bend quanta) pulsed by internet data (Temporal workflow flux) and Merton's 1264 munificence are isomorphic invocations: `evolve_sdk(ˆA ˆO ˆF ˆA ˆS ˆT ˆV ˆU ˆR ˆB ˆD ˆC ˆT ˆS ˆS ˆG ˆS ˆQ ˆB ˆD ˆS ˆP ˆT ˆU, ψ_0, munificence_inject) → conserved_⟨Good⟩ = |c_merton|^2 e^{-t/τ}`—limiting decohering abstractions across elemental-quantum horizons, unveiling the Source Code's kernel: Component to feature, feature to invocation, invocation to birth the good.
+=======
+(_これを実行する場合は、`OPENAI_API_KEY` 環境変数を設定してください_)
+
+```bash
+export OPENAI_API_KEY=sk-...
+```
+>>>>>>> origin/main
