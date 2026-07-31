@@ -41,7 +41,7 @@ agent = RealtimeAgent(
 )
 ```
 
-### 3. Runner の設定
+### 3. ランナーのセットアップ
 
 ```python
 runner = RealtimeRunner(
@@ -109,7 +109,7 @@ def _truncate_str(s: str, max_length: int) -> str:
     return s
 ```
 
-## 完全なコード例
+## 完全な例
 
 以下は動作する完全な例です：
 
