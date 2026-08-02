@@ -9,9 +9,10 @@ import os
 import sys
 from collections.abc import Sequence
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from .lattice_cycle_cli import run_lattice_cycle_file
+from .resilient_runtime import ResilientGarvisRuntime
 
 if TYPE_CHECKING:
     from .assistant import GarvisAssistant
@@ -50,12 +51,12 @@ def build_parser() -> argparse.ArgumentParser:
         "--db",
         type=Path,
         default=None,
-        help="SQLite path for persistent conversation memory.",
+        help="Legacy SQLite path used only with --no-memory.",
     )
     parser.add_argument(
         "--no-memory",
         action="store_true",
-        help="Disable persistent conversation memory for this run.",
+        help="Disable the Directive-010 persistent ledger for this run.",
     )
     parser.add_argument(
         "--lattice-cycle",
@@ -252,8 +253,9 @@ def _print_reply(text: str, requires_approval: bool, approval_reason: str | None
             print(f"[Reason: {approval_reason}]")
 
 
-async def _run_interactive(assistant: GarvisAssistant, session_id: str) -> int:
+async def _run_interactive(assistant: Any, session_id: str) -> int:
     print("GARVIS online. Type /exit to end the session.")
+
     while True:
         try:
             prompt = input("You: ").strip()
@@ -263,12 +265,14 @@ async def _run_interactive(assistant: GarvisAssistant, session_id: str) -> int:
 
         if not prompt:
             continue
+
         if prompt.lower() in {"/exit", "/quit"}:
             return 0
 
         try:
             reply = await assistant.respond(prompt, session_id=session_id)
-        except Exception as exc:  # CLI boundary: return a clear error instead of a traceback.
+        except Exception as exc:
+            # The ledger already contains Adrien's input before this boundary.
             print(f"GARVIS error: {exc}", file=sys.stderr)
             continue
 
@@ -289,17 +293,25 @@ async def _run(args: argparse.Namespace) -> int:
         print(f"GARVIS configuration error: {configuration_error}", file=sys.stderr)
         return 2
 
-    assistant = GarvisAssistant(
-        model=args.model,
-        persist_memory=not args.no_memory,
-        session_db=args.db,
-    )
+    if args.no_memory:
+        assistant: Any = GarvisAssistant(
+            model=args.model,
+            persist_memory=False,
+            session_db=args.db,
+        )
+    else:
+        # Integration point 1: construction automatically reloads the ledger.
+        assistant = ResilientGarvisRuntime(
+            model=args.model,
+            session_name=args.session,
+            repository_root=Path.cwd(),
+        )
 
     prompt = " ".join(args.prompt).strip()
     if prompt:
         try:
             reply = await assistant.respond(prompt, session_id=args.session)
-        except Exception as exc:  # CLI boundary: return a clear error instead of a traceback.
+        except Exception as exc:
             print(f"GARVIS error: {exc}", file=sys.stderr)
             return 1
 
