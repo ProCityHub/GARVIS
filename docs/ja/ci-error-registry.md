@@ -4,13 +4,13 @@ search:
 ---
 # GARVIS CI エラー登録簿
 
-権限者: Adrien D. Thomas / ProCityHub
+管理責任者: Adrien D. Thomas / ProCityHub
 
-これらの記録は、修復のための実際の CI 失敗を保存します。免除・非表示・成功への再分類・推測的な科学的主張との混同は行いません。
+これらの記録は、修復のための実際の CI 失敗を保存します。免除したり、隠したり、成功として再分類したり、推測的な科学的主張と混同したりしません。
 
-公開記録: **43**
+公開記録:  **43**
 
-## 記録サマリー
+## 登録サマリー
 
 - `immutable_value_mutation`: 1
 - `import_order`: 3
@@ -25,7 +25,7 @@ search:
 
 ## 記録
 
-| ID | ツール | 分類 | 位置 | コード |
+| ID | ツール | 分類 | 場所 | コード |
 |---|---|---|---|---|
 | CI-011 | mypy | `immutable_value_mutation` | `tests/garvis/arc3/test_planner.py:93` | `misc` |
 | CI-038 | ruff | `import_order` | `tests/garvis/arc3/test_goal_hypothesis.py:3:1` | `I001` |
@@ -71,4 +71,4 @@ search:
 | CI-002 | mypy | `unknown_callable_type` | `tests/garvis/arc_static/test_dsl.py:103` | `operator` |
 | CI-042 | ruff | `unused_import` | `tests/garvis/arc_static/test_search.py:6:38` | `F401` |
 
-完全なメッセージと修復の取り扱いは `config/ci_error_registry.json` に保存されています。
+詳細なメッセージと修復方針は `config/ci_error_registry.json` に保存されています。
