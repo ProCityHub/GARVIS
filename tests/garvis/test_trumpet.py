@@ -7,7 +7,6 @@ import sys
 from pathlib import Path
 from typing import Any
 
-
 SOURCE = Path(__file__).resolve().parents[2] / "src" / "garvis" / "trumpet.py"
 NETWORK_CALLS = {
     "accept",
@@ -111,7 +110,7 @@ class FakeSocket:
     def close(self) -> None:
         self.closed = True
 
-    def __enter__(self) -> "FakeSocket":
+    def __enter__(self) -> FakeSocket:
         return self
 
     def __exit__(self, exc_type, exc, traceback) -> None:

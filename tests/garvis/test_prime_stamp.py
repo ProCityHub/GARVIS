@@ -5,7 +5,6 @@ import importlib.util
 import sys
 from pathlib import Path
 
-
 SOURCE = Path(__file__).resolve().parents[2] / "src" / "garvis" / "prime_stamp.py"
 DANGEROUS_CALLS = {
     "accept",
