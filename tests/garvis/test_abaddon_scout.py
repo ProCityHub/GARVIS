@@ -7,6 +7,7 @@ import os
 import sys
 import zipfile
 from pathlib import Path
+from typing import cast
 
 import pytest
 
@@ -61,10 +62,11 @@ def test_scan_hashes_files_in_deterministic_path_order(tmp_path: Path) -> None:
     (root / "a.txt").write_bytes(b"a")
 
     report = scan_evidence(root, {"a.txt": digest(b"a")})
+    files = cast(list[dict[str, object]], report["files"])
 
-    assert [item["path"] for item in report["files"]] == ["a.txt", "z.txt"]
-    assert report["files"][0]["verification_status"] == "verified"
-    assert report["files"][1]["verification_status"] == "unverified"
+    assert [item["path"] for item in files] == ["a.txt", "z.txt"]
+    assert files[0]["verification_status"] == "verified"
+    assert files[1]["verification_status"] == "unverified"
     assert report["observed_file_count"] == 2
 
 
