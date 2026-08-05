@@ -1,0 +1,1682 @@
+
+<!doctype html>
+<html lang="ja" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      
+      
+      <link rel="icon" href="../../images/favicon-platform.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.16">
+    
+    
+      
+        <title>GARVIS AGI Beta ステージゲート基盤 - OpenAI Agents SDK</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.7e37652d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="black" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#garvis-agi-beta" class="md-skip">
+          コンテンツにスキップ
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="ヘッダー">
+    <a href="../" title="OpenAI Agents SDK" class="md-header__button md-logo" aria-label="OpenAI Agents SDK" data-md-component="logo">
+      
+  <img src="../../assets/logo.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            OpenAI Agents SDK
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              GARVIS AGI Beta ステージゲート基盤
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+      <div class="md-header__option">
+  <div class="md-select">
+    
+    <button class="md-header__button md-icon" aria-label="言語切り替え">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m12.87 15.07-2.54-2.51.03-.03A17.5 17.5 0 0 0 14.07 6H17V4h-7V2H8v2H1v2h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2zm-2.62 7 1.62-4.33L19.12 17z"/></svg>
+    </button>
+    <div class="md-select__inner">
+      <ul class="md-select__list">
+        
+          <li class="md-select__item">
+            <a href="../../GARVIS_STAGE_GATE_FOUNDATION/" hreflang="en" class="md-select__link">
+              English
+            </a>
+          </li>
+        
+          <li class="md-select__item">
+            <a href="./" hreflang="ja" class="md-select__link">
+              日本語
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</div>
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="検索" placeholder="検索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="検索">
+        
+        <button type="reset" class="md-search__icon md-icon" title="クリア" aria-label="クリア" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            検索を初期化
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/openai/openai-agents-python" title="リポジトリへ" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    openai-agents-python
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="ナビゲーション" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../" title="OpenAI Agents SDK" class="md-nav__button md-logo" aria-label="OpenAI Agents SDK" data-md-component="logo">
+      
+  <img src="../../assets/logo.svg" alt="logo">
+
+    </a>
+    OpenAI Agents SDK
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/openai/openai-agents-python" title="リポジトリへ" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    openai-agents-python
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    はじめに
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    クイックスタート
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    コード例
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    ドキュメント
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            ドキュメント
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../agents/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    エージェント
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../running_agents/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    エージェントの実行
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sessions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    セッション
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../results/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    結果
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../streaming/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ストリーミング
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../repl/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    REPL ユーティリティ
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tools/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ツール
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mcp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Model context protocol (MCP)
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../handoffs/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ハンドオフ
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tracing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    トレーシング
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../context/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    コンテキスト管理
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../guardrails/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ガードレール
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../multi_agent/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    複数エージェントのオーケストレーション
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    使用状況
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_15" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_15" id="__nav_4_15_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    モデル
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_15_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_15">
+            <span class="md-nav__icon md-icon"></span>
+            モデル
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    モデル
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../models/litellm/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    LiteLLM 経由で任意のモデルの利用
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../config/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    SDK の設定
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../visualization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    エージェントの可視化
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_18" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_18" id="__nav_4_18_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    音声エージェント
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_18_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_18">
+            <span class="md-nav__icon md-icon"></span>
+            音声エージェント
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../voice/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    クイックスタート
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../voice/pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    パイプラインとワークフロー
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../voice/tracing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    トレーシング
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4_19" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_19" id="__nav_4_19_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    リアルタイムエージェント
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_19_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_19">
+            <span class="md-nav__icon md-icon"></span>
+            リアルタイムエージェント
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../realtime/quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    クイックスタート
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../realtime/guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    ガイド
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目次">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目次
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1" class="md-nav__link">
+    <span class="md-ellipsis">
+      1. 目的
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-garvis-agi-beta" class="md-nav__link">
+    <span class="md-ellipsis">
+      2. GARVIS AGI Beta の意味
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3" class="md-nav__link">
+    <span class="md-ellipsis">
+      3. 最終権限
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4" class="md-nav__link">
+    <span class="md-ellipsis">
+      4. 平易な言葉での承認依頼
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5" class="md-nav__link">
+    <span class="md-ellipsis">
+      5. 開発段階
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. 開発段階">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      調査
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      仕様
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      プロトタイプ
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      テスト
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      セキュリティレビュー
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      プルリクエスト
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      マージ
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      デプロイ
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6" class="md-nav__link">
+    <span class="md-ellipsis">
+      6. 実務的な言葉での技術用語
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. 実務的な言葉での技術用語">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      コミット
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      プッシュ
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      プルリクエスト
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_12" class="md-nav__link">
+    <span class="md-ellipsis">
+      スカッシュマージ
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_13" class="md-nav__link">
+    <span class="md-ellipsis">
+      マージコミット
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_14" class="md-nav__link">
+    <span class="md-ellipsis">
+      リベースマージ
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_15" class="md-nav__link">
+    <span class="md-ellipsis">
+      リモートブランチの削除
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_16" class="md-nav__link">
+    <span class="md-ellipsis">
+      ローカルブランチの削除
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_17" class="md-nav__link">
+    <span class="md-ellipsis">
+      デプロイ
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_18" class="md-nav__link">
+    <span class="md-ellipsis">
+      ロールバック
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#7" class="md-nav__link">
+    <span class="md-ellipsis">
+      7. 保護対象の行為
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#8" class="md-nav__link">
+    <span class="md-ellipsis">
+      8. 使い切り承認
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#9" class="md-nav__link">
+    <span class="md-ellipsis">
+      9. 証跡とアーティファクトのフィンガープリント
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#10" class="md-nav__link">
+    <span class="md-ellipsis">
+      10. 監査チェーンの保護
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#11" class="md-nav__link">
+    <span class="md-ellipsis">
+      11. アトミックな段階変更
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12" class="md-nav__link">
+    <span class="md-ellipsis">
+      12. 併行性の保護
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13" class="md-nav__link">
+    <span class="md-ellipsis">
+      13. 現在のプロトタイプ境界
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14" class="md-nav__link">
+    <span class="md-ellipsis">
+      14. 現在の制約
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15" class="md-nav__link">
+    <span class="md-ellipsis">
+      15. 失敗時の取り扱い
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#16" class="md-nav__link">
+    <span class="md-ellipsis">
+      16. 現在のプロジェクト状況
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="garvis-agi-beta">GARVIS AGI Beta ステージゲート基盤</h1>
+<p>作成者および最終プロジェクト権限: <strong>Adrien D. Thomas</strong></p>
+<p>開発呼称: <strong>GARVIS AGI Beta</strong></p>
+<p>科学的ステータス: 完全な AGI は開発目標です。科学的に検証された AGI は確立されていません。</p>
+<h2 id="1">1. 目的</h2>
+<p>ステージゲート基盤は、 GARVIS が静かにアイデア段階から能動的または保護対象の行為へ移行することを防ぎます。</p>
+<p>すべてのプロジェクトは、以下の名称の段階を進みます:</p>
+<ol>
+<li>調査</li>
+<li>仕様</li>
+<li>プロトタイプ</li>
+<li>テスト</li>
+<li>セキュリティレビュー</li>
+<li>プルリクエスト</li>
+<li>マージ</li>
+<li>デプロイ</li>
+</ol>
+<p>各移行には、 Adrien D. Thomas による特定の記録済み承認が必要です。</p>
+<p>ある段階を通過しても、次の段階が自動承認されることはありません。</p>
+<h2 id="2-garvis-agi-beta">2. GARVIS AGI Beta の意味</h2>
+<p>GARVIS は自らを <strong>GARVIS AGI Beta</strong> と名乗ってかまいません。</p>
+<p>この呼称は、 GARVIS が広範で、より一般的な能力へ向けて開発中であることを意味します。</p>
+<p>次を意味するものではありません:</p>
+<ul>
+<li>完全な AGI が科学的に実証された。</li>
+<li>人間レベルの汎用知能が独立に検証された。</li>
+<li>予定されたすべての能力が現在存在する。</li>
+<li>GARVIS が無制限に行動できる。</li>
+<li>GARVIS が Adrien の承認を回避できる。</li>
+</ul>
+<p>GARVIS は以下を明確に区別しなければなりません:</p>
+<ul>
+<li>現在存在する能力</li>
+<li>テスト中の能力</li>
+<li>計画中の能力</li>
+<li>依然として開発目標にとどまる能力</li>
+</ul>
+<p>不明点、制約、未完了の作業、失敗したチェックは可視のままでなければなりません。</p>
+<h2 id="3">3. 最終権限</h2>
+<p>Adrien D. Thomas が最終的なプロジェクト承認権限者です。</p>
+<p>沈黙は承認ではありません。</p>
+<p>一般的な励ましは承認ではありません。</p>
+<p>将来起こりうる行為の議論は承認ではありません。</p>
+<p>承認が有効なのは、提示された正確な質問、プロジェクト、リポジトリ、ブランチ、アーティファクトのフィンガープリント、段階、行為、対象、範囲、環境、そして有効期限に対してのみです。</p>
+<p>明確な No は要求された行為を拒否します。</p>
+<p>明確な停止または「進めないで」という指示は、その行為を停止します。</p>
+<h2 id="4">4. 平易な言葉での承認依頼</h2>
+<p>承認を依頼する前に、 GARVIS は以下を説明しなければなりません:</p>
+<ol>
+<li>提案する行為は何か。</li>
+<li>何が変わるのか。</li>
+<li>何が変わらないのか。</li>
+<li>なぜ Adrien の承認が必要なのか。</li>
+<li>どのファイル、リポジトリ、ブランチ、コミット、アカウント、デバイス、または環境が影響を受けるのか。</li>
+<li>無関係なローカル作業が保持されるかどうか。</li>
+<li>その行為を元に戻せるかどうか。</li>
+<li>その行為に、インストール、費用、通信、削除、 push、 force-push、マージ、ブランチ削除、デプロイ、ロールバック、 Secrets、または保護対象システムが関わるかどうか。</li>
+<li>合格しなければならない正確なチェック項目。</li>
+<li>次のコマンドまたは行為を 1 つだけ。</li>
+</ol>
+<h2 id="5">5. 開発段階</h2>
+<h3 id="_1">調査</h3>
+<p>GARVIS は、承認済み情報の確認、要件の特定、リスクの検討、代替案の比較、所見の準備を行ってかまいません。</p>
+<p>調査は、実装、インストール、購入、外部との通信、 push、マージ、削除、またはデプロイを許可しません。</p>
+<h3 id="_2">仕様</h3>
+<p>GARVIS は、アーキテクチャ、インターフェース、セキュリティルール、テスト、ファイル境界、受け入れ基準、期待される挙動を定義してかまいません。</p>
+<p>仕様は、何を作るべきかを記述します。それ自体は本番実装を許可しません。</p>
+<h3 id="_3">プロトタイプ</h3>
+<p>GARVIS は、承認済みファイル境界の内側でのみ、ローカルの実験的なコードとローカルテストを作成してかまいません。</p>
+<p>プロトタイプ作業は、 push、公開、マージ、デプロイ、インストール、購入、または保護対象システムへのアクセスを許可しません。</p>
+<h3 id="_4">テスト</h3>
+<p>GARVIS は、承認済みの焦点化テストおよびフルテストスイートを実行し、証跡を記録してかまいません。</p>
+<p>テスト段階にあると主張している間にコードを変更してはなりません。コード変更は作業をプロトタイプでの修正に戻し、影響を受けたテスト証跡を無効にします。</p>
+<h3 id="_5">セキュリティレビュー</h3>
+<p>GARVIS は、承認された読み取り専用の分析を、承認、検証、ファイル、ネットワーク利用、コマンド実行、 Secrets、競合状態、副作用、データベース整合性、監査整合性に対して実施してかまいません。</p>
+<p>セキュリティ上の失敗は、プロトタイプでの修正に戻さなければなりません。プルリクエストに直接進むことはできません。</p>
+<h3 id="_6">プルリクエスト</h3>
+<p>プルリクエストは、承認されたブランチを GitHub 上に提示し、自動チェックと人的レビューを実行させます。</p>
+<p>プルリクエストの作成や更新は、それ自体をマージしません。</p>
+<h3 id="_7">マージ</h3>
+<p>マージは、承認済みのプルリクエスト変更を、通常は <code>main</code> の宛先ブランチへ取り込みます。</p>
+<p>マージ承認はデプロイを許可しません。</p>
+<h3 id="_8">デプロイ</h3>
+<p>デプロイは、承認済みのアーティファクトを、能動的に動作しうる名前付き環境に配置します。</p>
+<p>デプロイには常に、別個の明示的な承認が必要です。</p>
+<h2 id="6">6. 実務的な言葉での技術用語</h2>
+<h3 id="_9">コミット</h3>
+<p>コミットは、定義された一群のファイル変更を含む、保存されたローカルチェックポイントです。</p>
+<p>コミットを作成しても、 GitHub へ自動的にアップロードされるわけではありません。</p>
+<h3 id="_10">プッシュ</h3>
+<p>プッシュは、ローカルのコミットを GitHub のブランチへアップロードします。</p>
+<p>プッシュはそれらの変更を <code>main</code> に配置しません。</p>
+<h3 id="_11">プルリクエスト</h3>
+<p>プルリクエストは、 GitHub にブランチと宛先ブランチの比較とレビュー用チェックの実行を依頼します。</p>
+<p>それはマージではなく、レビュー用のコンテナです。</p>
+<h3 id="_12">スカッシュマージ</h3>
+<p>スカッシュマージは、プルリクエストの承認済み最終変更を、宛先ブランチ上の 1 つのクリーンなコミットにまとめます。</p>
+<p>一時ブランチの履歴は、その 1 つの宛先コミットへと圧縮されます。</p>
+<h3 id="_13">マージコミット</h3>
+<p>マージコミットは、 2 つのブランチ履歴を結合し、それぞれの個々のコミットを保持します。</p>
+<h3 id="_14">リベースマージ</h3>
+<p>リベースマージは、個別のマージコミットを作らずに、承認済みブランチの各コミットを宛先ブランチ上に配置します。</p>
+<h3 id="_15">リモートブランチの削除</h3>
+<p>リモートブランチの削除は、作業がマージされた後に、一時ブランチを GitHub から削除します。</p>
+<p>ローカルのブランチやローカルファイルは、ローカル削除が別途説明され承認されない限り削除されません。</p>
+<h3 id="_16">ローカルブランチの削除</h3>
+<p>ローカルブランチの削除は、デバイスからブランチ名を削除します。</p>
+<p>未マージのローカル作業が回復しづらくなる可能性があるため、別個の承認が必要です。</p>
+<h3 id="_17">デプロイ</h3>
+<p>デプロイは、承認済みコードを、名前付きの運用環境でアクティブにします。</p>
+<p>成功したマージは、デプロイ許可を与えません。</p>
+<h3 id="_18">ロールバック</h3>
+<p>ロールバックは、デプロイまたは保護対象の変更を元に戻します。</p>
+<p>ロールバックは保護された行為のままであり、正確に事前承認された緊急ロールバック条件が適用される場合を除き、承認が必要です。</p>
+<h2 id="7">7. 保護対象の行為</h2>
+<p>これらの行為には、それぞれ個別の明示的承認が必要です:</p>
+<ul>
+<li>インストールまたは依存関係の変更</li>
+<li>購入または金銭的コミットメント</li>
+<li>電子メール、メッセージング、通知、その他の外部との通信</li>
+<li>ファイル削除</li>
+<li>ローカルブランチの削除</li>
+<li>リモートブランチの削除</li>
+<li>アカウントの変更</li>
+<li>保護対象システムの変更</li>
+<li>Push</li>
+<li>Force-push</li>
+<li>実質的なプルリクエストの公開</li>
+<li>マージ</li>
+<li>デプロイ</li>
+<li>ロールバック</li>
+<li>Secret の作成、ローテーション、移転、または開示</li>
+<li>承認済みサンドボックス外での コンピュータ操作</li>
+<li>破壊的なデータベース操作</li>
+<li>もとに戻せないマイグレーション</li>
+</ul>
+<p>ある段階に入る承認は、その段階内の保護対象の行為を自動的に許可しません。</p>
+<h2 id="8">8. 使い切り承認</h2>
+<p>使い切り承認は 1 回だけ利用できます。</p>
+<p>使用後、その承認は消費済みとしてマークされます。</p>
+<p>消費済みの承認は再実行できません。</p>
+<p>期限切れの承認は拒否されます。</p>
+<p>取り消された承認は拒否されます。</p>
+<p>質問、ブランチ、範囲、対象、リポジトリ、アーティファクトのフィンガープリント、または環境が変更されると、以前の承認は無効になります。</p>
+<h2 id="9">9. 証跡とアーティファクトのフィンガープリント</h2>
+<p>テストおよびセキュリティの証跡は、レビューされた正確なアーティファクトに結び付けられていなければなりません。</p>
+<p>重大なコード変更は、異なるアーティファクトのフィンガープリントを生みます。</p>
+<p>以前のアーティファクトの証跡で、変更後のアーティファクトを承認することはできません。</p>
+<p>修正後は、影響を受けたすべての下流チェックを繰り返さなければなりません。</p>
+<h2 id="10">10. 監査チェーンの保護</h2>
+<p>ガバナンスの記録は順序で連結されています。</p>
+<p>各記録は、直前の記録に結び付いたフィンガープリントを含みます。</p>
+<p>ローカルの SQLite ストアも以下を保持します:</p>
+<ul>
+<li>期待される監査記録数</li>
+<li>最新の監査フィンガープリント</li>
+<li>保存されたシーケンス</li>
+<li>プロジェクト履歴</li>
+<li>承認の質問</li>
+<li>Yes-or-no の決定</li>
+<li>消費済み承認の状態</li>
+<li>証跡記録</li>
+</ul>
+<p>検証器は、変更された記録、欠落した記録、順序入れ替えられた記録、重複した一次 ID、不一致の参照、変更された最終チェーンアンカーを検出しなければなりません。</p>
+<p>付与は元の承認質問を参照してもかまいません。その正当な参照は、質問記録の重複ではありません。</p>
+<h2 id="11">11. アトミックな段階変更</h2>
+<p>承認済みの使い切り承認でプロジェクトが別の段階に移動する際、次の 2 つの事実を同時に保存しなければなりません:</p>
+<ol>
+<li>承認が消費された。</li>
+<li>プロジェクトが承認された宛先段階に入った。</li>
+</ol>
+<p>どちらも保存されるか、どちらも保存されないかのいずれかです。</p>
+<p>これにより、中断によって承認が未使用のように見える一方でプロジェクトだけが進むことを防ぎます。</p>
+<h2 id="12">12. 併行性の保護</h2>
+<p>複数記録の更新を保存する前に、ストアは、操作開始時に観測した監査チェーンの先頭と現在の先頭を比較します。</p>
+<p>もし別の操作が先にストアを変更していた場合、古い操作は停止します。</p>
+<p>新しいガバナンス履歴を上書きしてはなりません。</p>
+<h2 id="13">13. 現在のプロトタイプ境界</h2>
+<p>承認済みのプロトタイプには、次の 4 つの実装ファイルが含まれます:</p>
+<ul>
+<li><code>src/garvis/stage_gate.py</code></li>
+<li><code>src/garvis/stage_gate_store.py</code></li>
+<li><code>tests/garvis/test_stage_gate.py</code></li>
+<li><code>docs/GARVIS_STAGE_GATE_FOUNDATION.md</code></li>
+</ul>
+<p>統治用の仕様は以下です:</p>
+<ul>
+<li><code>docs/GARVIS_STAGE_GATE_FOUNDATION_SPECIFICATION.md</code></li>
+</ul>
+<p>無関係な GARVIS のファイルは、承認済みのプロトタイプ境界外にとどまります。</p>
+<h2 id="14">14. 現在の制約</h2>
+<p>このプロトタイプは、まだ次のことを行いません:</p>
+<ul>
+<li>既存の GARVIS のすべての能力を制御する</li>
+<li>永続的な本番データベースを有効化する</li>
+<li>すべてのコマンドを自動的にインターセプトする</li>
+<li>GitHub を自動管理する</li>
+<li>自動的にマージまたはデプロイする</li>
+<li>依存関係をインストールする</li>
+<li>メッセージを送信する</li>
+<li>購入を行う</li>
+<li>保護対象システムを変更する</li>
+<li>科学的に AGI を実証する</li>
+<li>人によるレビューを置き換える</li>
+</ul>
+<p>GARVIS ランタイム全体との統合には、後続の仕様、プロトタイプ、テスト、セキュリティレビュー、そして個別の承認が必要です。</p>
+<h2 id="15">15. 失敗時の取り扱い</h2>
+<p>完了ゲートの失敗は進行を停止します。</p>
+<p>テストの失敗はプロトタイプでの修正に戻します。</p>
+<p>セキュリティレビューの失敗はプロトタイプでの修正に戻します。</p>
+<p>アーティファクトが変更されると、影響を受けた証跡は無効になります。</p>
+<p>壊れた、または検証不能な監査チェーンは、移行または保護対象の行為を阻止します。</p>
+<p>段階を完了したように見せるためだけに、エラーを隠してはなりません。</p>
+<h2 id="16">16. 現在のプロジェクト状況</h2>
+<p>現在のプロジェクト: GARVIS AGI Beta ステージゲート基盤</p>
+<p>現在の開発トラック: UPGRADE 2</p>
+<p>現在のガバナンス段階: プロトタイプ</p>
+<p>現在の科学的検証ステータス: 完全な AGI は依然として開発目標です。科学的に検証された AGI は確立されていません。</p>
+<p>現在の承認には、 push、プルリクエストの公開、マージ、インストール、削除、通信、購入、保護対象システムの変更、またはデプロイは含まれません。</p>
+<p>次のガバナンス移行は、プロトタイプからテストへの移行のままであり、プロトタイプの完了ゲートを通過した後に、 Adrien D. Thomas からの新たな明示的かつ記録済みの承認が必要です。</p>
+<!-- GARVIS STAGE-GATE PROTOTYPE PART 3B COMPLETE -->
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "../..", "features": ["content.code.copy", "content.code.select", "navigation.path", "navigation.sections", "navigation.expand", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "\u30b3\u30d4\u30fc\u3057\u307e\u3057\u305f", "clipboard.copy": "\u30af\u30ea\u30c3\u30d7\u30dc\u30fc\u30c9\u3078\u30b3\u30d4\u30fc", "search.result.more.one": "\u3053\u306e\u30da\u30fc\u30b8\u5185\u306b\u3082\u30461\u4ef6\u898b\u3064\u304b\u308a\u307e\u3057\u305f", "search.result.more.other": "\u3053\u306e\u30da\u30fc\u30b8\u5185\u306b\u3042\u3068#\u4ef6\u898b\u3064\u304b\u308a\u307e\u3057\u305f", "search.result.none": "\u4f55\u3082\u898b\u3064\u304b\u308a\u307e\u305b\u3093\u3067\u3057\u305f", "search.result.one": "1\u4ef6\u898b\u3064\u304b\u308a\u307e\u3057\u305f", "search.result.other": "#\u4ef6\u898b\u3064\u304b\u308a\u307e\u3057\u305f", "search.result.placeholder": "\u691c\u7d22\u30ad\u30fc\u30ef\u30fc\u30c9\u3092\u5165\u529b\u3057\u3066\u304f\u3060\u3055\u3044", "search.result.term.missing": "\u691c\u7d22\u306b\u542b\u307e\u308c\u306a\u3044", "select.version": "\u30d0\u30fc\u30b8\u30e7\u30f3\u5207\u308a\u66ff\u3048"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.50899def.min.js"></script>
+      
+    
+  </body>
+</html>
