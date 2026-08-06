@@ -144,10 +144,7 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 .aider*
-<<<<<<< HEAD
-=======
 .secrets/
 
 # Local model weights
 models/*.gguf
->>>>>>> origin/main
