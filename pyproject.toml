@@ -143,6 +143,8 @@ module = [
     "garvis",
     "garvis.*",
     "pulse",
+    "hypercube_brain",
+    "hypercube_brain.*",
 ]
 ignore_errors = true
 
