@@ -1,13 +1,13 @@
 import unittest
 
-from hypercube_brain.sensory_nervous_system import (
-    ThalamicRouter,
-    activation_policy,
-)
 from hypercube_brain.screen_retina import (
     AndroidScreenRetina,
     ScreenBounds,
     ScreenElement,
+)
+from hypercube_brain.sensory_nervous_system import (
+    ThalamicRouter,
+    activation_policy,
 )
 
 
