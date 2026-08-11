@@ -45,9 +45,9 @@ The Actor receives no execution authority from this module.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import asdict, dataclass
 from math import hypot, isfinite
-from typing import Dict, Iterable, Tuple
 
 from .sensory_nervous_system import VisualNervePacket
 
@@ -180,7 +180,7 @@ class RetinaCalibrationReport:
 
     def as_dict(
         self,
-    ) -> Dict[str, object]:
+    ) -> dict[str, object]:
         return asdict(self)
 
 
@@ -249,7 +249,7 @@ class AndroidScreenRetina:
     def packets(
         self,
         elements: Iterable[ScreenElement],
-    ) -> Tuple[
+    ) -> tuple[
         VisualNervePacket,
         ...
     ]:
