@@ -1,9 +1,18 @@
 from pathlib import Path
+from pathlib import Path as _CouncilPath
 
 from garvis.capability_broker import ApprovalStore
+from garvis.capability_broker import ApprovalStore as _CouncilApprovalStore
 from garvis.capability_runtime import CapabilityAwareRuntime
+from garvis.capability_runtime import (
+    CapabilityAwareRuntime as _CouncilRuntime,
+    CapabilityRuntimeConfig as _CouncilRuntimeConfig,
+)
 from garvis.internet_research import ResearchReport, ResearchSource
 from garvis.local_file_access import LocalFileAccessStore
+from garvis.local_file_access import (
+    LocalFileAccessStore as _CouncilLocalAccessStore,
+)
 
 
 class FakeLocal:
@@ -150,17 +159,6 @@ def test_file_search_returns_exact_matches_without_calling_model(tmp_path: Path)
     assert research.queries == []
     runtime.close()
 # GARVIS_18_BRAIN_CAPABILITY_TESTS_V1
-
-from pathlib import Path as _CouncilPath
-
-from garvis.capability_broker import ApprovalStore as _CouncilApprovalStore
-from garvis.capability_runtime import (
-    CapabilityAwareRuntime as _CouncilRuntime,
-    CapabilityRuntimeConfig as _CouncilRuntimeConfig,
-)
-from garvis.local_file_access import (
-    LocalFileAccessStore as _CouncilLocalAccessStore,
-)
 
 
 class _CouncilFakeLocal:
