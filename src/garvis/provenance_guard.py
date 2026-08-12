@@ -17,11 +17,10 @@ Creator direction: Adrien D. Thomas / ProCityHub.
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from hashlib import sha256
 from pathlib import Path
-from typing import Iterable, Mapping
-
 
 SECURITY_FALSE_FLAGS = (
     "SOURCE_CHANGED",
