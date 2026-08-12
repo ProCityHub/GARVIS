@@ -85,6 +85,21 @@ def _safe_path(root: Path, relative_path: str) -> Path:
     if root.is_symlink():
         raise RepairRefused("symlink traversal refused")
 
+    parts = _normalized_parts(relative_path)
+
+    current = root
+    for part in parts:
+        if current.is_symlink():
+            raise RepairRefused("symlink traversal refused")
+        current = current / part
+        if current.exists() and current.is_symlink():
+            raise RepairRefused("symlink traversal refused")
+
+    return current
+
+
+
+def _normalized_parts(relative_path: str) -> tuple[str, ...]:
     pure = PurePosixPath(relative_path.replace("\\", "/"))
     if pure.is_absolute():
         raise RepairRefused("path traversal refused")
@@ -100,15 +115,12 @@ def _safe_path(root: Path, relative_path: str) -> Path:
     if not parts:
         raise RepairRefused("empty path refused")
 
-    current = root
-    for part in parts:
-        if current.is_symlink():
-            raise RepairRefused("symlink traversal refused")
-        current = current / part
-        if current.exists() and current.is_symlink():
-            raise RepairRefused("symlink traversal refused")
+    return tuple(parts)
 
-    return current
+
+
+def _normalized_relative_path(relative_path: str) -> str:
+    return "/".join(_normalized_parts(relative_path))
 
 
 
@@ -117,6 +129,9 @@ def _candidate_material(
     entry: TrustedEntry,
     canonical_root: CanonicalRoot,
 ) -> tuple[bytes, str, str]:
+    if _normalized_relative_path(entry.path) != _normalized_relative_path(entry.baseline):
+        raise RepairRefused("path identity mismatch")
+
     baseline_path = _baseline_path(root, entry.baseline)
     canonical_path = _safe_path(canonical_root.root, entry.baseline)
 

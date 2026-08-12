@@ -255,3 +255,31 @@ def test_executor_refuses_symlink_target(tmp_path: Path) -> None:
         )
 
     assert outside.read_text(encoding="utf-8") == "PRESERVE\n"
+
+
+
+def test_executor_refuses_path_identity_mismatch(tmp_path: Path) -> None:
+    root, canonical_root, _ = build_environment(tmp_path)
+    target = root / "docs" / "law_b.md"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text("DRIFT\n", encoding="utf-8")
+
+    entry = TrustedEntry(
+        path="docs/law_b.md",
+        sha256=sha256_file(root / ".garvis" / "baseline" / "docs" / "law_a.md"),
+        baseline="docs/law_a.md",
+        auto_repair=True,
+    )
+    decision = force_sealed_decision(build_plan(root, {entry.path: entry})[0])
+
+    with pytest.raises(RepairRefused, match="path identity mismatch"):
+        sealed_auto_repair(
+            root,
+            decision,
+            entry,
+            canonical_root,
+            expected_root_hash=canonical_root.root_hash,
+            verifier=verifier_for(canonical_root),
+        )
+
+    assert target.read_text(encoding="utf-8") == "DRIFT\n"
