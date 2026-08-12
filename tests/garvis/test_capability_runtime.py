@@ -1,3 +1,5 @@
+import shutil
+import tempfile
 from pathlib import Path
 
 from garvis.capability_broker import ApprovalStore
@@ -307,8 +309,6 @@ def test_supervisor_is_consulted_without_receiving_authority(
 
 class _SecurityCaptureApprovalStore(ApprovalStore):
     def __init__(self) -> None:
-        import tempfile
-
         self._tmp_dir = tempfile.mkdtemp()
         super().__init__(Path(self._tmp_dir) / "capture.db")
         self.events: list[tuple[str, dict[str, object]]] = []
@@ -326,8 +326,6 @@ class _SecurityCaptureApprovalStore(ApprovalStore):
         )
 
     def close(self) -> None:
-        import shutil
-
         super().close()
         shutil.rmtree(self._tmp_dir, ignore_errors=True)
 
