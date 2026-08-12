@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """GARVIS Full-Agent Hypercube Heartbeat Supervisor.
 
 Creator / conceptual architect attribution:
