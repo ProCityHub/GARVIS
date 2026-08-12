@@ -11,8 +11,8 @@ This is a functional software analogy, not a biological simulation.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, asdict
-from typing import Iterable
+from collections.abc import Iterable
+from dataclasses import asdict, dataclass
 
 from .core import Observation, clamp01
 

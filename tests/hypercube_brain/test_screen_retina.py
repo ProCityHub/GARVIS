@@ -5,7 +5,6 @@ from hypercube_brain.screen_retina import (
     ScreenBounds,
     ScreenElement,
 )
-
 from hypercube_brain.sensory_nervous_system import (
     ThalamicRouter,
     activation_policy,
