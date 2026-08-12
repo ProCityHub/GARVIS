@@ -180,7 +180,7 @@ def evaluate_report(report: EvidenceReport) -> ProvenanceDecision:
 
     return ProvenanceDecision(
         decision=decision,
-        safe_state=not unsafe,
+        safe_state=(decision == "EVIDENCE_ACCEPTED_FOR_REVIEW"),
         legal_conclusion="UNRESOLVED_REQUIRES_HUMAN_REVIEW",
         contradictions=tuple(contradictions),
         missing_security_flags=tuple(missing),
