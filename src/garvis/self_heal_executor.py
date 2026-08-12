@@ -142,7 +142,7 @@ def _candidate_material(
         raise RepairRefused("baseline anchor hash mismatch")
 
     if not canonical_path.is_file():
-        raise RepairRefused("canonical anchor missing")
+        raise RepairRefused("not independently anchored")
     canonical_sha256 = sha256_file(canonical_path)
     if canonical_sha256 != entry.sha256:
         raise RepairRefused("not independently anchored")
