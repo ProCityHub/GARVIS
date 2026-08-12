@@ -166,7 +166,7 @@ from garvis.local_file_access import (
 class _CouncilFakeLocal:
     def __init__(self, root: _CouncilPath) -> None:
         self.repository_root = root
-        self.calls = []
+        self.calls: list[tuple[str, str, str]] = []
 
     def respond(
         self,
@@ -207,7 +207,7 @@ class _CouncilPassingReport:
 
 class _CouncilPassingSupervisor:
     def __init__(self) -> None:
-        self.calls = []
+        self.calls: list[tuple[str, bool]] = []
 
     def consult(self, message: str, *, protected_action: bool = False):
         self.calls.append((message, protected_action))
@@ -305,15 +305,31 @@ def test_supervisor_is_consulted_without_receiving_authority(
 
 # GARVIS_18_BRAIN_AUDIT_SECURITY_TESTS_V1
 
-class _SecurityCaptureApprovalStore:
-    def __init__(self):
-        self.events = []
+class _SecurityCaptureApprovalStore(ApprovalStore):
+    def __init__(self) -> None:
+        import tempfile
 
-    def audit(self, event, **kwargs):
-        self.events.append((event, kwargs))
+        self._tmp_dir = tempfile.mkdtemp()
+        super().__init__(Path(self._tmp_dir) / "capture.db")
+        self.events: list[tuple[str, dict[str, object]]] = []
 
-    def close(self):
-        return None
+    def audit(
+        self,
+        event: str,
+        *,
+        session_id: str,
+        request_id: str | None = None,
+        detail: dict[str, object] | None = None,
+    ) -> None:
+        self.events.append(
+            (event, {"session_id": session_id, "request_id": request_id, "detail": detail})
+        )
+
+    def close(self) -> None:
+        import shutil
+
+        super().close()
+        shutil.rmtree(self._tmp_dir, ignore_errors=True)
 
 
 def test_council_failure_audit_excludes_exception_message(
