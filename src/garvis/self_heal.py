@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from .self_heal_executor import (
+    MathematicalInvariantSeal,
     RepairRefused,
     RepairResult,
     VerificationEvidence,
@@ -23,6 +24,7 @@ __all__ = [
     "Bundle",
     "CanonicalRoot",
     "DriftObservation",
+    "MathematicalInvariantSeal",
     "REPORT_ONLY",
     "REPAIR_REQUIRED",
     "RepairDecision",

@@ -1,4 +1,7 @@
+import os
 from pathlib import Path
+
+import pytest
 
 from garvis.self_heal_root import build_canonical_root, compute_bundle, sha256_file
 
@@ -37,3 +40,26 @@ def test_build_canonical_root_captures_authority_bundle(tmp_path: Path) -> None:
     authority = compute_bundle(tmp_path, "authority", ["src/stage_gate.py"])
     assert canonical_root.authority_bundle_sha256 == authority.sha256
     assert canonical_root.root_hash
+
+
+
+def test_compute_bundle_refuses_path_traversal(tmp_path: Path) -> None:
+    target = tmp_path / "docs" / "law_a.md"
+    target.parent.mkdir(parents=True)
+    target.write_text("LAW\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="path traversal"):
+        compute_bundle(tmp_path, "authority", ["../outside.md"])
+
+
+
+def test_build_canonical_root_refuses_symlinks(tmp_path: Path) -> None:
+    target = tmp_path / "src" / "stage_gate.py"
+    target.parent.mkdir(parents=True)
+    target.write_text("AUTHORITY = 'CANONICAL'\n", encoding="utf-8")
+    outside = tmp_path / "outside.py"
+    outside.write_text("EXTERNAL = True\n", encoding="utf-8")
+    os.symlink(outside, tmp_path / "src" / "linked.py")
+
+    with pytest.raises(ValueError, match="symlink"):
+        build_canonical_root(tmp_path, authority_paths=["src/stage_gate.py"])

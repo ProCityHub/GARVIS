@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import pytest
@@ -159,7 +160,13 @@ def test_authority_drift_can_restore_to_canonical(tmp_path: Path) -> None:
     )
 
     assert result.repaired is True
+    assert result.baseline_sha256 == canonical_sha
+    assert result.canonical_sha256 == canonical_sha
     assert sha256_file(target) == canonical_sha
+    assert result.candidate_sha256 == canonical_sha
+    assert result.actual_sha256 == canonical_sha
+    assert result.invariant_seal.seal_sha256
+    assert result.invariant_seal.actual_sha256 == canonical_sha
 
     authority = compute_bundle(root, "authority", canonical_root.authority_paths)
     assert authority.sha256 == canonical_root.authority_bundle_sha256
@@ -196,3 +203,55 @@ def test_invalid_hyperq_evidence_hash_rolls_back(tmp_path: Path) -> None:
         )
 
     assert target.read_text(encoding="utf-8") == original
+
+
+
+def test_executor_refuses_path_traversal_target(tmp_path: Path) -> None:
+    root, canonical_root, _ = build_environment(tmp_path)
+    outside = tmp_path / "outside.md"
+    outside.write_text("PRESERVE\n", encoding="utf-8")
+
+    entry = TrustedEntry(
+        path="../outside.md",
+        sha256=sha256_file(root / ".garvis" / "baseline" / "docs" / "law_a.md"),
+        baseline="docs/law_a.md",
+        auto_repair=True,
+    )
+    decision = force_sealed_decision(build_plan(root, {entry.path: entry})[0])
+
+    with pytest.raises(RepairRefused, match="path traversal"):
+        sealed_auto_repair(
+            root,
+            decision,
+            entry,
+            canonical_root,
+            expected_root_hash=canonical_root.root_hash,
+            verifier=verifier_for(canonical_root),
+        )
+
+    assert outside.read_text(encoding="utf-8") == "PRESERVE\n"
+
+
+
+def test_executor_refuses_symlink_target(tmp_path: Path) -> None:
+    root, canonical_root, _ = build_environment(tmp_path)
+    outside = tmp_path / "outside.md"
+    outside.write_text("PRESERVE\n", encoding="utf-8")
+    target = root / "docs" / "law_a.md"
+    target.unlink()
+    os.symlink(outside, target)
+
+    decision, entry = decision_for(root, "docs/law_a.md")
+    decision = force_sealed_decision(decision)
+
+    with pytest.raises(RepairRefused, match="symlink traversal"):
+        sealed_auto_repair(
+            root,
+            decision,
+            entry,
+            canonical_root,
+            expected_root_hash=canonical_root.root_hash,
+            verifier=verifier_for(canonical_root),
+        )
+
+    assert outside.read_text(encoding="utf-8") == "PRESERVE\n"
