@@ -7,6 +7,8 @@ This supervisor coordinates planning and evidence exchange.
 It does not grant arbitrary outside-world authority.
 """
 
+from __future__ import annotations
+
 import ast
 import hashlib
 import json
