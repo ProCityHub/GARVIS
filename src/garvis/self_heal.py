@@ -8,8 +8,8 @@ from .self_heal_executor import (
     sealed_auto_repair,
 )
 from .self_heal_projection import (
-    REPORT_ONLY,
     REPAIR_REQUIRED,
+    REPORT_ONLY,
     TRUSTED,
     DriftObservation,
     RepairDecision,

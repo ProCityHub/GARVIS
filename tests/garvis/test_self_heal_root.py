@@ -3,7 +3,6 @@ from pathlib import Path
 from garvis.self_heal_root import build_canonical_root, compute_bundle, sha256_file
 
 
-
 def test_sha256_file_is_deterministic(tmp_path: Path) -> None:
     target = tmp_path / "docs" / "law_a.md"
     target.parent.mkdir(parents=True)

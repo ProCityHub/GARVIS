@@ -13,7 +13,6 @@ from garvis.self_heal_root import build_canonical_root, compute_bundle, sha256_f
 from garvis.self_heal_seal import force_sealed_decision
 
 
-
 def build_environment(
     tmp_path: Path,
     *,
@@ -57,23 +56,12 @@ def decision_for(root: Path, path: str) -> tuple[object, TrustedEntry]:
         baseline=path,
         auto_repair=True,
     )
-    decision = next(item for item in build_plan(root, {entry.path: entry}) if item.observation.path == path)
-    return decision, entry
-
-
-
-def passing_verifier(root: Path, target: str, candidate_sha: str) -> VerificationEvidence:
-    del root
-    canonical_root = build_canonical_root(root := Path(target).anchor and Path('.') or Path('.'), authority_paths=[])
-    del canonical_root
-    return VerificationEvidence(
-        oab_relationships_preserved=True,
-        stage_gate_preserved=True,
-        hyperq_verified=True,
-        tests_pass=True,
-        evidence_sha256="",
+    decision = next(
+        item
+        for item in build_plan(root, {entry.path: entry})
+        if item.observation.path == path
     )
-
+    return decision, entry
 
 
 def verifier_for(canonical_root) -> object:

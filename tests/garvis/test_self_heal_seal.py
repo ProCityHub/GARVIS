@@ -5,7 +5,6 @@ from garvis.self_heal_root import sha256_file
 from garvis.self_heal_seal import SEALED_REPAIR_REQUIRED, force_sealed_decision
 
 
-
 def test_force_sealed_decision_requires_sealed_repair(tmp_path: Path) -> None:
     target = tmp_path / "docs" / "law_a.md"
     target.parent.mkdir(parents=True)

@@ -1,8 +1,13 @@
 from pathlib import Path
 
-from garvis.self_heal_projection import REPAIR_REQUIRED, REPORT_ONLY, TRUSTED, TrustedEntry, build_plan
+from garvis.self_heal_projection import (
+    REPAIR_REQUIRED,
+    REPORT_ONLY,
+    TRUSTED,
+    TrustedEntry,
+    build_plan,
+)
 from garvis.self_heal_root import sha256_file
-
 
 
 def test_build_plan_marks_trusted_file(tmp_path: Path) -> None:
