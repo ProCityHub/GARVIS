@@ -28,6 +28,7 @@ class FullAgentHeartbeatSupervisor:
     """
 
     def __init__(self, repository_root: Path) -> None:
+        # repository_root is retained for future sub-class use or inspection
         self.repository_root = Path(repository_root)
 
     def consult(
@@ -47,6 +48,10 @@ class FullAgentHeartbeatSupervisor:
             as internet research or local-file access.
         """
         digest = hashlib.sha256(message.encode()).hexdigest()
+        # operational_authorization is always False: the supervisor reports
+        # availability but never grants operational authority directly.  The
+        # CapabilityAwareRuntime interprets consultation_available to decide
+        # whether a protected action may proceed.
         return CouncilAdvisoryReport(
             request_sha256=digest,
             consultation_available=True,
