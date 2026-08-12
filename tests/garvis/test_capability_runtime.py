@@ -166,7 +166,7 @@ from garvis.local_file_access import (
 class _CouncilFakeLocal:
     def __init__(self, root: _CouncilPath) -> None:
         self.repository_root = root
-        self.calls = []
+        self.calls: list[tuple[str, str, str]] = []
 
     def respond(
         self,
@@ -207,7 +207,7 @@ class _CouncilPassingReport:
 
 class _CouncilPassingSupervisor:
     def __init__(self) -> None:
-        self.calls = []
+        self.calls: list[tuple[str, bool]] = []
 
     def consult(self, message: str, *, protected_action: bool = False):
         self.calls.append((message, protected_action))
@@ -325,7 +325,7 @@ def test_council_failure_audit_excludes_exception_message(
     local = _CouncilFakeLocal(tmp_path)
     runtime = _CouncilRuntime(
         local,
-        approval_store=audit_store,
+        approval_store=audit_store,  # type: ignore[arg-type]
         local_access_store=_CouncilLocalAccessStore(
             tmp_path / "security-audit-local.db"
         ),
