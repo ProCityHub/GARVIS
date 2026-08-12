@@ -18,9 +18,9 @@ These are engineering analogies, not biological equivalence.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from math import sqrt
-from typing import Iterable
 
 from .core import HypercubeBrainEngine, Observation, clamp01
 
