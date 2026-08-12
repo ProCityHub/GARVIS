@@ -197,7 +197,11 @@ def evaluate_latest_security_report(
 
     root = Path(directory).expanduser().resolve()
 
-    candidates = sorted(root.glob(pattern))
+    candidates = sorted(
+        candidate
+        for candidate in root.glob(pattern)
+        if candidate.is_file()
+    )
 
     if not candidates:
         raise FileNotFoundError(

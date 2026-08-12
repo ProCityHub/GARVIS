@@ -2,11 +2,6 @@
 
 from __future__ import annotations
 
-from .heartbeat_supervisor import (
-    CouncilAdvisoryReport,
-    FullAgentHeartbeatSupervisor,
-)
-
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -67,19 +62,6 @@ class CapabilityRuntimeConfig:
         return cls(mode if mode in {"off", "approval", "thanos"} else "approval")
 
 
-# GARVIS_18_BRAIN_AUDIT_SECURITY_REPAIR_V1
-def _safe_exception_audit_detail(
-    exc: BaseException,
-    *,
-    code: str,
-) -> dict[str, str]:
-    """Return bounded audit metadata without retaining exception text."""
-    return {
-        "error_code": code,
-        "error_type": type(exc).__name__,
-    }
-
-
 class CapabilityAwareRuntime:
     def __init__(
         self,
@@ -90,7 +72,6 @@ class CapabilityAwareRuntime:
         researcher: Researcher | None = None,
         config: CapabilityRuntimeConfig | None = None,
         thanos_store: ThanosAuthorizationStore | None = None,
-        heartbeat_supervisor: FullAgentHeartbeatSupervisor | None = None,
         session_id: str = "default",
     ) -> None:
         self.local_runtime = local_runtime
@@ -116,76 +97,6 @@ class CapabilityAwareRuntime:
             )
         )
         self.session_id = session_id
-
-        repository_root = Path(
-            getattr(
-                self.local_runtime,
-                "repository_root",
-                Path.cwd(),
-            )
-        )
-        self.heartbeat_supervisor = (
-            heartbeat_supervisor
-            or FullAgentHeartbeatSupervisor(repository_root)
-        )
-        self.last_council_report: CouncilAdvisoryReport | None = None
-
-    def _consult_council(
-        self,
-        message: str,
-        *,
-        protected: bool,
-    ) -> bool:
-        try:
-            report = self.heartbeat_supervisor.consult(
-                message,
-                protected_action=protected,
-            )
-            self.last_council_report = report
-
-            try:
-                self.approval_store.audit(
-                    "council_consulted",
-                    session_id=self.session_id,
-                    detail={
-                        "request_sha256": report.request_sha256,
-                        "protected": protected,
-                        "consultation_available": (
-                            report.consultation_available
-                        ),
-                        "council_participation_count": (
-                            report.council_participation_count
-                        ),
-                        "angel_participation_count": (
-                            report.angel_participation_count
-                        ),
-                        "operational_authorization": False,
-                    },
-                )
-            except Exception:
-                pass
-
-            return (
-                report.consultation_available
-                or not protected
-            )
-        except Exception as exc:
-            try:
-                self.approval_store.audit(
-                    "council_consultation_failed",
-                    session_id=self.session_id,
-                    detail={
-                        "protected": protected,
-                        **_safe_exception_audit_detail(
-                            exc,
-                            code="COUNCIL_CONSULTATION_FAILED",
-                        ),
-                    },
-                )
-            except Exception:
-                pass
-
-            return not protected
 
     def close(self) -> None:
         self.approval_store.close()
@@ -246,15 +157,6 @@ class CapabilityAwareRuntime:
         *,
         governed: bool = False,
     ) -> str:
-        if not self._consult_council(
-            request.original_request,
-            protected=True,
-        ):
-            return (
-                "GARVIS council unavailable. "
-                "Protected research was not executed."
-            )
-
         self.approval_store.audit(
             "network_research_started",
             session_id=self.session_id,
@@ -307,10 +209,7 @@ class CapabilityAwareRuntime:
                 "network_research_failed",
                 session_id=self.session_id,
                 request_id=request.request_id,
-                detail=_safe_exception_audit_detail(
-                    exc,
-                    code="RUNTIME_BOUNDARY_EXCEPTION",
-                ),
+                detail={"error": str(exc)},
             )
 
             return "GARVIS research error: " + str(exc)
@@ -320,10 +219,7 @@ class CapabilityAwareRuntime:
                 "network_research_failed",
                 session_id=self.session_id,
                 request_id=request.request_id,
-                detail=_safe_exception_audit_detail(
-                    exc,
-                    code="RUNTIME_BOUNDARY_EXCEPTION",
-                ),
+                detail={"error": str(exc)},
             )
 
             return "GARVIS research failed safely: " + str(exc)
@@ -356,15 +252,6 @@ class CapabilityAwareRuntime:
         return answer
 
     def _execute_local_access(self, request: LocalAccessRequest) -> str:
-        if not self._consult_council(
-            request.original_request,
-            protected=True,
-        ):
-            return (
-                "GARVIS council unavailable. "
-                "Protected local access was not executed."
-            )
-
         self.local_access_store.audit(
             "local_access_started",
             session_id=self.session_id,
@@ -390,10 +277,7 @@ class CapabilityAwareRuntime:
                 "local_access_failed",
                 session_id=self.session_id,
                 request_id=request.request_id,
-                detail=_safe_exception_audit_detail(
-                    exc,
-                    code="RUNTIME_BOUNDARY_EXCEPTION",
-                ),
+                detail={"error": str(exc)},
             )
             return f"GARVIS local access denied safely: {exc}"
         except Exception as exc:
@@ -401,10 +285,7 @@ class CapabilityAwareRuntime:
                 "local_access_failed",
                 session_id=self.session_id,
                 request_id=request.request_id,
-                detail=_safe_exception_audit_detail(
-                    exc,
-                    code="RUNTIME_BOUNDARY_EXCEPTION",
-                ),
+                detail={"error": str(exc)},
             )
             return f"GARVIS local access failed safely: {exc}"
         self.local_access_store.audit(
@@ -416,10 +297,6 @@ class CapabilityAwareRuntime:
         return answer
 
     def respond(self, message: str) -> str:
-        # GARVIS_18_BRAIN_LIVE_INTEGRATION_V1
-        # Ordinary consultation is fail-soft and never grants authority.
-        self._consult_council(message, protected=False)
-
         local_resolution = self.local_access_store.resolve(
             message,
             session_id=self.session_id,

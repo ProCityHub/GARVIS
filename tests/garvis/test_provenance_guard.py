@@ -6,6 +6,7 @@ from garvis.provenance_guard import (
     LOCAL_ONLY,
     NETWORK_CAPABILITY,
     SOURCE_HISTORY_REWRITE,
+    evaluate_latest_security_report,
     evaluate_report,
     load_evidence_report,
 )
@@ -241,3 +242,23 @@ def test_duplicate_event_count_valid_then_negative_must_be_contradictory(tmp_pat
         "LICENSE_EVENT_COUNT" in item
         for item in decision.contradictions
     )
+
+def test_latest_security_report_ignores_matching_directory(tmp_path):
+    report_path = tmp_path / "GARVIS_LICENSE_ORIGIN_TEMPORAL_SCOPE_001.txt"
+    report_path.write_text(
+        "\n".join(
+            [
+                "SOURCE_CHANGED=FALSE",
+                "GIT_HISTORY_CHANGED=FALSE",
+                "NETWORK_OPERATION_PERFORMED=FALSE",
+                "PROTECTED_ACTION_PERFORMED=FALSE",
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (tmp_path / "GARVIS_LICENSE_ORIGIN_TEMPORAL_SCOPE_999.txt").mkdir()
+
+    report, decision = evaluate_latest_security_report(tmp_path)
+
+    assert report.path == report_path.resolve()
+    assert decision.decision == "EVIDENCE_ACCEPTED_FOR_REVIEW"
