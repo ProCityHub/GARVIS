@@ -24,6 +24,8 @@ from collections import Counter
 from collections.abc import Sequence
 from typing import Any, Callable
 
+from .object_primitives import OBJECT_UNARY_PRIMITIVES
+
 Grid = tuple[tuple[int, ...], ...]
 
 
@@ -249,6 +251,8 @@ UNARY_PRIMITIVES: dict[str, Callable[[Grid], Grid]] = {
     "mirror_down": lambda g: vconcat(g, flip_v(g)),
     "pad1": lambda g: pad(g, 1),
 }
+
+UNARY_PRIMITIVES.update(OBJECT_UNARY_PRIMITIVES)
 
 COLOR_RANGE = tuple(range(10))
 ParamBuilder = Callable[..., Grid]
