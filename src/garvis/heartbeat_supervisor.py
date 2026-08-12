@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """GARVIS Full-Agent Hypercube Heartbeat Supervisor.
 
 Creator / conceptual architect attribution:
@@ -8,6 +6,8 @@ Adrien D. Thomas / ProCityHub
 This supervisor coordinates planning and evidence exchange.
 It does not grant arbitrary outside-world authority.
 """
+
+from __future__ import annotations
 
 import ast
 import hashlib
