@@ -127,6 +127,7 @@ strict = true
 disallow_incomplete_defs = false
 disallow_untyped_defs = false
 disallow_untyped_calls = false
+exclude = ["src/hypercube_brain"]
 
 [[tool.mypy.overrides]]
 module = "sounddevice.*"
@@ -138,6 +139,8 @@ module = [
     "hypercube_network",
     "hypercube_protocol",
     "hypercube_protocol.*",
+    "hypercube_brain",
+    "hypercube_brain.*",
     "golden_ratio_optimization",
     "src.garvis",
     "garvis",
