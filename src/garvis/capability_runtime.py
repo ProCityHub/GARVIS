@@ -57,6 +57,15 @@ class Researcher(Protocol):
     def research(self, query: str) -> ResearchReport: ...
 
 
+class HeartbeatSupervisor(Protocol):
+    def consult(
+        self,
+        request: str,
+        *,
+        protected_action: bool = False,
+    ) -> CouncilAdvisoryReport: ...
+
+
 @dataclass(frozen=True)
 class CapabilityRuntimeConfig:
     network_mode: str = "approval"
@@ -90,7 +99,7 @@ class CapabilityAwareRuntime:
         researcher: Researcher | None = None,
         config: CapabilityRuntimeConfig | None = None,
         thanos_store: ThanosAuthorizationStore | None = None,
-        heartbeat_supervisor: FullAgentHeartbeatSupervisor | None = None,
+        heartbeat_supervisor: HeartbeatSupervisor | None = None,
         session_id: str = "default",
     ) -> None:
         self.local_runtime = local_runtime
