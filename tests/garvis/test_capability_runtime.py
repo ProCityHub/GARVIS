@@ -1,3 +1,14 @@
+
+from pathlib import Path as _CouncilPath
+
+from garvis.capability_broker import ApprovalStore as _CouncilApprovalStore
+from garvis.capability_runtime import (
+    CapabilityAwareRuntime as _CouncilRuntime,
+    CapabilityRuntimeConfig as _CouncilRuntimeConfig,
+)
+from garvis.local_file_access import (
+    LocalFileAccessStore as _CouncilLocalAccessStore,
+)
 from pathlib import Path
 
 from garvis.capability_broker import ApprovalStore
@@ -151,22 +162,13 @@ def test_file_search_returns_exact_matches_without_calling_model(tmp_path: Path)
     runtime.close()
 # GARVIS_18_BRAIN_CAPABILITY_TESTS_V1
 
-from pathlib import Path as _CouncilPath
 
-from garvis.capability_broker import ApprovalStore as _CouncilApprovalStore
-from garvis.capability_runtime import (
-    CapabilityAwareRuntime as _CouncilRuntime,
-    CapabilityRuntimeConfig as _CouncilRuntimeConfig,
-)
-from garvis.local_file_access import (
-    LocalFileAccessStore as _CouncilLocalAccessStore,
-)
 
 
 class _CouncilFakeLocal:
     def __init__(self, root: _CouncilPath) -> None:
         self.repository_root = root
-        self.calls = []
+        self.calls: list[tuple[object, ...]] = []
 
     def respond(
         self,
@@ -207,7 +209,7 @@ class _CouncilPassingReport:
 
 class _CouncilPassingSupervisor:
     def __init__(self) -> None:
-        self.calls = []
+        self.calls: list[tuple[object, ...]] = []
 
     def consult(self, message: str, *, protected_action: bool = False):
         self.calls.append((message, protected_action))
@@ -305,7 +307,7 @@ def test_supervisor_is_consulted_without_receiving_authority(
 
 # GARVIS_18_BRAIN_AUDIT_SECURITY_TESTS_V1
 
-class _SecurityCaptureApprovalStore:
+class _SecurityCaptureApprovalStore(_CouncilApprovalStore):
     def __init__(self):
         self.events = []
 
