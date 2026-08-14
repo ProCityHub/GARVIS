@@ -1,3 +1,4 @@
+
 """Tests for the ARC-3 planner (DIRECTIVE-011 module 5)."""
 
 from dataclasses import FrozenInstanceError
