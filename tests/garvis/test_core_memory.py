@@ -53,5 +53,99 @@ class CoreMemoryTests(unittest.TestCase):
             self.assertFalse(verify_manifest(path).compatible)
 
 
+    def test_attribution_notice_rejects_tampered_manifest(self) -> None:
+        import json
+        import tempfile
+        from pathlib import Path
+
+        from garvis.core_memory import attribution_notice, load_manifest
+
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "tampered.json"
+            data = load_manifest()
+            data["attribution"] = (
+                str(data["attribution"]) + " [tampered]"
+            )
+            path.write_text(
+                json.dumps(
+                    data,
+                    ensure_ascii=False,
+                    sort_keys=True,
+                    indent=2,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            with self.assertRaises(ValueError):
+                attribution_notice(path)
+
+
+    def test_tampered_manifest_cannot_enter_protected_core_memory(
+        self,
+    ) -> None:
+        import json
+        import tempfile
+        from pathlib import Path
+
+        from garvis.core_memory import ensure_core_memories, load_manifest
+        from garvis.memory_lifecycle import MemoryStore
+
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "tampered.json"
+            data = load_manifest()
+            data["attribution"] = (
+                str(data["attribution"]) + " [tampered]"
+            )
+            path.write_text(
+                json.dumps(
+                    data,
+                    ensure_ascii=False,
+                    sort_keys=True,
+                    indent=2,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            with MemoryStore(Path(tmp) / "memory.db") as store:
+                with self.assertRaises(ValueError):
+                    ensure_core_memories(store, path)
+
+                count = store.connection.execute(
+                    """
+                    SELECT COUNT(*)
+                    FROM memories
+                    WHERE source = 'garvis_core_memory_manifest'
+                    """
+                ).fetchone()[0]
+
+                self.assertEqual(int(count), 0)
+
+
+    def test_verified_manifest_preserves_core_memory_behavior(
+        self,
+    ) -> None:
+        import tempfile
+        from pathlib import Path
+
+        from garvis.core_memory import (
+            ensure_core_memories,
+            render_core_context,
+        )
+        from garvis.memory_lifecycle import MemoryStore
+
+        with tempfile.TemporaryDirectory() as tmp:
+            with MemoryStore(Path(tmp) / "memory.db") as store:
+                first = ensure_core_memories(store)
+                second = ensure_core_memories(store)
+
+                self.assertEqual(first, second)
+                self.assertIn(
+                    "Adrien D. Thomas",
+                    render_core_context(store),
+                )
+
+
 if __name__ == "__main__":
     unittest.main()

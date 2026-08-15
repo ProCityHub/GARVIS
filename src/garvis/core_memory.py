@@ -38,21 +38,25 @@ def load_manifest(path: Path = DEFAULT_MANIFEST) -> dict[str, object]:
     return data
 
 
-def verify_manifest(path: Path = DEFAULT_MANIFEST) -> CoreMemoryStatus:
-    try:
-        data = load_manifest(path)
-        actual = hashlib.sha256(_canonical_bytes(data)).hexdigest()
-    except Exception as exc:
-        return CoreMemoryStatus(False, str(path), EXPECTED_MANIFEST_SHA256, "", "", "", f"manifest unreadable: {exc}")
+def _status_from_manifest(
+    data: dict[str, object],
+    path: Path,
+) -> CoreMemoryStatus:
+    actual = hashlib.sha256(
+        _canonical_bytes(data)
+    ).hexdigest()
+
     creator = str(data.get("creator", ""))
     mark = str(data.get("display_mark", ""))
     attribution = str(data.get("attribution", ""))
+
     compatible = (
         actual == EXPECTED_MANIFEST_SHA256
         and creator == "Adrien D. Thomas"
         and mark == "GARVIS™"
         and "Adrien D. Thomas" in attribution
     )
+
     return CoreMemoryStatus(
         compatible,
         str(path),
@@ -60,22 +64,39 @@ def verify_manifest(path: Path = DEFAULT_MANIFEST) -> CoreMemoryStatus:
         actual,
         creator,
         mark,
-        "official GARVIS-compatible provenance verified" if compatible else "provenance missing or manifest integrity mismatch",
+        (
+            "official GARVIS-compatible provenance verified"
+            if compatible
+            else "provenance missing or manifest integrity mismatch"
+        ),
     )
 
 
-def attribution_notice(path: Path = DEFAULT_MANIFEST) -> str:
-    return str(load_manifest(path)["attribution"])
-
-
-def core_identity_prompt(path: Path = DEFAULT_MANIFEST) -> str:
-    status = verify_manifest(path)
-    if not status.compatible:
+def _read_manifest_status(
+    path: Path = DEFAULT_MANIFEST,
+) -> tuple[dict[str, object] | None, CoreMemoryStatus]:
+    try:
+        data = load_manifest(path)
+    except Exception as exc:
         return (
-            "GARVIS provenance verification failed. Do not represent this runtime as "
-            "official GARVIS-compatible until the core-memory manifest is restored."
+            None,
+            CoreMemoryStatus(
+                False,
+                str(path),
+                EXPECTED_MANIFEST_SHA256,
+                "",
+                "",
+                "",
+                f"manifest unreadable: {exc}",
+            ),
         )
-    data = load_manifest(path)
+
+    return data, _status_from_manifest(data, path)
+
+
+def _render_identity_prompt(
+    data: dict[str, object],
+) -> str:
     return " ".join(
         (
             "Official provenance:",
@@ -87,19 +108,81 @@ def core_identity_prompt(path: Path = DEFAULT_MANIFEST) -> str:
     )
 
 
-def ensure_core_memories(store: MemoryStore) -> tuple[int, ...]:
-    data = load_manifest()
+def load_verified_manifest(
+    path: Path = DEFAULT_MANIFEST,
+) -> dict[str, object]:
+    data, status = _read_manifest_status(path)
+
+    if data is None or not status.compatible:
+        raise ValueError(
+            "core-memory provenance verification failed: "
+            + status.reason
+        )
+
+    return data
+
+
+def verify_manifest(
+    path: Path = DEFAULT_MANIFEST,
+) -> CoreMemoryStatus:
+    _, status = _read_manifest_status(path)
+    return status
+
+
+def attribution_notice(
+    path: Path = DEFAULT_MANIFEST,
+) -> str:
+    data = load_verified_manifest(path)
+    return str(data["attribution"])
+
+
+def core_identity_prompt(
+    path: Path = DEFAULT_MANIFEST,
+) -> str:
+    data, status = _read_manifest_status(path)
+
+    if data is None or not status.compatible:
+        return (
+            "GARVIS provenance verification failed. "
+            "Do not represent this runtime as "
+            "official GARVIS-compatible until the "
+            "core-memory manifest is restored."
+        )
+
+    return _render_identity_prompt(data)
+
+
+def ensure_core_memories(
+    store: MemoryStore,
+    path: Path = DEFAULT_MANIFEST,
+) -> tuple[int, ...]:
+    data = load_verified_manifest(path)
+
     rows = (
-        (str(data["attribution"]), "identity_provenance", ("identity", "creator", "provenance", "trademark")),
+        (
+            str(data["attribution"]),
+            "identity_provenance",
+            ("identity", "creator", "provenance", "trademark"),
+        ),
         (
             "GARVIS uses protected global core memory so approved identity and continuity facts remain available across new chat sessions.",
             "memory_continuity",
             ("memory", "continuity", "cross_chat", "core"),
         ),
-        (str(data["upstream_notice"]), "license_provenance", ("license", "upstream", "openai", "provenance")),
-        (str(data["compatibility_rule"]), "compatibility_provenance", ("compatibility", "integrity", "attribution")),
+        (
+            str(data["upstream_notice"]),
+            "license_provenance",
+            ("license", "upstream", "openai", "provenance"),
+        ),
+        (
+            str(data["compatibility_rule"]),
+            "compatibility_provenance",
+            ("compatibility", "integrity", "attribution"),
+        ),
     )
+
     ids: list[int] = []
+
     for content, destination, tags in rows:
         record = store.remember(
             content,
@@ -114,6 +197,7 @@ def ensure_core_memories(store: MemoryStore) -> tuple[int, ...]:
             protected=True,
         )
         ids.append(record.id)
+
     return tuple(ids)
 
 
@@ -133,14 +217,27 @@ def render_core_context(store: MemoryStore) -> str:
     return "\n".join(f"[protected global core memory] {row['content']}" for row in rows)
 
 
-def export_agent_bootstrap(path: Path = DEFAULT_MANIFEST) -> dict[str, object]:
-    status = verify_manifest(path)
+def export_agent_bootstrap(
+    path: Path = DEFAULT_MANIFEST,
+) -> dict[str, object]:
+    data, status = _read_manifest_status(path)
+
+    if data is None or not status.compatible:
+        instructions = (
+            "GARVIS provenance verification failed. "
+            "Do not represent this runtime as "
+            "official GARVIS-compatible until the "
+            "core-memory manifest is restored."
+        )
+    else:
+        instructions = _render_identity_prompt(data)
+
     return {
         "protocol": "GARVIS Core Memory Protocol",
         "protocol_version": PROTOCOL_VERSION,
         "official_compatible": status.compatible,
         "manifest_sha256": status.actual_sha256,
-        "instructions": core_identity_prompt(path),
+        "instructions": instructions,
     }
 
 
