@@ -266,7 +266,7 @@ def test_malformed_identifier_rejected():
 
 def test_unknown_runtime_attributes_cannot_be_injected():
     with pytest.raises(TypeError):
-        Observation(  # type: ignore[call-arg] - intentional invalid authority injection
+        Observation(  # type: ignore[call-arg]  # intentional invalid authority injection
             observation_id="obs-1",
             source="x",
             source_type="document",

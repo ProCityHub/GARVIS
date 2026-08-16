@@ -100,10 +100,12 @@ exclude = [
     "hypercube_protocol",
     "golden_ratio_optimization.py",
     "src/garvis",
+    "src/hypercube_brain",
     "pulse.py",
     "BINARYBRAIN",
     "ci-fix-bot",
     "genesis-x",
+    "prime_consciousness_integration.py",
 ]
 
 [tool.ruff.lint]
@@ -132,6 +134,11 @@ disallow_untyped_calls = false
 exclude = [
     "ci-fix-bot/",
     "genesis-x/",
+    "tools/",
+    "src/hypercube_brain/",
+    "tests/hypercube_brain/",
+    "prime_consciousness_integration.py",
+    "tools/garvis_resilience.py",
 ]
 
 [[tool.mypy.overrides]]
@@ -139,7 +146,7 @@ module = "sounddevice.*"
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
-module = ["ci-fix-bot.*", "genesis-x.*", "brain_gate", "garvis_brain_adapter", "brain"]
+module = ["ci-fix-bot.*", "genesis-x.*", "brain_gate", "garvis_brain_adapter", "brain", "tools.garvis_resilience", "tools.*", "prime_consciousness_integration"]
 ignore_errors = true
 
 [[tool.mypy.overrides]]

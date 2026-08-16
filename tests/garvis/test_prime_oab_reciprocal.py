@@ -1,7 +1,7 @@
 from garvis.prime_oab_reciprocal import (
     EPOCH_NODES,
-    OABCapsule,
     PHASE_NAMES,
+    OABCapsule,
     RoleVector,
     epoch_addresses,
     first_epoch_prime_span,

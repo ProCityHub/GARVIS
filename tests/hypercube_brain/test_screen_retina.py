@@ -5,7 +5,6 @@ from hypercube_brain.screen_retina import (
     ScreenBounds,
     ScreenElement,
 )
-
 from hypercube_brain.sensory_nervous_system import (
     ThalamicRouter,
     activation_policy,
@@ -25,22 +24,22 @@ class ScreenRetinaTests(
         self,
         **overrides,
     ):
-        data = dict(
-            element_id="send-1",
-            label="Send",
-            role="button",
-            bounds=ScreenBounds(
+        data = {
+            "element_id": "send-1",
+            "label": "Send",
+            "role": "button",
+            "bounds": ScreenBounds(
                 810,
                 2100,
                 1050,
                 2310,
             ),
-            screen_width=1080,
-            screen_height=2400,
-            confidence=0.98,
-            motion=0.0,
-            source="android_screen",
-        )
+            "screen_width": 1080,
+            "screen_height": 2400,
+            "confidence": 0.98,
+            "motion": 0.0,
+            "source": "android_screen",
+        }
 
         data.update(
             overrides

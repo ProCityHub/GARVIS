@@ -1,0 +1,33 @@
+{
+  "agents": {
+    "test": {
+      "observations": [
+        {
+          "label": "smoke-test",
+          "verdict": "INDETERMINATE",
+          "path_class": "DISCRIMINATING_ASYMMETRIC",
+          "qm_residual": 0.5,
+          "phi_residual": 0.5,
+          "qm_visibility": 0.47140452079103173,
+          "phi_visibility": 0.47298311707317975,
+          "timestamp": 1786847638.1915298
+        }
+      ],
+      "total": 1,
+      "confirmed": 0,
+      "falsified": 0,
+      "indeterminate": 1
+    }
+  },
+  "total_observations": 1,
+  "total_falsified": 0,
+  "epistemic_boundary": {
+    "canonical_lattice_law": "HYPOTHESIS_UNDER_TEST",
+    "interference_discriminator": "HYPOTHESIS_UNDER_TEST",
+    "discriminator_empirical_status": "NOT_EVALUATED",
+    "agi": "NOT_ESTABLISHED",
+    "consciousness": "NOT_ESTABLISHED",
+    "new_physics": "NOT_ESTABLISHED",
+    "note": "Mathematical consistency and software PASS do not establish physical truth."
+  }
+}

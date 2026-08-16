@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 import pytest
 
@@ -13,8 +13,8 @@ from garvis.resilient_runtime import (
 
 class FakeLedger:
     def __init__(self) -> None:
-        self.turns: List[Dict[str, str]] = []
-        self.events: List[str] = []
+        self.turns: list[dict[str, str]] = []
+        self.events: list[str] = []
 
     def append(self, role: str, content: str) -> None:
         self.events.append(f"append:{role}")
@@ -24,13 +24,13 @@ class FakeLedger:
 class CapturingModel:
     def __init__(self, reply: str = "test reply") -> None:
         self.reply = reply
-        self.messages: List[Dict[str, str]] = []
+        self.messages: list[dict[str, str]] = []
 
     def __call__(
         self,
         client: Any,
         model: str,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
     ) -> str:
         del client, model
         self.messages = list(messages)
@@ -40,7 +40,7 @@ class CapturingModel:
 def fake_build_context(
     system_prompt: str,
     ledger: FakeLedger,
-) -> List[Dict[str, str]]:
+) -> list[dict[str, str]]:
     return [{"role": "system", "content": system_prompt}, *ledger.turns[-30:]]
 
 
@@ -116,7 +116,7 @@ async def test_failed_model_call_preserves_user_input() -> None:
     def failing_model(
         client: Any,
         model: str,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
     ) -> str:
         del client, model, messages
         raise RuntimeError("simulated 429")
