@@ -1,0 +1,266 @@
+name: GARVIS CI Fix Bot
+
+# This bot triggers when any CI workflow fails on the GARVIS repo.
+# It downloads the failure logs, runs the fix engine against known patterns,
+# and if a fix is found, pushes a fix branch and creates a PR.
+# For unknown failures, it creates an issue with the diagnosis.
+
+on:
+  workflow_run:
+    workflows:
+      - "Tests"
+      - "Guard"
+      - "Deploy docs"
+      - "Publish to PyPI"
+      - "Issue Management"
+    types:
+      - completed
+
+jobs:
+  diagnose-and-fix:
+    name: Diagnose & Auto-Fix CI Failure
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    permissions:
+      actions: read
+      contents: write
+      issues: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Capture failure metadata
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const run = context.payload.workflow_run;
+            core.exportVariable('FAILED_WORKFLOW', run.name);
+            core.exportVariable('FAILED_RUN_ID', run.id);
+            core.exportVariable('FAILED_HEAD_SHA', run.head_sha);
+            core.exportVariable('FAILED_EVENT', run.event);
+            core.exportVariable('FAILED_HTML_URL', run.html_url);
+            core.exportVariable('FAILED_BRANCH', run.head_branch);
+            core.info(`Failure in ${run.name} on ${run.head_branch} (${run.head_sha.slice(0,12)})`);
+
+      - name: Download failure logs
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const runId = context.payload.workflow_run.id;
+            const fs = require('fs');
+            const https = require('https');
+
+            const result = await github.rest.actions.downloadWorkflowRunLogs({
+              ...context.repo,
+              run_id: runId
+            });
+
+            await new Promise((resolve, reject) => {
+              const file = fs.createWriteStream('/tmp/failure-logs.zip');
+              const get = (url) => {
+                https.get(url, (res) => {
+                  if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+                    get(res.headers.location);
+                    return;
+                  }
+                  res.pipe(file);
+                  file.on('finish', () => { file.close(); resolve(); });
+                }).on('error', reject);
+              };
+              get(result.data.url);
+            });
+
+            core.info('Downloaded failure logs');
+
+      - name: Extract logs
+        run: |
+          mkdir -p /tmp/failure-logs
+          python3 -c "
+          import zipfile
+          with zipfile.ZipFile('/tmp/failure-logs.zip', 'r') as z:
+              z.extractall('/tmp/failure-logs/')
+          "
+          find /tmp/failure-logs -name '*.txt' -exec cat {} \; > /tmp/all-logs.txt 2>/dev/null
+          echo "Log lines: $(wc -l < /tmp/all-logs.txt)"
+
+      - name: Run fix engine
+        id: fix
+        run: |
+          if [ -f "ci-fix-bot/fix_engine.py" ]; then
+            python3 ci-fix-bot/fix_engine.py /tmp/all-logs.txt . 2>&1 | tee /tmp/fix-result.json
+            if [ $? -eq 0 ]; then
+              echo "fixed=true" >> $GITHUB_OUTPUT
+            else
+              echo "fixed=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo '{"any_fixed": false, "results": []}' > /tmp/fix-result.json
+            echo "fixed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create fix PR
+        if: steps.fix.outputs.fixed == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const { execSync } = require('child_process');
+            const result = JSON.parse(fs.readFileSync('/tmp/fix-result.json', 'utf8'));
+
+            if (!result.any_fixed) {
+              core.info('No auto-fixes could be applied');
+              return;
+            }
+
+            const changedFiles = new Set();
+            const fixDescriptions = [];
+            for (const r of result.results) {
+              if (r.fixed) {
+                fixDescriptions.push(`### ${r.pattern}\n\n${r.description}`);
+                (r.files_changed || []).forEach(f => changedFiles.add(f));
+              }
+            }
+
+            if (changedFiles.size === 0) {
+              core.info('Fix engine reported success but no files changed');
+              return;
+            }
+
+            const workflow = process.env.FAILED_WORKFLOW;
+            const sha = process.env.FAILED_HEAD_SHA;
+            const branch = `ci-fix-bot/${sha.slice(0, 12)}`;
+
+            try {
+              execSync(`git config user.name "GARVIS CI Fix Bot"`);
+              execSync(`git config user.email "ci-fix-bot@procityhub.github.io"`);
+              execSync(`git checkout -b ${branch}`);
+              execSync(`git add ${Array.from(changedFiles).join(' ')}`);
+              execSync(`git commit -m "fix(ci): auto-fix ${workflow} failure
+
+            Auto-applied by GARVIS CI Fix Bot.
+
+            Failed workflow: ${workflow}
+            Failed commit: ${sha}
+            Run: ${process.env.FAILED_HTML_URL}
+
+            Fixes applied:
+            ${fixDescriptions.join('\\n\\n')}
+
+            ---
+            This PR was created automatically by the GARVIS CI Fix Bot.
+            It does not think. It pattern-matches errors against known fix patterns."`);
+
+              execSync(`git push origin ${branch}`);
+
+              const pr = await github.rest.pulls.create({
+                ...context.repo,
+                title: `[CI Fix Bot] Auto-fix for ${workflow} (${sha.slice(0, 12)})`,
+                head: branch,
+                base: process.env.FAILED_BRANCH || 'main',
+                body: [
+                  `## Auto-Fix PR`,
+                  ``,
+                  `**Failed workflow:** ${workflow}`,
+                  `**Failed run:** ${process.env.FAILED_HTML_URL}`,
+                  `**Original commit:** \`${sha}\``,
+                  ``,
+                  `### Fixes Applied`,
+                  ``,
+                  fixDescriptions.join('\n\n'),
+                  ``,
+                  `### Changed Files`,
+                  ``,
+                  Array.from(changedFiles).map(f => `- \`${f}\``).join('\n'),
+                  ``,
+                  `---`,
+                  `_This PR was created automatically by the **GARVIS CI Fix Bot**._`,
+                  `Review the changes before merging._`,
+                ].join('\n'),
+                labels: ['ci-fix-bot', 'auto-fix'],
+              });
+
+              core.info(`Created fix PR #${pr.data.number}: ${pr.data.html_url}`);
+            } catch (e) {
+              core.error(`Failed to create fix PR: ${e.message}`);
+            }
+
+      - name: Create issue for unfixable failures
+        if: steps.fix.outputs.fixed != 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const workflow = process.env.FAILED_WORKFLOW;
+            const runId = process.env.FAILED_RUN_ID;
+            const sha = process.env.FAILED_HEAD_SHA;
+            const htmlUrl = process.env.FAILED_HTML_URL;
+            const branch = process.env.FAILED_BRANCH;
+
+            let errorLines = [];
+            try {
+              const logs = fs.readFileSync('/tmp/all-logs.txt', 'utf8');
+              errorLines = logs.split('\n').filter(l =>
+                l.includes('error:') || l.includes('Error:') ||
+                l.includes('FAILED') || l.includes('Traceback') ||
+                l.includes('Exception') || l.includes('##[error]')
+              ).slice(0, 25);
+            } catch (e) {}
+
+            const existing = await github.rest.issues.listForRepo({
+              ...context.repo,
+              state: 'open',
+              labels: 'ci-fix-bot'
+            });
+
+            const dup = existing.data.find(i =>
+              i.title.includes(workflow) && i.title.includes(sha.slice(0, 12))
+            );
+
+            if (dup) {
+              core.info(`Duplicate issue exists: #${dup.number}`);
+              return;
+            }
+
+            const body = [
+              `## CI Failure — Auto-Fix Could Not Resolve`,
+              ``,
+              `**Workflow:** ${workflow}`,
+              `**Branch:** ${branch}`,
+              `**Run:** ${process.env.FAILED_HTML_URL}`,
+              `**Commit:** \`${sha}\``,
+              ``,
+              `### Error Excerpt`,
+              ``,
+              '```',
+              errorLines.join('\n') || 'No error lines found',
+              '```',
+              ``,
+              `### Diagnosis`,
+              ``,
+              `The CI Fix Bot analyzed this failure but could not auto-fix it.`,
+              `This may be a new failure pattern that needs to be added to the fix engine.`,
+              ``,
+              `**To improve the bot:** After resolving this manually, add the error pattern`,
+              `and fix to \`ci-fix-bot/fix_engine.py\` so future occurrences are auto-fixed.`,
+              ``,
+              `---`,
+              `_Auto-created by **GARVIS CI Fix Bot**._`,
+            ].join('\n');
+
+            await github.rest.issues.create({
+              ...context.repo,
+              title: `[CI Fix Bot] ${workflow} failed on ${branch} (${sha.slice(0, 12)})`,
+              body: body,
+              labels: ['ci-failure', 'ci-fix-bot', 'needs-investigation']
+            });
+
+            core.info('Created issue for unfixable failure');
