@@ -23,13 +23,11 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 import re
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
-
 
 # ============================================================
 # Fingerprinting — normalize a failure log into a stable hash
@@ -297,9 +295,11 @@ def generate_regression_test(
 def main() -> None:
     """
     Usage:
-        python3 pattern_registry.py record <logs_file> <repo_root> [--recognized] [--fix-result <json>]
+        python3 pattern_registry.py record <logs_file> <repo_root>
+            [--recognized] [--fix-result <json>]
         python3 pattern_registry.py list <repo_root>
-        python3 pattern_registry.py promote <fingerprint> <repo_root> [--reviewer <name>] [--test-path <path>]
+        python3 pattern_registry.py promote <fingerprint> <repo_root>
+            [--reviewer <name>] [--test-path <path>]
     """
     if len(sys.argv) < 2:
         print("Usage: pattern_registry.py <command> [args]")
