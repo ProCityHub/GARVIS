@@ -34,7 +34,7 @@ jobs:
           GITHUB_BASE_REF: ${{ github.base_ref || 'main' }}
         run: python .github/scripts/guard_check.py
       - name: Brain gate — observe & falsify
-      if: always()
+        if: always()
         run: |
           python3 ci-fix-bot/brain_gate.py observe \
             --agent guard \

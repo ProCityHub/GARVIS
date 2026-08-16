@@ -138,7 +138,7 @@ jobs:
       - name: Test old versions
         run: make test-old-versions
       - name: Brain gate — observe & falsify
-      if: always()
+        if: always()
         run: |
           python3 ci-fix-bot/brain_gate.py observe \
             --agent tests \

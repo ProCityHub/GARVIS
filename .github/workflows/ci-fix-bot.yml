@@ -380,7 +380,7 @@ jobs:
 
             core.info('Created issue for unfixable failure');
       - name: Brain gate — observe & falsify
-      if: always()
+        if: always()
         run: |
           if [ "${{ steps.fix.outputs.fixed }}" = "true" ]; then
           OBSERVED=1.0

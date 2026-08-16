@@ -44,7 +44,7 @@ jobs:
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
       - name: Brain gate — observe & falsify
-      if: always()
+        if: always()
         run: |
           python3 ci-fix-bot/brain_gate.py observe \
             --agent publish \
