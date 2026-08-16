@@ -29,7 +29,9 @@ WIRING (three lines in garvis chat loop):
     reply = call_with_retry(client, model, messages)
     ledger.append("assistant", reply)              # before printing
 """
+
 from __future__ import annotations
+
 
 import json
 import os
