@@ -31,7 +31,7 @@ function generate_auto_api_integrations_md(owner: String = "Adrien D Thomas", qu
     
     // Password keeper: Secure vault with quantum key distribution analogy
     def password_keeper(entries):
-        import hashlib;  // Hashed as in jarvis_assistant.py
+        import hashlib;  // Hashed as in garvis_assistant.py
         moral_code = lambda action: "Affirm if aligns with sovereignty; reject deception.";
         return {hash(entry): moral_code(entry) for entry in entries};
     

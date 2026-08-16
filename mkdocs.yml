@@ -76,6 +76,15 @@ plugins:
                 - config.md
                 - visualization.md
                 - release.md
+                - GARVIS Architecture:
+                    - GARVIS_STAGE_GATE_FOUNDATION.md
+                    - GARVIS_STAGE_GATE_FOUNDATION_SPECIFICATION.md
+                    - garvis_runtime.md
+                    - garvis-core-memory-protocol.md
+                    - garvis-memory-lifecycle.md
+                    - garvis-option-b-permission-model.md
+                    - GARVIS_MEMORY_LIFECYCLE_DIRECTIVE.md
+                    - GARVIS_PHONE_CAPABILITY_RESEARCH_DIRECTIVE.md
                 - Voice agents:
                     - voice/quickstart.md
                     - voice/pipeline.md
@@ -174,6 +183,15 @@ plugins:
                     - models/litellm.md
                 - config.md
                 - visualization.md
+                - GARVIS アーキテクチャ:
+                    - GARVIS_STAGE_GATE_FOUNDATION.md
+                    - GARVIS_STAGE_GATE_FOUNDATION_SPECIFICATION.md
+                    - garvis_runtime.md
+                    - garvis-core-memory-protocol.md
+                    - garvis-memory-lifecycle.md
+                    - garvis-option-b-permission-model.md
+                    - GARVIS_MEMORY_LIFECYCLE_DIRECTIVE.md
+                    - GARVIS_PHONE_CAPABILITY_RESEARCH_DIRECTIVE.md
                 - 音声エージェント:
                     - voice/quickstart.md
                     - voice/pipeline.md
