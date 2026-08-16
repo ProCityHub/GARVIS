@@ -1,0 +1,85 @@
+name: GARVIS Town Square
+
+# The Town Square is where agents communicate.
+# It runs on a schedule and on demand, reading all pending agent messages
+# from the bus and routing them to their targets via GitHub Issues.
+#
+# It also detects cross-agent correlations — when multiple agents report
+# the same issue, it creates a coordination message so they can work together.
+
+on:
+  schedule:
+    # Every 30 minutes
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+    inputs:
+      agent_id:
+        description: 'Specific agent to check messages for'
+        required: false
+        type: string
+
+jobs:
+  coordinate:
+    name: Route Agent Messages
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Route pending messages
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Route all pending messages via the agent bus
+          python3 ci-fix-bot/agent_bus.py route \
+            --repo . \
+            --github-repo "$GITHUB_REPOSITORY" 2>&1 | tee /tmp/town-square-result.json
+
+          # Show the result
+          python3 -c "
+          import json
+          with open('/tmp/town-square-result.json') as f:
+              result = json.load(f)
+          print(f'Messages routed: {result.get(\"routed\", 0)}')
+          print(f'Issues created: {result.get(\"issues_created\", [])}')
+          print(f'Cross-agent correlations: {len(result.get(\"correlations\", []))}')
+          for c in result.get('correlations', []):
+              print(f'  - Pattern {c[\"fingerprint\"]}: {c[\"agents\"]} ({c[\"count\"]} messages)')
+          "
+
+      - name: List all agent messages
+        run: python3 ci-fix-bot/agent_bus.py list --repo .
+
+      - name: Check agent health
+        run: |
+          python3 -c "
+          import json
+          from pathlib import Path
+
+          bus_path = Path('ci-fix-bot/agent_bus.json')
+          if bus_path.exists():
+              with open(bus_path) as f:
+                  bus = json.load(f)
+
+              status = bus.get('agent_status', {})
+              if not status:
+                  print('No agent status reports yet.')
+              else:
+                  print('\nAgent Health Report:')
+                  for aid, s in status.items():
+                      print(f'  {aid:30s}  {s[\"status\"]:15s}  findings: {len(s.get(\"findings\", []))}')
+          else:
+              print('Agent bus not initialized yet.')
+          "

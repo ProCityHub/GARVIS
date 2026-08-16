@@ -4,11 +4,11 @@ name: GARVIS CI Fix Bot
 # It:
 # 1. Fingerprints the failure and records it in the Pattern Registry
 # 2. Runs the fix engine against known patterns
-# 3. For fixable patterns: pushes a fix PR
-# 4. For unknown patterns: creates an issue to begin the DIAGNOSED lifecycle
+# 3. For fixable patterns: pushes a fix PR and notifies relevant agents
+# 4. For unknown patterns: creates an issue + broadcasts to agents for help
 #
+# Agent communication: uses the Agent Bus to notify other agents of findings.
 # Pattern lifecycle: DETECTED → DIAGNOSED → REVIEWED → TESTED → PROMOTED
-# New patterns become automatic only after human review + regression test.
 
 on:
   workflow_run:
@@ -102,9 +102,7 @@ jobs:
         with:
           script: |
             const { execSync } = require('child_process');
-            const fs = require('fs');
 
-            // Record the failure — always, whether or not we can fix it
             try {
               const result = execSync(
                 `python3 ci-fix-bot/pattern_registry.py record /tmp/all-logs.txt . --recognized`,
@@ -158,6 +156,75 @@ jobs:
               }
             }
 
+      - name: Post agent bus messages
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { execSync } = require('child_process');
+            const fs = require('fs');
+            const fingerprint = process.env.PATTERN_FINGERPRINT || '';
+            const signature = process.env.PATTERN_SIGNATURE || 'unknown';
+            const patternCount = process.env.PATTERN_COUNT || '1';
+            const workflow = process.env.FAILED_WORKFLOW;
+            const sha = process.env.FAILED_HEAD_SHA;
+            const fixed = '${{ steps.fix.outputs.fixed }}' === 'true';
+
+            // Read the fix result to get the pattern name
+            let patternName = 'unknown';
+            let fixDescription = '';
+            if (fs.existsSync('/tmp/fix-result.json')) {
+              try {
+                const result = JSON.parse(fs.readFileSync('/tmp/fix-result.json', 'utf8'));
+                const fixedR = result.results.find(r => r.fixed);
+                if (fixedR) {
+                  patternName = fixedR.pattern;
+                  fixDescription = fixedR.description;
+                }
+              } catch (e) {}
+            }
+
+            // Post status to agent bus
+            try {
+              const status = fixed ? `FIXED (${patternName})` : `UNFIXABLE`;
+              const findings = [`${workflow} failed: ${signature}`];
+              if (fixed) findings.push(`Auto-fixed with pattern: ${patternName}`);
+
+              execSync(
+                `python3 ci-fix-bot/agent_bus.py status ci-fix-bot "${status}" --repo . --finding "${signature}"`,
+                { encoding: 'utf-8' }
+              );
+              core.info(`Posted ci-fix-bot status: ${status}`);
+            } catch (e) {
+              core.warning(`Could not post agent status: ${e.message}`);
+            }
+
+            // Post a message to relevant agents
+            if (fixed) {
+              // Notify code-quality-agent that we fixed a lint/type issue
+              if (patternName.includes('type_ignore') || patternName.includes('mypy') || patternName.includes('lint')) {
+                try {
+                  execSync(
+                    `python3 ci-fix-bot/agent_bus.py post ci-fix-bot code-quality-agent FINDING "Auto-fixed ${patternName}" "CI Fix Bot auto-fixed a ${patternName} issue in ${workflow}. Pattern: ${fingerprint}. This may indicate a systemic code quality issue — please review whether the root cause needs addressing." --repo .`,
+                    { encoding: 'utf-8' }
+                  );
+                  core.info('Notified code-quality-agent of fix');
+                } catch (e) {
+                  core.warning(`Could not notify code-quality-agent: ${e.message}`);
+                }
+              }
+            } else {
+              // Broadcast to all agents — we need help diagnosing this
+              try {
+                execSync(
+                  `python3 ci-fix-bot/agent_bus.py post ci-fix-bot all ALERT "Unfixable CI failure: ${signature}" "${workflow} failed on ${sha.slice(0,12)} and the CI Fix Bot could not auto-fix it. Pattern: ${fingerprint} (seen ${patternCount}x). Any agent with relevant knowledge, please respond." --repo .`,
+                  { encoding: 'utf-8' }
+                );
+                core.info('Broadcast alert to all agents');
+              } catch (e) {
+                core.warning(`Could not broadcast alert: ${e.message}`);
+              }
+            }
+
       - name: Create fix PR
         if: steps.fix.outputs.fixed == 'true'
         uses: actions/github-script@v7
@@ -167,10 +234,7 @@ jobs:
             const { execSync } = require('child_process');
             const result = JSON.parse(fs.readFileSync('/tmp/fix-result.json', 'utf8'));
 
-            if (!result.any_fixed) {
-              core.info('No auto-fixes could be applied');
-              return;
-            }
+            if (!result.any_fixed) return;
 
             const changedFiles = new Set();
             const fixDescriptions = [];
@@ -181,10 +245,7 @@ jobs:
               }
             }
 
-            if (changedFiles.size === 0) {
-              core.info('Fix engine reported success but no files changed');
-              return;
-            }
+            if (changedFiles.size === 0) return;
 
             const workflow = process.env.FAILED_WORKFLOW;
             const sha = process.env.FAILED_HEAD_SHA;
@@ -199,19 +260,16 @@ jobs:
               execSync(`git add ${Array.from(changedFiles).join(' ')}`);
               execSync(`git commit -m "fix(ci): auto-fix ${workflow} failure
 
-            Auto-applied by GARVIS CI Fix Bot.
             Pattern: ${fingerprint} (seen ${patternCount}x)
-
             Failed workflow: ${workflow}
             Failed commit: ${sha}
-            Run: ${process.env.FAILED_HTML_URL}
 
             Fixes applied:
             ${fixDescriptions.join('\\n\\n')}
 
+            Notified via Agent Bus: code-quality-agent
             ---
-            This PR was created automatically by the GARVIS CI Fix Bot.
-            It does not think. It pattern-matches errors against known fix patterns."`);
+            Auto-applied by GARVIS CI Fix Bot."`);
 
               execSync(`git push origin ${branch}`);
 
@@ -237,14 +295,19 @@ jobs:
                   ``,
                   Array.from(changedFiles).map(f => `- \`${f}\``).join('\n'),
                   ``,
+                  `### Agent Communication`,
+                  ``,
+                  `The following agents were notified via the Agent Bus:`,
+                  `- **code-quality-agent** — notified of ${fingerprint} pattern`,
+                  ``,
                   `---`,
-                  `_This PR was created automatically by the **GARVIS CI Fix Bot**._`,
+                  `_Auto-applied by **GARVIS CI Fix Bot**._`,
                   `_Pattern lifecycle: DETECTED → DIAGNOSED → REVIEWED → TESTED → PROMOTED_`,
                 ].join('\n'),
                 labels: ['ci-fix-bot', 'auto-fix'],
               });
 
-              core.info(`Created fix PR #${pr.data.number}: ${pr.data.html_url}`);
+              core.info(`Created fix PR #${pr.data.number}`);
             } catch (e) {
               core.error(`Failed to create fix PR: ${e.message}`);
             }
@@ -256,7 +319,6 @@ jobs:
           script: |
             const fs = require('fs');
             const workflow = process.env.FAILED_WORKFLOW;
-            const runId = process.env.FAILED_RUN_ID;
             const sha = process.env.FAILED_HEAD_SHA;
             const htmlUrl = process.env.FAILED_HTML_URL;
             const branch = process.env.FAILED_BRANCH;
@@ -275,20 +337,17 @@ jobs:
               ).slice(0, 25);
             } catch (e) {}
 
-            // Check for existing issue with same fingerprint
             const existing = await github.rest.issues.listForRepo({
               ...context.repo,
               state: 'open',
               labels: 'ci-fix-bot'
             });
 
-            // Look for existing issue mentioning this fingerprint
             const dup = existing.data.find(i =>
               i.body && i.body.includes(fingerprint)
             );
 
             if (dup) {
-              // Update existing issue with new occurrence
               const newBody = dup.body + `\n\n## New occurrence — ${new Date().toISOString()}\n\n- Workflow: ${workflow}\n- Run: ${htmlUrl}\n- Count: ${patternCount}x\n`;
               await github.rest.issues.update({
                 ...context.repo,
@@ -296,14 +355,13 @@ jobs:
                 body: newBody,
               });
 
-              // Add a comment
               await github.rest.issues.createComment({
                 ...context.repo,
                 issue_number: dup.number,
-                body: `Recurring failure #${patternCount}: [${workflow}](${htmlUrl}) on \`${sha.slice(0, 12)}\`\n\nPattern: \`${fingerprint}\`\nSignature: ${signature}`,
+                body: `Recurring failure #${patternCount}: [${workflow}](${htmlUrl}) on \`${sha.slice(0, 12)}\`\n\nPattern: \`${fingerprint}\`\nSignature: ${signature}\n\n**Agent Bus:** Alert broadcast to all agents.`,
               });
 
-              core.info(`Updated existing issue #${dup.number} for pattern ${fingerprint}`);
+              core.info(`Updated existing issue #${dup.number}`);
               return;
             }
 
@@ -317,7 +375,7 @@ jobs:
               ``,
               `**Workflow:** ${workflow}`,
               `**Branch:** ${branch}`,
-              `**Run:** ${process.env.FAILED_HTML_URL}`,
+              `**Run:** ${htmlUrl}`,
               `**Commit:** \`${sha}\``,
               ``,
               `### Error Excerpt`,
@@ -328,26 +386,29 @@ jobs:
               ``,
               `### Pattern Lifecycle`,
               ``,
-              `This failure pattern is currently at: **DETECTED**`,
+              `Status: **DETECTED**`,
               ``,
-              `To promote this pattern to automatic fixing:`,
-              `1. **DIAGNOSED** — Identify the root cause and write a fix (comment below)`,
-              `2. **REVIEWED** — A human reviews and approves the fix approach`,
-              `3. **TESTED** — Add a regression test proving the fix works`,
-              `4. **PROMOTED** — The fix is added to \`ci-fix-bot/fix_engine.py\``,
+              `1. **DIAGNOSED** — Identify root cause and write a fix (comment below)`,
+              `2. **REVIEWED** — Human reviews and approves the fix`,
+              `3. **TESTED** — Add a regression test`,
+              `4. **PROMOTED** — Fix added to \`fix_engine.py\``,
               ``,
-              `Once promoted, this pattern will be auto-fixed on all future occurrences.`,
+              `### Agent Communication`,
+              ``,
+              `**Agent Bus Alert** broadcast to all agents.`,
+              `If your agent has knowledge of this failure pattern, respond`,
+              `via the Agent Bus with a FINDING or RESPONSE message.`,
               ``,
               `---`,
-              `_Auto-created by **GARVIS CI Fix Bot**. It does not think. It pattern-matches._`,
-              `_It does not silently learn. New patterns require human review before promotion._`,
+              `_Auto-created by **GARVIS CI Fix Bot**._`,
+              `_It does not think. It pattern-matches._`,
             ].join('\n');
 
             await github.rest.issues.create({
               ...context.repo,
               title: `[CI Fix Bot] ${statusBadge}: ${signature.slice(0, 80)}`,
               body: body,
-              labels: ['ci-failure', 'ci-fix-bot', 'needs-diagnosis']
+              labels: ['ci-failure', 'ci-fix-bot', 'needs-diagnosis', 'agent-bus']
             });
 
             core.info('Created issue for unfixable failure');
