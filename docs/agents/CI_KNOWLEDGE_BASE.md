@@ -117,7 +117,7 @@ A naming compliance check reports violations in its own workflow file.
 
 **Root Cause:**
 `grep -rni "the old name" .` matches the workflow file that contains the
-word "JARVIS" in its own step names and error messages.
+word "GARVIS" in its own step names and error messages.
 
 **Fix:**
 Exclude the `.github/` directory from the grep:
