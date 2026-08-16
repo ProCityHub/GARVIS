@@ -302,7 +302,7 @@ class AndroidScreenRetina:
         stable = 0
         max_error = 0.0
         rounds = 0
-        packets = ()
+        packets: Tuple[VisualNervePacket, ...] = ()
 
         for round_index in range(
             1,

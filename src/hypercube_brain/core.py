@@ -172,7 +172,7 @@ class HypercubeBrainEngine:
         self.cycle_id = 0
         self.truth = HypercubeTruthEngine()
 
-        self.working = deque(maxlen=working_capacity)
+        self.working: deque[CycleResult] = deque(maxlen=working_capacity)
         self.episodes: list[dict[str, Any]] = []
         self.semantic: dict[str, float] = {}
         self.events: list[dict[str, Any]] = []

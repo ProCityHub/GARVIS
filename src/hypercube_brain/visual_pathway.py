@@ -12,7 +12,7 @@ This is a functional software analogy, not a biological simulation.
 from __future__ import annotations
 
 from dataclasses import dataclass, asdict
-from typing import Iterable
+from typing import Any, Iterable
 
 from .core import Observation, clamp01
 
@@ -268,5 +268,5 @@ class VisualPathway:
         )
 
     @staticmethod
-    def describe(percept: CorticalPercept) -> dict:
+    def describe(percept: CorticalPercept) -> dict[str, Any]:
         return asdict(percept)

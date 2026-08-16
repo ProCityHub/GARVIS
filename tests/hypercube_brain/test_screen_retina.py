@@ -23,31 +23,29 @@ class ScreenRetinaTests(
 
     def element(
         self,
-        **overrides,
-    ):
-        data = dict(
-            element_id="send-1",
-            label="Send",
-            role="button",
-            bounds=ScreenBounds(
+        *,
+        element_id: str = "send-1",
+        label: str = "Send",
+        bounds: ScreenBounds | None = None,
+    ) -> ScreenElement:
+        if bounds is None:
+            bounds = ScreenBounds(
                 810,
                 2100,
                 1050,
                 2310,
-            ),
+            )
+
+        return ScreenElement(
+            element_id=element_id,
+            label=label,
+            role="button",
+            bounds=bounds,
             screen_width=1080,
             screen_height=2400,
             confidence=0.98,
             motion=0.0,
             source="android_screen",
-        )
-
-        data.update(
-            overrides
-        )
-
-        return ScreenElement(
-            **data
         )
 
     def test_maps_screen_element_to_visual_nerve(
