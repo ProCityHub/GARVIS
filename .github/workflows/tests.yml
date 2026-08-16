@@ -1,6 +1,5 @@
-# Divine Foundation: Ten Commandments Testing Workflow
-# "You shall not bear false witness" - Ensure truthful code validation
-# Aligned with biblical principles and natural law compliance
+# GARVIS Testing Workflow
+# Ensure truthful code validation and CI checks.
 
 name: Tests
 

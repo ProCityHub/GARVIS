@@ -1,6 +1,5 @@
-# Divine Foundation: Ten Commandments Publishing Workflow
-# "You shall not steal" - Ensure honest and proper package distribution
-# Aligned with biblical principles and natural law compliance
+# GARVIS PyPI Publishing Workflow (DISABLED — needs retargeting to garvis-agents namespace)
+# Ensure honest and proper package distribution.
 
 name: Publish to PyPI
 

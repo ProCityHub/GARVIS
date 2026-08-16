@@ -1,6 +1,5 @@
-# Divine Foundation: Ten Commandments Documentation Workflow
-# "You shall not bear false witness" - Ensure truthful documentation updates
-# Aligned with biblical principles and natural law compliance
+# GARVIS Documentation Translation Workflow
+# Ensures translated documentation stays current with source changes.
 
 name: "Update Translated Docs"
 
