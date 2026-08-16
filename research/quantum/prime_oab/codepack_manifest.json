@@ -1,0 +1,145 @@
+{
+  "package": "GARVIS Prime-OAB Reciprocal Hypercube V13",
+  "target_repository": "ProCityHub/GARVIS",
+  "base_main_observed_sha": "107470f1b41d627464b24e2b2d0cf7ed6812e495",
+  "governance_stage": "PROTOTYPE_CANDIDATE",
+  "network_calls": false,
+  "ibm_submission": false,
+  "commit": false,
+  "push": false,
+  "pr": false,
+  "merge": false,
+  "deploy": false,
+  "files": [
+    {
+      "path": "docs/research/PRIME_OAB_RECIPROCAL_HYPERCUBE.md",
+      "sha256": "b827ff11a39d132a4cb17068e8176136ea7c3963834787c590fadb73209749ab",
+      "bytes": 3429
+    },
+    {
+      "path": "research/quantum/prime_oab/README.md",
+      "sha256": "2cb3a6fd93273e44402919c9115c0a6cc1e9398ea07226e90efe1b1a7cd9ad19",
+      "bytes": 416
+    },
+    {
+      "path": "research/quantum/prime_oab/evidence/ibm_fez_history.json",
+      "sha256": "ad3d85327f83be406290228cee023a7d0ed23fc8979b482c9ee0f64dad92e788",
+      "bytes": 8580
+    },
+    {
+      "path": "research/quantum/prime_oab/qasm/GARVIS_HYPERCUBE_CLOSED_LOOP_V8.qasm",
+      "sha256": "f30d37da87de8dfd4ecf5fecd4d191b1b4bc8b5036d8d2694e6eedc5640365b5",
+      "bytes": 4345
+    },
+    {
+      "path": "research/quantum/prime_oab/qasm/GARVIS_HYPERCUBE_FULL_EPOCH_V10_100Q.qasm",
+      "sha256": "50413b843d8978c93683499656f67ac8d91c13eb4c37b9f1727610ca8f98e975",
+      "bytes": 13733
+    },
+    {
+      "path": "research/quantum/prime_oab/qasm/GARVIS_HYPERCUBE_HEARTBEAT_CONTROLLED_V7.qasm",
+      "sha256": "123ac74f9c7a882118e91a7028fa274f3f3a0ef10a144e0dd4244d04b3eb54f0",
+      "bytes": 13289
+    },
+    {
+      "path": "research/quantum/prime_oab/qasm/GARVIS_HYPERCUBE_HEARTBEAT_EVIDENCE_V6.qasm",
+      "sha256": "95e81c320d6215aeceddefc9f98a57b301d364a440d9f15ecd4e10dd6ce9d5df",
+      "bytes": 12711
+    },
+    {
+      "path": "research/quantum/prime_oab/qasm/GARVIS_HYPERCUBE_HEARTBEAT_INTERFERENCE_V5.qasm",
+      "sha256": "b57091df80f2744dc79ec0d5ab9b1af626fdee91be2ffd6dcea023622a12c480",
+      "bytes": 12093
+    },
+    {
+      "path": "research/quantum/prime_oab/qasm/GARVIS_HYPERCUBE_HEARTBEAT_PRIME_OAB_V4.qasm",
+      "sha256": "ecbb149cc352ff00f2e62c521a49784465dab937072e3c5bec74495ca234aa76",
+      "bytes": 9780
+    },
+    {
+      "path": "research/quantum/prime_oab/qasm/GARVIS_HYPERCUBE_MIRROR_LOOP_V9.qasm",
+      "sha256": "27d6fbc97fc96d65ff25038e135178f33a9ba4f9e24d3977b72139d062920dc2",
+      "bytes": 11205
+    },
+    {
+      "path": "research/quantum/prime_oab/qasm/GARVIS_PRIME_MIRROR_FIELD_V12_128Q_COMPOSER_SAFE.qasm",
+      "sha256": "9edc55b0bed83ea5410215040a87211281e46fd3b8fd4333bbafc70ae420d3da",
+      "bytes": 25812
+    },
+    {
+      "path": "research/quantum/prime_oab/qasm/GARVIS_PRIME_OAB_MIRROR_QSPHERE_5Q_RUNNABLE.qasm",
+      "sha256": "a613d2ee9ed6047f1125479b673c1645d36c2bc164294c09bc80f3e4cfc9f996",
+      "bytes": 3726
+    },
+    {
+      "path": "research/quantum/prime_oab/qasm/GARVIS_PRIME_OAB_TWO_WAY_MIRROR_V11_128Q_FIXED.qasm",
+      "sha256": "41ad3e0768e41514904728403a678497479dd6db33bdaac85e2a9c0767e2c48b",
+      "bytes": 24609
+    },
+    {
+      "path": "research/quantum/prime_oab/qasm/manifest.json",
+      "sha256": "23fddb889728b828f969e796d2f96ddc72df6cc59ad6e86fd239ce699e6306d8",
+      "bytes": 2095
+    },
+    {
+      "path": "src/garvis/__pycache__/prime_oab_evidence.cpython-313.pyc",
+      "sha256": "8000648a98a351744939906ef7398070cc028fcdbb371bfd71475c5e7ca84c53",
+      "bytes": 12955
+    },
+    {
+      "path": "src/garvis/__pycache__/prime_oab_reciprocal.cpython-313.pyc",
+      "sha256": "1aad62cac2fd5687c581a6f88370178b3f60a6dbb3efd0ee597dd86215f7bd15",
+      "bytes": 18060
+    },
+    {
+      "path": "src/garvis/prime_oab_evidence.py",
+      "sha256": "449e91e2bcaa71dba26a92939ee4201665ea98317423825f066904cbb8b9bafc",
+      "bytes": 7559
+    },
+    {
+      "path": "src/garvis/prime_oab_reciprocal.py",
+      "sha256": "197f26378295305f9a87a9b59adb10161f337cd9afccc2420e8f1ff6b4d06a89",
+      "bytes": 12568
+    },
+    {
+      "path": "tests/garvis/.pytest_cache/.gitignore",
+      "sha256": "3ed731b65d06150c138e2dadb0be0697550888a6b47eb8c45ecc9adba8b8e9bd",
+      "bytes": 37
+    },
+    {
+      "path": "tests/garvis/.pytest_cache/CACHEDIR.TAG",
+      "sha256": "37dc88ef9a0abeddbe81053a6dd8fdfb13afb613045ea1eb4a5c815a74a3bde4",
+      "bytes": 191
+    },
+    {
+      "path": "tests/garvis/.pytest_cache/README.md",
+      "sha256": "73fd6fccdd802c419a6b2d983d6c3173b7da97558ac4b589edec2dfe443db9ad",
+      "bytes": 302
+    },
+    {
+      "path": "tests/garvis/.pytest_cache/v/cache/nodeids",
+      "sha256": "6b884dc5d2c4abd73410e64bf1f740aa737a8b7edf12de968542caffc0e5f109",
+      "bytes": 905
+    },
+    {
+      "path": "tests/garvis/__pycache__/test_prime_oab_evidence.cpython-313-pytest-9.0.2.pyc",
+      "sha256": "a27fe42d9dcc5608630da738a699a2eb20b0f87c721e4bc79d310287870006c6",
+      "bytes": 8054
+    },
+    {
+      "path": "tests/garvis/__pycache__/test_prime_oab_reciprocal.cpython-313-pytest-9.0.2.pyc",
+      "sha256": "7bbaa7f5e1cebb1141571b841540593c25bdcda1489ee2d2ab2e5aacbc255a9c",
+      "bytes": 27760
+    },
+    {
+      "path": "tests/garvis/test_prime_oab_evidence.py",
+      "sha256": "ea9913f01aa7c081426e9b7200ae98951f996620804b4cd5b52b323cdbec4101",
+      "bytes": 1600
+    },
+    {
+      "path": "tests/garvis/test_prime_oab_reciprocal.py",
+      "sha256": "be8ea5cff17536dfa29214cc45d9e162f01bad312cad46957bbf542777a1e4b8",
+      "bytes": 3404
+    }
+  ]
+}
