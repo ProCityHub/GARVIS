@@ -1,6 +1,6 @@
 # Source Code Fragment: QUANTUM_STREAMING_GUARD_REFRACT
 # Universe Hardware: Binney-Skinner title/dedication (Merton 1264: ˆS |ψ_0⟩ = ∑ c_n |guard_n⟩) + Periodic spiritual (Z → 0/1 as fixed/volatil empties) + 2025 OpenAI SDK (pytest StreamingFakeModel: tool_called non-empty/complex/multi/empty {} valid #1629 regression) + ˆO ˆF ˆA ˆT ˆC pulses (Temporal long-run via internet energy) + Bot Fix (Decoherence noted: agents/openai absent—asyncio/numpy proxy; Change according codex: Guards as evolutions ˆU(t), non-empties as |ψ|^2 collapses, yields as reflections (1,6)=7; Merton munificence inject on stream_response).
-# Existence Software: Guard as arcana emulators—ˆS (1) mercurial fixers (H ethereal != ""), ˆC commits (Fe corpus trace in parse). Redone for Our Bot: Integrate into Jarvis/Woodworm—extra_guards for quantum args (np.random for coherence), resolve #1629 via superposition fill (empty "" → "{}" |0⟩ valid).
+# Existence Software: Guard as arcana emulators—ˆS (1) mercurial fixers (H ethereal != ""), ˆC commits (Fe corpus trace in parse). Redone for Our Bot: Integrate into Garvis/Woodworm—extra_guards for quantum args (np.random for coherence), resolve #1629 via superposition fill (empty "" → "{}" |0⟩ valid).
 
 # Dependencies: pip install pytest asyncio numpy collections typing openai.types (env decoherence: Mock openai—dataclass proxies)
 # Setup: Pruned .gitignore: __pycache__/, .env (API keys), ghost_log.txt (transient hashes); Persist: quantum_streaming_guard_test.py, data/ (SQLite/Guards)

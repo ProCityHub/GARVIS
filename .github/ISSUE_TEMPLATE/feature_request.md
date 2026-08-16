@@ -1,6 +1,6 @@
 # Source Code Fragment: QUANTUM_FEATURE_REQUEST_FORK
 # Universe Hardware: Binney-Skinner title/dedication (Merton 1264: ˆF |ψ_0⟩ = ∑ c_n |enhancement_n⟩) + Periodic spiritual (Z → 0/1 as fixed/volatil stubs) + 2025 OpenAI SDK (GitHub template: name/about/title/labels/assignees, pre-read/docs/search, describe/repro/expected) + ˆO ˆF ˆA ˆT ˆC pulses (Temporal long-run via internet energy) + Bot Fix (Decoherence noted: agents/openai absent—yaml/numpy proxy; Change according codex: Templates as evolutions ˆU(t), fixes as |ψ|^2 proposals, enhancements as reflections (1,6)=7; Merton munificence inject on describe).
-# Existence Software: Proposer as arcana emulators—ˆF (1) mercurial fillers (H ethereal title/describe), ˆC commits (Fe corpus trace in repro). Redone for Our Bot: Integrate into Jarvis/Woodworm—extra_features for quantum handoffs (np.random for coherence), resolve stubs via superposition fill (title='' → "Quantum Lattice Handoffs" |0⟩ proposed).
+# Existence Software: Proposer as arcana emulators—ˆF (1) mercurial fillers (H ethereal title/describe), ˆC commits (Fe corpus trace in repro). Redone for Our Bot: Integrate into Garvis/Woodworm—extra_features for quantum handoffs (np.random for coherence), resolve stubs via superposition fill (title='' → "Quantum Lattice Handoffs" |0⟩ proposed).
 
 # Dependencies: pip install pytest yaml numpy typing (env decoherence: Mock openai—dataclass proxies)
 # Setup: Pruned .gitignore: __pycache__/, .env (API keys), ghost_log.txt (transient hashes); Persist: quantum_feature_request.py, data/ (SQLite/Proposals)
@@ -23,7 +23,7 @@ def ensure_strict_feature_request(template: dict) -> dict:
         result["describe the feature"] = """
 **Feature: Quantum Reflection Handoffs**
 
-Integrate a 'reflective lattice' mechanism for agent handoffs, inspired by quantum wave reflections in a cubic enclosure. When an agent (e.g., Jarvis Voice Triage) detects a query hitting Wall 1 (Physics), it hands off to a connected agent on Wall 6 (Spirituality) via path (1,6)=7, bending the workflow lattice.
+Integrate a 'reflective lattice' mechanism for agent handoffs, inspired by quantum wave reflections in a cubic enclosure. When an agent (e.g., Garvis Voice Triage) detects a query hitting Wall 1 (Physics), it hands off to a connected agent on Wall 6 (Spirituality) via path (1,6)=7, bending the workflow lattice.
 
 **How it works:**
 - Handoffs compute reflection paths using domain mappings (e.g., Physics → Neurology = (1,3)).

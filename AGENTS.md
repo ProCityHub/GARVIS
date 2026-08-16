@@ -1,6 +1,6 @@
 # Source Code Fragment: OPENAI_BOT_AGENT_KERNEL
-# Universe Hardware: Binney-Skinner frontispiece (Merton 1264: ˆO |ψ_0⟩ = ∑ c_n |handoff_n⟩) + Periodic spiritual (Z → 0/1 as fixed/volatil agents) + 2025 OpenAI SDK (GPT-5 unified, Codex coding, handoffs/guardrails/sessions) + ˆF ˆA ˆT ˆC pulses (Temporal long-run via internet energy) + Bot Ideas (woodworm_agi: DigitalWorld/SpiritCore/WoodwormAGI; jarvis_assistant: Voice/Speech/Passwords/GhostLog; language_learning_ai: AgentPrime/Cohort simulation).
-# Existence Software: OpenAI agents as arcana emulators—ˆO (1) mercurial orchestrators (H ethereal handoff), ˆC sessions (Fe corpus trace in GPT-5). Redone for Our Bot: Multi-agent swarm—Jarvis (voice triage), Woodworm (AGI lattice), LanguagePrime (cohort learner); integrates speech (sr/pyaudio), memory (SQLite), quantum sim (numpy/datetime).
+# Universe Hardware: Binney-Skinner frontispiece (Merton 1264: ˆO |ψ_0⟩ = ∑ c_n |handoff_n⟩) + Periodic spiritual (Z → 0/1 as fixed/volatil agents) + 2025 OpenAI SDK (GPT-5 unified, Codex coding, handoffs/guardrails/sessions) + ˆF ˆA ˆT ˆC pulses (Temporal long-run via internet energy) + Bot Ideas (woodworm_agi: DigitalWorld/SpiritCore/WoodwormAGI; garvis_assistant: Voice/Speech/Passwords/GhostLog; language_learning_ai: AgentPrime/Cohort simulation).
+# Existence Software: OpenAI agents as arcana emulators—ˆO (1) mercurial orchestrators (H ethereal handoff), ˆC sessions (Fe corpus trace in GPT-5). Redone for Our Bot: Multi-agent swarm—Garvis (voice triage), Woodworm (AGI lattice), LanguagePrime (cohort learner); integrates speech (sr/pyaudio), memory (SQLite), quantum sim (numpy/datetime).
 
 # Dependencies: pip install openai-agents-python speechrecognition pyaudio numpy datetime sqlite3 hashlib csv requests
 # Setup: Set OPENAI_API_KEY env; Pruned .gitignore: __pycache__/, .env, ghost_log.txt (transient hashes), *.pyc, venv/, build/, logs/ (volatils), .DS_Store; Persist: *.py, data/ (CSV/SQLite)
@@ -18,7 +18,7 @@ import pyaudio
 import requests
 from openai_agents import Agent, Runner, function_tool, SQLiteSession, Guardrail  # From ProCityHub/openai-agents-python fork
 
-# Core Bot Classes (Integrated from Our Ideas: Woodworm Lattice, Jarvis Voice, Language Cohort)
+# Core Bot Classes (Integrated from Our Ideas: Woodworm Lattice, Garvis Voice, Language Cohort)
 class DigitalLaw:
     def __init__(self):
         self.laws = {"causality": "Every effect must have a cause", "identity": "Every entity must have a unique identity"}
@@ -173,8 +173,8 @@ class AgentCohort:
             return f"{agent_name} follow-up: Contextualize '{prior_response}' in language dynamics."
         return "Cohort query complete."
 
-# Jarvis Voice Integration (Adapted for OpenAI: Replace Grok API with OpenAI chat)
-class JarvisVoice:
+# Garvis Voice Integration (Adapted for OpenAI: Replace Grok API with OpenAI chat)
+class GarvisVoice:
     def __init__(self):
         self.r = sr.Recognizer()
         self.m = sr.Microphone()
@@ -197,7 +197,7 @@ class JarvisVoice:
         text = spoken_text.lower().strip()
         self.history.append(f"[{datetime.datetime.now().isoformat()}] {text}")
         if "open" in text or "record" in text or "list" in text or "add" in text:
-            return f"Jarvis processed: '{text}'. Voice command executed in agent loop."
+            return f"Garvis processed: '{text}'. Voice command executed in agent loop."
         elif "grok" in text:
             return "Bridging to OpenAI agent swarm..."
         return "Unknown. Options: open, record, list passwords, add password."
@@ -211,14 +211,14 @@ class JarvisVoice:
         except:
             return "Speech not recognized."
 
-# Main OpenAI Multi-Agent Bot (Our Ideas Swarm: Handoffs between Jarvis, Woodworm, Language Cohort)
-jarvis_agent = Agent(
-    name="Jarvis Voice Triage",
-    instructions="You are Jarvis, voice-activated assistant. Triage commands: open apps, record, passwords, bridge to AGI. Handoff to Woodworm for quantum sim, LanguagePrime for learning. Use tools for voice/speech.",
-    tools=[JarvisVoice().wake_and_command, JarvisVoice().listen],
+# Main OpenAI Multi-Agent Bot (Our Ideas Swarm: Handoffs between Garvis, Woodworm, Language Cohort)
+garvis_agent = Agent(
+    name="Garvis Voice Triage",
+    instructions="You are Garvis, voice-activated assistant. Triage commands: open apps, record, passwords, bridge to AGI. Handoff to Woodworm for quantum sim, LanguagePrime for learning. Use tools for voice/speech.",
+    tools=[GarvisVoice().wake_and_command, GarvisVoice().listen],
     handoffs=[woodworm_agent, language_prime_agent],  # Defined below
     guardrails=Guardrail("min_coherence:0.5", "Validate commands: no unsafe ops"),
-    session=SQLiteSession("jarvis_history")  # Persistent memory
+    session=SQLiteSession("garvis_history")  # Persistent memory
 )
 
 woodworm_agent = Agent(
@@ -231,16 +231,16 @@ woodworm_agent = Agent(
 
 language_prime_agent = Agent(
     name="Language Learning Prime",
-    instructions="You are AgentPrime, core learner with cohort. Learn patterns, respond, generate follow-ups. Integrate with Jarvis for voice, Woodworm for quantum metaphors.",
+    instructions="You are AgentPrime, core learner with cohort. Learn patterns, respond, generate follow-ups. Integrate with Garvis for voice, Woodworm for quantum metaphors.",
     tools=[AgentPrime().respond, AgentCohort().next_question],
     session=SQLiteSession("prime_memory")
 )
 
 # Runner for Bot Execution (Async Main Loop)
-async def run_bot(input_query: str = "Initialize Jarvis AGI swarm"):
+async def run_bot(input_query: str = "Initialize Garvis AGI swarm"):
     session = SQLiteSession("bot_global")  # Shared session
     result = await Runner.run(
-        jarvis_agent,  # Start with triage
+        garvis_agent,  # Start with triage
         input=input_query,
         session=session,
         max_turns=5  # Limit for safety
@@ -250,7 +250,7 @@ async def run_bot(input_query: str = "Initialize Jarvis AGI swarm"):
 # Execution Entry (Merton's Launch)
 if __name__ == "__main__":
     # Simulate voice init
-    print("Jarvis online. Listening...")
+    print("Garvis online. Listening...")
     query = "Hello, bridge to Woodworm for quantum language learning."
     output = asyncio.run(run_bot(query))
     print(f"Bot Output: {output}")

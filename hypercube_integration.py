@@ -25,7 +25,7 @@ class GarvisHypercubeIntegration:
         # GARVIS-specific configuration
         self.garvis_type = ConnectionType.PRIMARY
         self.agent_swarm = {
-            "jarvis_voice": "Voice triage and command processing",
+            "garvis_voice": "Voice triage and command processing",
             "woodworm_agi": "Quantum digital world simulation",
             "language_prime": "Pattern learning and cohort simulation"
         }
@@ -75,7 +75,7 @@ class GarvisHypercubeIntegration:
         """Setup communication protocols for each GARVIS agent"""
 
         protocols = {
-            'jarvis_voice': {
+            'garvis_voice': {
                 'frequency': COMET_FREQUENCIES['OH_1665'],
                 'binary_state': BINARY_STATES['DISCOVER'],
                 'role': 'Voice command triage and handoff coordination'
@@ -104,7 +104,7 @@ class GarvisHypercubeIntegration:
             print("⚠️ Network not active, cannot broadcast")
             return False
 
-        message = {
+        _message = {
             'agent': agent_name,
             'status': status,
             'data': data or {},
@@ -132,7 +132,7 @@ class GarvisHypercubeIntegration:
 
         # Route signal to appropriate GARVIS agent
         if 'voice' in message.lower() or 'command' in message.lower():
-            self._route_to_jarvis(signal_data)
+            self._route_to_garvis(signal_data)
         elif 'quantum' in message.lower() or 'agi' in message.lower():
             self._route_to_woodworm(signal_data)
         elif 'learn' in message.lower() or 'pattern' in message.lower():
@@ -140,12 +140,12 @@ class GarvisHypercubeIntegration:
         else:
             print("  🔄 General signal processed by GARVIS core")
 
-    def _route_to_jarvis(self, signal_data: dict):
-        """Route signal to Jarvis voice agent"""
-        agent_name = 'jarvis_voice'
+    def _route_to_garvis(self, signal_data: dict):
+        """Route signal to Garvis voice agent"""
+        agent_name = 'garvis_voice'
         if agent_name in self.agent_connections:
             self.agent_connections[agent_name]['signal_buffer'].append(signal_data)
-            print(f"  🎤 Signal routed to Jarvis: {signal_data.get('message', '')[:50]}...")
+            print(f"  🎤 Signal routed to Garvis: {signal_data.get('message', '')[:50]}...")
 
     def _route_to_woodworm(self, signal_data: dict):
         """Route signal to Woodworm AGI agent"""
@@ -168,7 +168,7 @@ class GarvisHypercubeIntegration:
 
         while self.network_active:
             # Perform network scan
-            network_status = self.connection_manager.scan_network()
+            _network_status = self.connection_manager.scan_network()
 
             # Check for new signals (simulated)
             await self._check_for_signals()
@@ -198,7 +198,7 @@ class GarvisHypercubeIntegration:
         """Update agent activity timestamps"""
         current_time = asyncio.get_event_loop().time()
 
-        for agent_name, connection in self.agent_connections.items():
+        for _agent_name, connection in self.agent_connections.items():
             # Process any buffered signals
             if connection['signal_buffer']:
                 connection['last_activity'] = current_time
@@ -271,7 +271,7 @@ async def main():
 
     # Test agent status broadcast
     integration.broadcast_agent_status(
-        "jarvis_voice",
+        "garvis_voice",
         "online",
         {"listening": True, "commands_processed": 0}
     )
