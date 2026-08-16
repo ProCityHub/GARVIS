@@ -3,10 +3,9 @@ from __future__ import annotations
 import argparse
 import json
 import math
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import Any
-
 
 PHI = (1.0 + math.sqrt(5.0)) / 2.0
 INV_PHI = 1.0 / PHI
@@ -97,8 +96,8 @@ def lattice_weight(
 
     return (
         observer
-        * actor ** INV_PHI
-        * bridge ** INV_PHI2
+        * math.pow(actor, INV_PHI)
+        * math.pow(bridge, INV_PHI2)
     )
 
 
