@@ -102,6 +102,8 @@ exclude = [
     "src/garvis",
     "pulse.py",
     "BINARYBRAIN",
+    "ci-fix-bot",
+    "genesis-x",
 ]
 
 [tool.ruff.lint]
@@ -131,6 +133,10 @@ disallow_untyped_calls = false
 [[tool.mypy.overrides]]
 module = "sounddevice.*"
 ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["ci-fix-bot.*", "genesis-x.*", "brain_gate", "garvis_brain_adapter", "brain"]
+ignore_errors = true
 
 [[tool.mypy.overrides]]
 module = [

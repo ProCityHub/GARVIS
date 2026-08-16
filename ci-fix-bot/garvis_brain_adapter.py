@@ -80,13 +80,11 @@ if _brain_imported:
         DoubleSlitBrain,
         DoubleSlitObservation,
         EmpiricalStatus,
+        EpistemicBoundary as BrainEpistemicBoundary,  # type: ignore[import-not-found]
         classify_path_pair,
         phi_visibility,
         qm_visibility,
         self_test,
-    )
-    from brain import (
-        EpistemicBoundary as BrainEpistemicBoundary,  # type: ignore[import-not-found]
     )
 else:
     # Fallback if brain.py is not available — define minimal stubs
