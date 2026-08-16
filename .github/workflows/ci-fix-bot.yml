@@ -58,57 +58,25 @@ jobs:
 
       - name: Download failure logs
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FAILED_RUN_ID: ${{ github.event.workflow_run.id }}
         run: |
-          # Use curl to download the logs — the GitHub JS https.get approach
-          # fails with ECONNREFUSED on the redirect URL in the runner environment.
-          # curl handles redirects (-L) and auth headers correctly.
-          RUN_ID="${FAILED_RUN_ID}"
-          API_URL="https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}/logs"
+          rm -rf failure-logs failure-logs.zip
+          mkdir -p failure-logs
 
-          echo "Downloading logs from: $API_URL"
+          curl --fail-with-body -L \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${FAILED_RUN_ID}/logs" \
+            -o failure-logs.zip
 
-          HTTP_CODE=$(curl -sL \
-            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            -o /tmp/failure-logs.zip \
-            -w "%{http_code}" \
-            "$API_URL")
+          unzip -q failure-logs.zip -d failure-logs
+          test -n "$(find failure-logs -type f -print -quit)"
 
-          echo "HTTP response code: $HTTP_CODE"
-
-          if [ "$HTTP_CODE" != "200" ]; then
-            echo "Failed to download logs (HTTP $HTTP_CODE)"
-            echo "Creating empty log file as fallback"
-            echo "Unable to download CI failure logs (HTTP $HTTP_CODE)" > /tmp/all-logs.txt
-            # Still record the failure with minimal info
-            echo "## CI Failure in ${FAILED_WORKFLOW}" >> /tmp/all-logs.txt
-            echo "Run: ${FAILED_HTML_URL}" >> /tmp/all-logs.txt
-            echo "Commit: ${FAILED_HEAD_SHA}" >> /tmp/all-logs.txt
-          else
-            echo "Downloaded failure logs successfully"
-            ls -la /tmp/failure-logs.zip
-          fi
-
-      - name: Extract logs
-        if: success()
-        run: |
-          if [ -f /tmp/failure-logs.zip ] && [ -s /tmp/failure-logs.zip ]; then
-            mkdir -p /tmp/failure-logs
-            python3 -c "
-            import zipfile
-            try:
-                with zipfile.ZipFile('/tmp/failure-logs.zip', 'r') as z:
-                    z.extractall('/tmp/failure-logs/')
-            except zipfile.BadZipFile:
-                print('Not a valid zip file — using fallback')
-            "
-            find /tmp/failure-logs -name '*.txt' -exec cat {} \; > /tmp/all-logs.txt 2>/dev/null || true
-            echo "Log lines: $(wc -l < /tmp/all-logs.txt 2>/dev/null || echo 0)"
-          else
-            echo "No zip file available — using fallback logs"
-            echo "Unable to extract CI failure logs" > /tmp/all-logs.txt
-          fi
+          # Concatenate all log files for the fix engine
+          find failure-logs -type f -exec cat {} + > /tmp/all-logs.txt
+          echo "Log lines: $(wc -l < /tmp/all-logs.txt)"
 
       - name: Record failure in Pattern Registry
         uses: actions/github-script@v7
