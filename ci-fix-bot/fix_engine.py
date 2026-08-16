@@ -1,17 +1,10 @@
 #!/usr/bin/env python3
 """
-GARVIS CI Fix Bot — Auto-Fix Engine
+GARVIS CI Fix Bot — Auto-Fix Engine.
 
 This script is called by the CI Fix Bot GitHub Action when a CI failure
 is detected. It downloads the failure logs, pattern-matches against known
 failure patterns, and for each match, applies the corresponding fix script.
-
-Each fix script is a standalone function that:
-1. Reads the failing file(s)
-2. Applies a deterministic fix
-3. Returns a description of what was changed
-
-The bot then commits the fix, pushes a branch, and creates a PR.
 """
 
 from __future__ import annotations
@@ -22,7 +15,6 @@ import re
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
 
 
 @dataclass
@@ -30,12 +22,10 @@ class FixResult:
     fixed: bool
     description: str
     files_changed: list[str] = field(default_factory=list)
-    verification_cmd: Optional[str] = None
+    verification_cmd: str | None = None
 
 
-def _group_by_file(
-    matches: list[tuple[str, str]],
-) -> dict[str, list[int]]:
+def _group_by_file(matches: list[tuple[str, str]]) -> dict[str, list[int]]:
     """Group regex matches by file path."""
     by_file: dict[str, list[int]] = {}
     for filepath, line_num in matches:
@@ -66,7 +56,7 @@ def fix_unused_type_ignore(logs: str, repo_root: Path) -> FixResult:
             changes.append(f"  - {filepath}: file not found, skipped")
             continue
 
-        with open(full_path, "r") as f:
+        with open(full_path) as f:
             lines = f.readlines()
 
         modified = False
@@ -122,7 +112,7 @@ def fix_bash_quote_conflict(logs: str, repo_root: Path) -> FixResult:
     changes: list[str] = []
 
     for yml_file in yaml_files:
-        with open(yml_file, "r") as f:
+        with open(yml_file) as f:
             content = f.read()
 
         if 'python3 -c "' not in content:
@@ -250,7 +240,7 @@ def fix_json_serialization(logs: str, repo_root: Path) -> FixResult:
             continue
 
         try:
-            with open(py_file, "r") as f:
+            with open(py_file) as f:
                 content = f.read()
         except (UnicodeDecodeError, FileNotFoundError):
             continue
@@ -293,19 +283,19 @@ def fix_json_serialization(logs: str, repo_root: Path) -> FixResult:
 # ============================================================
 def fix_grep_self_match(logs: str, repo_root: Path) -> FixResult:
     """Add ``.github/`` exclusion to compliance grep commands."""
-    yaml_files = list(
-        repo_root.glob(".github/workflows/*.yml")
-    )
+    yaml_files = list(repo_root.glob(".github/workflows/*.yml"))
 
     files_changed: list[str] = []
     changes: list[str] = []
 
     for yml_file in yaml_files:
-        with open(yml_file, "r") as f:
+        with open(yml_file) as f:
             content = f.read()
 
         modified = False
-        grep_pattern = r'(grep\s+-r\w*\s+"[^"]+"\s+\.)(?!.*grep\s+-v\s+"\.github/")'
+        grep_pattern = (
+            r'(grep\s+-r\w*\s+"[^"]+"\s+\.)(?!.*grep\s+-v\s+"\.github/")'
+        )
         if re.search(grep_pattern, content) and 'grep -v ".github/"' not in content:
             content = re.sub(
                 r'(grep\s+-r\w*\s+"[^"]+"\s+\.)',
@@ -360,7 +350,7 @@ def fix_mypy_comparison_overlap(logs: str, repo_root: Path) -> FixResult:
         if not full_path.exists():
             continue
 
-        with open(full_path, "r") as f:
+        with open(full_path) as f:
             lines = f.readlines()
 
         modified = False
@@ -408,13 +398,15 @@ def fix_mypy_comparison_overlap(logs: str, repo_root: Path) -> FixResult:
 # ============================================================
 def fix_mypy_arg_type(logs: str, repo_root: Path) -> FixResult:
     """Flag arg-type errors for manual review."""
-    pattern = r'(.+?):(\d+): error: Argument \d+ to "(\w+)" has incompatible type'
+    pattern = (
+        r'(.+?):(\d+): error: Argument \d+ to "(\w+)" has incompatible type'
+    )
     matches = re.findall(pattern, logs)
 
     if not matches:
         return FixResult(fixed=False, description="No arg-type errors found")
 
-    files = set(m[0] for m in matches)
+    files = {m[0] for m in matches}
     return FixResult(
         fixed=False,
         description=(
@@ -434,7 +426,7 @@ def main() -> None:
     failed_workflow = os.environ.get("FAILED_WORKFLOW", "unknown")
     failed_sha = os.environ.get("FAILED_HEAD_SHA", "unknown")
 
-    with open(logs_path, "r", errors="replace") as f:
+    with open(logs_path, errors="replace") as f:
         logs = f.read()
 
     fixers = [
