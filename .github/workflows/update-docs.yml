@@ -9,13 +9,15 @@ name: "Update Translated Docs"
 # 2. When you add a new page to the left-hand menu, **make sure to manually update mkdocs.yml** to include the new item.
 # 3. If you switch to a different LLM (for example, from o3 to a newer model), be sure to conduct thorough testing before making the switch.
 
-on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'docs/**'
-      - mkdocs.yml
+# DISABLED: Disabled due to OpenAI 429 insufficient_quota error (billing issue, not code defect).
+# Re-enable once OpenAI account has credits again.
+# on:
+#   push:
+#     branches:
+#       - main
+#     paths:
+#       - 'docs/**'
+#       - mkdocs.yml
 
 permissions:
   contents: write
