@@ -123,7 +123,8 @@ def load_bus(repo_root: Path) -> dict[str, Any]:
     bus_path = repo_root / "ci-fix-bot" / "agent_bus.json"
     if bus_path.exists():
         with open(bus_path) as f:
-            return json.load(f)
+            data: dict[str, Any] = json.load(f)
+            return data
     return {
         "messages": [],
         "agent_status": {},
@@ -293,10 +294,11 @@ def create_agent_issue(
             "labels": labels,
         }),
     ]
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    result = subprocess.run(cmd, capture_output=True, text=True, check=False)
     try:
-        response = json.loads(result.stdout)
-        return response.get("number")
+        response: dict[str, Any] = json.loads(result.stdout)
+        num: int | None = response.get("number")
+        return num
     except (json.JSONDecodeError, KeyError):
         return None
 
@@ -318,10 +320,11 @@ def close_agent_issue(
             "state_reason": "completed" if resolution == "resolved" else "not_planned",
         }),
     ]
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    result = subprocess.run(cmd, capture_output=True, text=True, check=False)
     try:
-        response = json.loads(result.stdout)
-        return response.get("state") == "closed"
+        response: dict[str, Any] = json.loads(result.stdout)
+        state: str | None = response.get("state")
+        return state == "closed"
     except (json.JSONDecodeError, KeyError):
         return False
 

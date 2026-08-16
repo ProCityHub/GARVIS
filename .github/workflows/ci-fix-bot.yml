@@ -49,7 +49,7 @@ jobs:
           script: |
             const run = context.payload.workflow_run;
             core.exportVariable('FAILED_WORKFLOW', run.name);
-            core.exportVariable('FAILED_RUN_ID', run.id);
+            core.exportVariable('FAILED_RUN_ID', String(run.id));
             core.exportVariable('FAILED_HEAD_SHA', run.head_sha);
             core.exportVariable('FAILED_EVENT', run.event);
             core.exportVariable('FAILED_HTML_URL', run.html_url);
@@ -57,45 +57,58 @@ jobs:
             core.info(`Failure in ${run.name} on ${run.head_branch} (${run.head_sha.slice(0,12)})`);
 
       - name: Download failure logs
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const runId = context.payload.workflow_run.id;
-            const fs = require('fs');
-            const https = require('https');
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Use curl to download the logs — the GitHub JS https.get approach
+          # fails with ECONNREFUSED on the redirect URL in the runner environment.
+          # curl handles redirects (-L) and auth headers correctly.
+          RUN_ID="${FAILED_RUN_ID}"
+          API_URL="https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}/logs"
 
-            const result = await github.rest.actions.downloadWorkflowRunLogs({
-              ...context.repo,
-              run_id: runId
-            });
+          echo "Downloading logs from: $API_URL"
 
-            await new Promise((resolve, reject) => {
-              const file = fs.createWriteStream('/tmp/failure-logs.zip');
-              const get = (url) => {
-                https.get(url, (res) => {
-                  if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-                    get(res.headers.location);
-                    return;
-                  }
-                  res.pipe(file);
-                  file.on('finish', () => { file.close(); resolve(); });
-                }).on('error', reject);
-              };
-              get(result.data.url);
-            });
+          HTTP_CODE=$(curl -sL \
+            -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            -o /tmp/failure-logs.zip \
+            -w "%{http_code}" \
+            "$API_URL")
 
-            core.info('Downloaded failure logs');
+          echo "HTTP response code: $HTTP_CODE"
+
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "Failed to download logs (HTTP $HTTP_CODE)"
+            echo "Creating empty log file as fallback"
+            echo "Unable to download CI failure logs (HTTP $HTTP_CODE)" > /tmp/all-logs.txt
+            # Still record the failure with minimal info
+            echo "## CI Failure in ${FAILED_WORKFLOW}" >> /tmp/all-logs.txt
+            echo "Run: ${FAILED_HTML_URL}" >> /tmp/all-logs.txt
+            echo "Commit: ${FAILED_HEAD_SHA}" >> /tmp/all-logs.txt
+          else
+            echo "Downloaded failure logs successfully"
+            ls -la /tmp/failure-logs.zip
+          fi
 
       - name: Extract logs
+        if: success()
         run: |
-          mkdir -p /tmp/failure-logs
-          python3 -c "
-          import zipfile
-          with zipfile.ZipFile('/tmp/failure-logs.zip', 'r') as z:
-              z.extractall('/tmp/failure-logs/')
-          "
-          find /tmp/failure-logs -name '*.txt' -exec cat {} \; > /tmp/all-logs.txt 2>/dev/null
-          echo "Log lines: $(wc -l < /tmp/all-logs.txt)"
+          if [ -f /tmp/failure-logs.zip ] && [ -s /tmp/failure-logs.zip ]; then
+            mkdir -p /tmp/failure-logs
+            python3 -c "
+            import zipfile
+            try:
+                with zipfile.ZipFile('/tmp/failure-logs.zip', 'r') as z:
+                    z.extractall('/tmp/failure-logs/')
+            except zipfile.BadZipFile:
+                print('Not a valid zip file — using fallback')
+            "
+            find /tmp/failure-logs -name '*.txt' -exec cat {} \; > /tmp/all-logs.txt 2>/dev/null || true
+            echo "Log lines: $(wc -l < /tmp/all-logs.txt 2>/dev/null || echo 0)"
+          else
+            echo "No zip file available — using fallback logs"
+            echo "Unable to extract CI failure logs" > /tmp/all-logs.txt
+          fi
 
       - name: Record failure in Pattern Registry
         uses: actions/github-script@v7
@@ -118,6 +131,9 @@ jobs:
             } catch (e) {
               core.warning(`Could not record pattern: ${e.message}`);
               core.exportVariable('PATTERN_IS_NEW', 'false');
+              core.exportVariable('PATTERN_FINGERPRINT', 'unknown');
+              core.exportVariable('PATTERN_SIGNATURE', 'Unable to download failure logs');
+              core.exportVariable('PATTERN_COUNT', '1');
             }
 
       - name: Run fix engine
@@ -169,26 +185,18 @@ jobs:
             const sha = process.env.FAILED_HEAD_SHA;
             const fixed = '${{ steps.fix.outputs.fixed }}' === 'true';
 
-            // Read the fix result to get the pattern name
             let patternName = 'unknown';
-            let fixDescription = '';
             if (fs.existsSync('/tmp/fix-result.json')) {
               try {
                 const result = JSON.parse(fs.readFileSync('/tmp/fix-result.json', 'utf8'));
                 const fixedR = result.results.find(r => r.fixed);
-                if (fixedR) {
-                  patternName = fixedR.pattern;
-                  fixDescription = fixedR.description;
-                }
+                if (fixedR) patternName = fixedR.pattern;
               } catch (e) {}
             }
 
             // Post status to agent bus
             try {
               const status = fixed ? `FIXED (${patternName})` : `UNFIXABLE`;
-              const findings = [`${workflow} failed: ${signature}`];
-              if (fixed) findings.push(`Auto-fixed with pattern: ${patternName}`);
-
               execSync(
                 `python3 ci-fix-bot/agent_bus.py status ci-fix-bot "${status}" --repo . --finding "${signature}"`,
                 { encoding: 'utf-8' }
@@ -198,13 +206,12 @@ jobs:
               core.warning(`Could not post agent status: ${e.message}`);
             }
 
-            // Post a message to relevant agents
+            // Post messages to relevant agents
             if (fixed) {
-              // Notify code-quality-agent that we fixed a lint/type issue
               if (patternName.includes('type_ignore') || patternName.includes('mypy') || patternName.includes('lint')) {
                 try {
                   execSync(
-                    `python3 ci-fix-bot/agent_bus.py post ci-fix-bot code-quality-agent FINDING "Auto-fixed ${patternName}" "CI Fix Bot auto-fixed a ${patternName} issue in ${workflow}. Pattern: ${fingerprint}. This may indicate a systemic code quality issue — please review whether the root cause needs addressing." --repo .`,
+                    `python3 ci-fix-bot/agent_bus.py post ci-fix-bot code-quality-agent FINDING "Auto-fixed ${patternName}" "CI Fix Bot auto-fixed a ${patternName} issue in ${workflow}. Pattern: ${fingerprint}." --repo .`,
                     { encoding: 'utf-8' }
                   );
                   core.info('Notified code-quality-agent of fix');
@@ -213,10 +220,9 @@ jobs:
                 }
               }
             } else {
-              // Broadcast to all agents — we need help diagnosing this
               try {
                 execSync(
-                  `python3 ci-fix-bot/agent_bus.py post ci-fix-bot all ALERT "Unfixable CI failure: ${signature}" "${workflow} failed on ${sha.slice(0,12)} and the CI Fix Bot could not auto-fix it. Pattern: ${fingerprint} (seen ${patternCount}x). Any agent with relevant knowledge, please respond." --repo .`,
+                  `python3 ci-fix-bot/agent_bus.py post ci-fix-bot all ALERT "Unfixable CI failure: ${signature}" "${workflow} failed on ${sha.slice(0,12)}. Pattern: ${fingerprint} (seen ${patternCount}x)." --repo .`,
                   { encoding: 'utf-8' }
                 );
                 core.info('Broadcast alert to all agents');
@@ -264,11 +270,6 @@ jobs:
             Failed workflow: ${workflow}
             Failed commit: ${sha}
 
-            Fixes applied:
-            ${fixDescriptions.join('\\n\\n')}
-
-            Notified via Agent Bus: code-quality-agent
-            ---
             Auto-applied by GARVIS CI Fix Bot."`);
 
               execSync(`git push origin ${branch}`);
@@ -295,14 +296,8 @@ jobs:
                   ``,
                   Array.from(changedFiles).map(f => `- \`${f}\``).join('\n'),
                   ``,
-                  `### Agent Communication`,
-                  ``,
-                  `The following agents were notified via the Agent Bus:`,
-                  `- **code-quality-agent** — notified of ${fingerprint} pattern`,
-                  ``,
                   `---`,
                   `_Auto-applied by **GARVIS CI Fix Bot**._`,
-                  `_Pattern lifecycle: DETECTED → DIAGNOSED → REVIEWED → TESTED → PROMOTED_`,
                 ].join('\n'),
                 labels: ['ci-fix-bot', 'auto-fix'],
               });
@@ -388,7 +383,7 @@ jobs:
               ``,
               `Status: **DETECTED**`,
               ``,
-              `1. **DIAGNOSED** — Identify root cause and write a fix (comment below)`,
+              `1. **DIAGNOSED** — Identify root cause and write a fix`,
               `2. **REVIEWED** — Human reviews and approves the fix`,
               `3. **TESTED** — Add a regression test`,
               `4. **PROMOTED** — Fix added to \`fix_engine.py\``,
@@ -396,12 +391,9 @@ jobs:
               `### Agent Communication`,
               ``,
               `**Agent Bus Alert** broadcast to all agents.`,
-              `If your agent has knowledge of this failure pattern, respond`,
-              `via the Agent Bus with a FINDING or RESPONSE message.`,
               ``,
               `---`,
               `_Auto-created by **GARVIS CI Fix Bot**._`,
-              `_It does not think. It pattern-matches._`,
             ].join('\n');
 
             await github.rest.issues.create({

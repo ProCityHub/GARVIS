@@ -125,7 +125,8 @@ def load_registry(repo_root: Path) -> dict[str, Any]:
     registry_path = repo_root / 'ci-fix-bot' / 'pattern_registry.json'
     if registry_path.exists():
         with open(registry_path) as f:
-            return json.load(f)
+            data: dict[str, Any] = json.load(f)
+            return data
     return {'patterns': {}, 'version': 1, 'total_detected': 0}
 
 
