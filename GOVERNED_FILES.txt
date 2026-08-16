@@ -30,5 +30,10 @@ src/garvis/github_maintenance.py
 # Evidence integrity
 src/garvis/upgrade_research.py
 
+# Preregistration and retraction ledger
+PREREGISTRATION.md
+RETRACTIONS.md
+FROZEN_FILES.txt
+
 # The guard itself, and everything that runs it
 .github/

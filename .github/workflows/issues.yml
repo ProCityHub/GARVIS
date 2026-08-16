@@ -37,5 +37,5 @@ jobs:
           python3 ci-fix-bot/brain_gate.py observe \
             --agent issues \
             --label "issue-${{ github.event.issue.number }}" \
-            --observed 1.0 || true
+            --observed "${{ (job.status == 'success' && 1.0) || 0.0 }}" || true
           python3 ci-fix-bot/brain_gate.py falsify --agent issues || true

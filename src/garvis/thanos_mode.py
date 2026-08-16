@@ -143,6 +143,11 @@ PROTECTED_PATHS = (
     "src/garvis/stage_gate_store.py",
     "src/garvis/github_maintenance.py",
     "src/garvis/upgrade_cycle.py",
+    "src/garvis/upgrade_research.py",
+    "FROZEN_FILES.txt",
+    "GOVERNED_FILES.txt",
+    "RETRACTIONS.md",
+    "PREREGISTRATION.md",
 )
 
 

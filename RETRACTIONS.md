@@ -34,6 +34,34 @@ These are never mixed. `.github/scripts/guard_check.py` enforces this in CI.
 
 ## Inherited organization-wide retractions
 
+### R-001  V16 instrument-validity gate cannot fail
+- **Status:** RETRACTED
+- **Origin:** ProCityHub/hypercubeheartbeat (repo deleted), applies organization-wide
+- **Retracted claim:** The V16 instrument-validity gate measures whether
+  the lattice model is correct.
+- **Why it was wrong:** The gate hard-coded `--observed 1.0 || true`,
+  making it structurally incapable of registering a negative result.
+  An instrument that cannot fail is not measuring.
+- **Superseded by:** Brain gate with `--observed` bound to `job.status`
+  (2026-08-16 audit fix)
+- **Enforcement:** All 8 GARVIS workflows and 11 procityhub workflows now
+  derive `--observed` from `job.status`. The hardcoded pattern is checked
+  in CI.
+
+### R-002  hypercubeheartbeat public replication claim
+- **Status:** RETRACTED
+- **Origin:** ProCityHub/hypercubeheartbeat (repo deleted), applies organization-wide
+- **Retracted claim:** Results published in hypercubeheartbeat are
+  independently replicable from public artifacts.
+- **Why it was wrong:** The repository was deleted, along with AGI and
+  THUNDERBIRD. All public artifacts, PREREGISTRATION.md, and CITATION.cff
+  hosted there are no longer reachable.
+- **Superseded by:** PREREGISTRATION.md restored to GARVIS repo (P-004).
+  Surviving evidence for P-001 preserved in
+  `research/quantum/prime_oab/evidence/ibm_fez_history.json`.
+- **Enforcement:** FROZEN_FILES.txt now records the evidence artifact.
+  Governance files are protected by CODEOWNERS and PROTECTED_PATHS.
+
 ### R-003  Scalar Lattice Law formula
 - **Status:** RETRACTED
 - **Origin:** ProCityHub/hypercubeheartbeat, applies organization-wide

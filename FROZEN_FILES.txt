@@ -11,5 +11,14 @@
 # Read from the base branch. Editing this ledger in a pull request does not
 # unfreeze anything in that pull request.
 
-# (no frozen artifacts recorded yet -- add preregistrations and run
-#  outcomes here as they are produced)
+# Preregistered evidence artifacts — these are results, not configuration.
+# They are appended-only. A frozen artifact is superseded by a new record
+# and a RETRACTIONS.md entry, never rewritten.
+
+# IBM Quantum job archive — prime OAB double-slit discriminator
+# Jobs run on ibm_fez (156-qubit Heron r2), 2026-07-XX
+# Contains real IBM job IDs, shot counts, entropy figures, marginal probabilities.
+# Status: NOT_SUPPORTED (discriminator did not favor V_phi over V_QM on
+# asymmetric-path data). See PREREGISTRATION.md for the protocol and
+# RETRACTIONS.md for the outcome record.
+research/quantum/prime_oab/evidence/ibm_fez_history.json
