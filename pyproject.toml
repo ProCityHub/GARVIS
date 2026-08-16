@@ -129,6 +129,10 @@ strict = true
 disallow_incomplete_defs = false
 disallow_untyped_defs = false
 disallow_untyped_calls = false
+exclude = [
+    "ci-fix-bot/",
+    "genesis-x/",
+]
 
 [[tool.mypy.overrides]]
 module = "sounddevice.*"
