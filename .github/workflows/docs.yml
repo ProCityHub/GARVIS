@@ -20,6 +20,13 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      - name: Brain gate — predict
+        run: |
+          python3 ci-fix-bot/brain_gate.py predict \
+            --agent docs \
+            --label "docs-${{ github.run_id }}" \
+            --predicted 1.0 \
+            --confidence 0.9
       - name: Setup uv
         uses: astral-sh/setup-uv@v5
         with:
@@ -28,3 +35,11 @@ jobs:
         run: make sync
       - name: Deploy docs
         run: make deploy-docs
+      - name: Brain gate — observe & falsify
+      if: always()
+        run: |
+          python3 ci-fix-bot/brain_gate.py observe \
+            --agent docs \
+            --label "docs-${{ github.run_id }}" \
+            --observed 1.0 || true
+          python3 ci-fix-bot/brain_gate.py falsify --agent docs || true

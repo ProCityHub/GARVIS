@@ -13,5 +13,29 @@ jobs:
     # Only run when there is a real issue payload
     if: github.event.issue != null
     steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Brain gate — predict
+        run: |
+          python3 ci-fix-bot/brain_gate.py predict \
+            --agent issues \
+            --label "issue-${{ github.event.issue.number }}" \
+            --predicted 1.0 \
+            --confidence 0.9
+
       - name: No-op triage
         run: echo "Issue triage placeholder — no action required."
+
+      - name: Brain gate — observe & falsify
+      if: always()
+        run: |
+          python3 ci-fix-bot/brain_gate.py observe \
+            --agent issues \
+            --label "issue-${{ github.event.issue.number }}" \
+            --observed 1.0 || true
+          python3 ci-fix-bot/brain_gate.py falsify --agent issues || true

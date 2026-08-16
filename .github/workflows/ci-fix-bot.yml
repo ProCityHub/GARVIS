@@ -43,6 +43,13 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Brain gate — predict
+        run: |
+          python3 ci-fix-bot/brain_gate.py predict \
+            --agent ci-fix-bot \
+            --label "diagnose-${{ github.event.workflow_run.id }}" \
+            --predicted 1.0 \
+            --confidence 0.8
       - name: Capture failure metadata
         uses: actions/github-script@v7
         with:
@@ -372,3 +379,16 @@ jobs:
             });
 
             core.info('Created issue for unfixable failure');
+      - name: Brain gate — observe & falsify
+      if: always()
+        run: |
+          if [ "${{ steps.fix.outputs.fixed }}" = "true" ]; then
+          OBSERVED=1.0
+          else
+          OBSERVED=0.0
+          fi
+          python3 ci-fix-bot/brain_gate.py observe \
+            --agent ci-fix-bot \
+            --label "diagnose-${{ github.event.workflow_run.id }}" \
+            --observed $OBSERVED || true
+          python3 ci-fix-bot/brain_gate.py falsify --agent ci-fix-bot || true

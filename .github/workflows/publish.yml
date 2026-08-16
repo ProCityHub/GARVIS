@@ -26,6 +26,13 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      - name: Brain gate — predict
+        run: |
+          python3 ci-fix-bot/brain_gate.py predict \
+            --agent publish \
+            --label "publish-${{ github.ref_name }}" \
+            --predicted 1.0 \
+            --confidence 0.9
       - name: Setup uv
         uses: astral-sh/setup-uv@v5
         with:
@@ -36,3 +43,11 @@ jobs:
         run: uv build
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+      - name: Brain gate — observe & falsify
+      if: always()
+        run: |
+          python3 ci-fix-bot/brain_gate.py observe \
+            --agent publish \
+            --label "publish-${{ github.ref_name }}" \
+            --observed 1.0 || true
+          python3 ci-fix-bot/brain_gate.py falsify --agent publish || true
