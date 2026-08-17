@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you reference the original ProCityHub/GARVIS project, cite Adrien D. Thomas."
+title: "GARVIS"
+type: software
+authors:
+  - family-names: "Thomas"
+    given-names: "Adrien D."
+    affiliation: "ProCityHub"
+repository-code: "https://github.com/ProCityHub/GARVIS"
+license: MIT
+abstract: "GARVIS is the ProCityHub governed intelligence architecture and research project created and conceptually architected by Adrien D. Thomas."
+keywords:
+  - GARVIS
+  - ProCityHub
+  - Genesis X
+  - Observer Actor Bridge
+  - Hypercube
