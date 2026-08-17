@@ -21,6 +21,8 @@ Python 3.9 compatible.
 
 from __future__ import annotations
 
+from typing import Callable
+
 import ast
 import asyncio
 import json
@@ -36,6 +38,8 @@ from typing import Any, Mapping, Optional, Protocol, Sequence, Tuple
 from garvis.assistant import GarvisAssistant
 from garvis.hypercube_snapshot import validate_hypercube_snapshot
 from garvis.internet_research import InternetResearchClient, ResearchReport
+from garvis.core_memory import ensure_core_memories
+from garvis.memory_lifecycle import MemoryStore
 from garvis.upgrade_research import (
     EvidenceLedger,
     ResearchEvidence,
@@ -368,7 +372,7 @@ def _source_context(report: ResearchReport, evidence: Sequence[ResearchEvidence]
     return "\n".join(parts)
 
 
-def _packet_prompt(query: str, repository_context: str, source_context: str) -> str:
+def _packet_prompt(query: str, repository_context: str, source_context: str, memory_context: str) -> str:
     return f"""
 You are GARVIS, created and owned by Adrien D. Thomas.
 
@@ -377,6 +381,14 @@ Research objective:
 
 Repository state:
 {repository_context}
+
+ADVISORY RESEARCH MEMORY — NOT SOURCE EVIDENCE:
+{memory_context}
+
+BOUNDARY:
+Recalled memory may inform reasoning and foreground review.
+It must not be counted as a retrieved source, evidence-ledger record,
+verified empirical result, execution authorization, or truth guarantee.
 
 {source_context}
 
@@ -433,6 +445,31 @@ def _atomic_write(path: Path, payload: Mapping[str, Any]) -> None:
         raise
 
 
+def _mandatory_research_memory_context(
+    query: str,
+) -> str:
+    """Load mandatory advisory memory before network research."""
+
+    try:
+        with MemoryStore.from_environment() as store:
+            ensure_core_memories(store)
+            context = store.render_research_context(
+                query,
+                session_id="research-hypercube",
+            )
+    except Exception as exc:
+        raise BridgeError(
+            "mandatory research memory unavailable"
+        ) from exc
+
+    if not context.strip():
+        raise BridgeError(
+            "mandatory research memory returned empty context"
+        )
+
+    return context
+
+
 class HypercubeResearchBridge:
     """Run one internet-research, GARVIS-reasoning, Hypercube-verification cycle."""
 
@@ -444,11 +481,18 @@ class HypercubeResearchBridge:
         ledger_path: Path,
         research_client: Optional[ResearchClient] = None,
         assistant: Optional[ReasoningAssistant] = None,
+        memory_context_provider: Optional[
+            Callable[[str], str]
+        ] = None,
     ) -> None:
         self.repository_root = repository_root
         self.model = model
         self.ledger = EvidenceLedger(ledger_path)
         self.research_client = research_client or InternetResearchClient()
+        self.memory_context_provider = (
+            memory_context_provider
+            or _mandatory_research_memory_context
+        )
         self.assistant = assistant or GarvisAssistant(
             model=model,
             persist_memory=False,
@@ -460,6 +504,20 @@ class HypercubeResearchBridge:
         if not clean_query:
             raise BridgeError("research query must not be empty")
 
+        try:
+            memory_context = self.memory_context_provider(clean_query)
+        except BridgeError:
+            raise
+        except Exception as exc:
+            raise BridgeError(
+                "mandatory research memory unavailable"
+            ) from exc
+
+        if not memory_context.strip():
+            raise BridgeError(
+                "mandatory research memory returned empty context"
+            )
+
         report = self.research_client.research(clean_query)
         if not report.sources:
             raise BridgeError("internet research returned no sources")
@@ -467,7 +525,12 @@ class HypercubeResearchBridge:
         stored_evidence = _evidence_records(report, ledger=self.ledger)
         repository_context = _repository_context(self.repository_root)
         source_context = _source_context(report, stored_evidence)
-        prompt = _packet_prompt(clean_query, repository_context, source_context)
+        prompt = _packet_prompt(
+            clean_query,
+            repository_context,
+            source_context,
+            memory_context,
+        )
 
         reply = await self.assistant.respond(
             prompt,

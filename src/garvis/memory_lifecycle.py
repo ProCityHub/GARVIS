@@ -67,11 +67,51 @@ def _tokens(text: str) -> set[str]:
     }
 
 
+_RESEARCH_MEMORY_PATTERNS = (
+    re.compile(
+        r"\b(?:search|browse|research|look\s+up|find\s+online|investigate)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(?:latest|today|current|currently|recent|recently|news|weather|"
+        r"forecast|live\s+score|stock\s+price|exchange\s+rate|"
+        r"released?|release\s+changes?)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(?:evidence|peer[- ]reviewed|stud(?:y|ies)|papers?|literature|"
+        r"citations?|empirical|experimental|reproducible|reproduction|"
+        r"benchmark|dataset)\b",
+        re.IGNORECASE,
+    ),
+)
+
+def research_memory_required(message: str) -> bool:
+    """High-recall classifier for advisory research-memory consultation.
+
+    This classifier does not grant network access, execution authority,
+    evidence status, or approval. It decides only whether canonical memory
+    must be consulted before research-like reasoning.
+    """
+
+    clean = " ".join(message.strip().split())
+
+    if not clean:
+        return False
+
+    return any(
+        pattern.search(clean)
+        for pattern in _RESEARCH_MEMORY_PATTERNS
+    )
+
+
 class MemoryKind(str, Enum):
     WORKING = "working"
     EPISODIC = "episodic"
     SEMANTIC = "semantic"
     PROCEDURAL = "procedural"
+    PROSPECTIVE = "prospective"
+    SIMULATION = "simulation"
     CORE = "core"
     TRACE = "trace"
 
@@ -114,6 +154,8 @@ class MemoryPolicy:
             MemoryKind.EPISODIC: self.episodic_half_life_hours,
             MemoryKind.SEMANTIC: self.semantic_half_life_hours,
             MemoryKind.PROCEDURAL: self.procedural_half_life_hours,
+            MemoryKind.PROSPECTIVE: self.procedural_half_life_hours,
+            MemoryKind.SIMULATION: self.working_half_life_hours,
             MemoryKind.CORE: self.core_half_life_hours,
             MemoryKind.TRACE: self.core_half_life_hours,
         }[kind]
@@ -155,6 +197,18 @@ class RecallResult:
     relevance: float
     retention: float
     score: float
+
+
+@dataclass(frozen=True)
+class MemoryControlSignal:
+    cue: str
+    procedural_candidates: tuple[RecallResult, ...]
+    prospective_triggers: tuple[RecallResult, ...]
+    contradiction_observed: bool
+    foreground_required: bool
+    execution_authority: bool
+    silent_consolidation_allowed: bool
+    reason: str
 
 
 @dataclass(frozen=True)
@@ -353,6 +407,19 @@ class MemoryStore:
         clean = _clean(content)
         if not clean:
             raise ValueError("memory content must not be empty")
+
+        if (
+            kind is MemoryKind.SIMULATION
+            and evidence_status
+            not in (
+                EvidenceStatus.PROVISIONAL,
+                EvidenceStatus.MODEL_GENERATED,
+            )
+        ):
+            raise ValueError(
+                "simulation memory cannot be classified as verified or "
+                "evidence-supported reality"
+            )
         if not session_id.strip():
             raise ValueError("session_id must not be empty")
         now = _now()
@@ -518,6 +585,277 @@ class MemoryStore:
             self._render(result)
             for result in self.recall(query, session_id=session_id)
         )
+
+    def recall_kind(
+        self,
+        query: str,
+        kind: MemoryKind,
+        *,
+        session_id: str = "default",
+        record_retrieval: bool = True,
+    ) -> tuple[RecallResult, ...]:
+        clean_query = _clean(query)
+        if not clean_query:
+            return ()
+
+        rows = self.connection.execute(
+            """
+            SELECT * FROM memories
+            WHERE session_id IN (?, 'global')
+              AND kind = ?
+              AND state IN (?, ?, ?)
+              AND content <> ''
+            """,
+            (
+                session_id,
+                kind.value,
+                MemoryState.ACTIVE.value,
+                MemoryState.CONSOLIDATED.value,
+                MemoryState.LATENT.value,
+            ),
+        ).fetchall()
+
+        results: list[RecallResult] = []
+
+        for row in rows:
+            memory = self._row(row)
+            relevance = lexical_relevance(clean_query, memory)
+            if relevance <= 0.0:
+                continue
+
+            retention = retention_score(
+                memory,
+                policy=self.policy,
+            )
+
+            evidence_bonus = {
+                EvidenceStatus.VERIFIED: 0.12,
+                EvidenceStatus.EVIDENCE_SUPPORTED: 0.08,
+                EvidenceStatus.USER_SUPPLIED: 0.03,
+                EvidenceStatus.PROVISIONAL: 0.0,
+                EvidenceStatus.MODEL_GENERATED: -0.05,
+            }[memory.evidence_status]
+
+            score = _clamp(
+                0.60 * relevance
+                + 0.35 * retention
+                + evidence_bonus
+                + 0.05 * memory.salience
+            )
+
+            if score >= 0.10:
+                results.append(
+                    RecallResult(
+                        memory=memory,
+                        relevance=relevance,
+                        retention=retention,
+                        score=score,
+                    )
+                )
+
+        results.sort(
+            key=lambda item: (-item.score, item.memory.id)
+        )
+
+        selected: list[RecallResult] = []
+        used = 0
+
+        for result in results:
+            rendered = self._render(result)
+            if used + len(rendered) + 1 > self.policy.prompt_budget_chars:
+                continue
+
+            selected.append(result)
+            used += len(rendered) + 1
+
+            if len(selected) >= self.policy.max_recall_items:
+                break
+
+        if record_retrieval and selected:
+            ids = [item.memory.id for item in selected]
+            placeholders = ",".join("?" for _ in ids)
+            self.connection.execute(
+                f"""
+                UPDATE memories
+                SET retrieval_count = retrieval_count + 1,
+                    updated_at = ?
+                WHERE id IN ({placeholders})
+                """,
+                (_iso(_now()), *ids),
+            )
+            self.connection.commit()
+
+        return tuple(selected)
+
+    def automatic_memory_control(
+        self,
+        cue: str,
+        *,
+        session_id: str = "default",
+        contradiction_observed: bool = False,
+    ) -> MemoryControlSignal:
+        """Evaluate automatic recall without granting action authority.
+
+        Procedural memory may become available in the background without
+        requiring foreground interruption.
+
+        A matching prospective intention or an externally observed
+        contradiction requires foreground re-engagement.
+
+        Automatic recall does not increment retrieval counts, consolidate
+        memory, execute actions, or silently rewrite remembered content.
+        """
+
+        procedural = self.recall_kind(
+            cue,
+            MemoryKind.PROCEDURAL,
+            session_id=session_id,
+            record_retrieval=False,
+        )
+
+        prospective = self.recall_kind(
+            cue,
+            MemoryKind.PROSPECTIVE,
+            session_id=session_id,
+            record_retrieval=False,
+        )
+
+        foreground_required = (
+            contradiction_observed or bool(prospective)
+        )
+
+        if contradiction_observed and prospective:
+            reason = "contradiction_and_prospective_cue"
+        elif contradiction_observed:
+            reason = "contradiction"
+        elif prospective:
+            reason = "prospective_cue"
+        elif procedural:
+            reason = "procedural_candidate_available"
+        else:
+            reason = "no_matching_memory"
+
+        return MemoryControlSignal(
+            cue=_clean(cue),
+            procedural_candidates=procedural,
+            prospective_triggers=prospective,
+            contradiction_observed=contradiction_observed,
+            foreground_required=foreground_required,
+            execution_authority=False,
+            silent_consolidation_allowed=False,
+            reason=reason,
+        )
+
+    def recall_for_research(
+        self,
+        query: str,
+        *,
+        session_id: str = "default",
+        record_retrieval: bool = True,
+    ) -> tuple[RecallResult, ...]:
+        """Recall memory for research with protected core memory first.
+
+        Research always consults memory. Protected core memory is surfaced
+        before ordinary relevance-ranked recall so provenance and durable
+        boundaries remain visible even when the current query uses different
+        vocabulary.
+
+        Memory remains context only. Recall does not grant execution,
+        authorization, merge, deployment, or truth status.
+        """
+
+        ordinary = list(
+            self.recall(
+                query,
+                session_id=session_id,
+                record_retrieval=record_retrieval,
+            )
+        )
+        ordinary_ids = {result.memory.id for result in ordinary}
+
+        rows = self.connection.execute(
+            """
+            SELECT * FROM memories
+            WHERE session_id IN (?, 'global')
+              AND kind = ?
+              AND protected = 1
+              AND state IN (?, ?, ?)
+              AND content <> ''
+            ORDER BY id
+            """,
+            (
+                session_id,
+                MemoryKind.CORE.value,
+                MemoryState.ACTIVE.value,
+                MemoryState.CONSOLIDATED.value,
+                MemoryState.LATENT.value,
+            ),
+        ).fetchall()
+
+        protected_core: list[RecallResult] = []
+        for row in rows:
+            memory = self._row(row)
+            if memory.id in ordinary_ids:
+                continue
+            protected_core.append(
+                RecallResult(
+                    memory=memory,
+                    relevance=0.0,
+                    retention=retention_score(
+                        memory,
+                        policy=self.policy,
+                    ),
+                    score=1.0,
+                )
+            )
+
+        candidates = protected_core + ordinary
+        selected: list[RecallResult] = []
+        used = 0
+
+        for result in candidates:
+            rendered = self._render(result)
+            if used + len(rendered) + 1 > self.policy.prompt_budget_chars:
+                continue
+            selected.append(result)
+            used += len(rendered) + 1
+            if len(selected) >= self.policy.max_recall_items:
+                break
+
+        return tuple(selected)
+
+    def render_research_context(
+        self,
+        query: str,
+        *,
+        session_id: str = "default",
+    ) -> str:
+        """Render mandatory memory context for research."""
+
+        recalled = self.recall_for_research(
+            query,
+            session_id=session_id,
+            record_retrieval=False,
+        )
+
+        lines = [
+            (
+                "[research-memory-control "
+                "consulted=true "
+                "prominence=required "
+                "execution_authority=false "
+                "simulation_is_evidence=false]"
+            )
+        ]
+
+        if recalled:
+            lines.extend(self._render(result) for result in recalled)
+        else:
+            lines.append(
+                "[research-memory] no protected or relevant memory available"
+            )
+
+        return "\n".join(lines)
 
     def maintain(
         self,
