@@ -232,8 +232,50 @@ class BrainAdapter:
             "agi": "NOT_ESTABLISHED",
             "consciousness": "NOT_ESTABLISHED",
             "new_physics": "NOT_ESTABLISHED",
-            "note": "Mathematical consistency and software PASS do not establish physical truth.",
+            "value_authority": "HUMAN_CREATOR_LAW",
+            "theology_status": "VALUE_GUIDANCE_NOT_PHYSICAL_PROOF",
+            "note": "Mathematical consistency and software PASS do not establish physical truth. Faith and identity may guide values and approval; they are not treated as laboratory evidence.",
         }
+
+
+    def _agent_record(self) -> dict[str, Any]:
+        agent_key = self.agent_name
+        if agent_key not in self._ledger["agents"]:
+            self._ledger["agents"][agent_key] = {
+                "observations": [],
+                "pending_predictions": {},
+                "total": 0,
+                "confirmed": 0,
+                "falsified": 0,
+                "indeterminate": 0,
+            }
+        record = self._ledger["agents"][agent_key]
+        record.setdefault("pending_predictions", {})
+        return record
+
+    def _store_pending_prediction(self, pred: "AgentPrediction") -> None:
+        """Freeze prediction to disk before measurement. Memory is not authority."""
+        record = self._agent_record()
+        record["pending_predictions"][pred.label] = {
+            "predicted": pred.predicted,
+            "confidence": pred.confidence,
+            "timestamp": pred.timestamp,
+        }
+        self._save_ledger()
+
+    def _consume_pending_prediction(self, label: str) -> "AgentPrediction | None":
+        record = self._agent_record()
+        pending = record.get("pending_predictions", {}).pop(label, None)
+        if pending is None:
+            return None
+        self._save_ledger()
+        return AgentPrediction(
+            label=label,
+            predicted=float(pending.get("predicted", 0.5)),
+            confidence=float(pending.get("confidence", 0.5)),
+            agent_name=self.agent_name,
+            timestamp=float(pending.get("timestamp", time.time())),
+        )
 
     def predict(self, label: str, predicted: float, confidence: float = 0.9) -> AgentPrediction:
         """Record a prediction before the bot acts."""
@@ -247,6 +289,7 @@ class BrainAdapter:
             agent_name=self.agent_name,
         )
         self.predictions[label] = pred
+        self._store_pending_prediction(pred)
         return pred
 
     def observe(
@@ -260,12 +303,16 @@ class BrainAdapter:
 
         pred = self.predictions.get(label)
         if pred is None:
+            pred = self._consume_pending_prediction(label)
+
+        if pred is None:
             # No prediction recorded — use neutral defaults
             A = 0.5
             O = 0.5
         else:
             A = pred.predicted
             O = pred.confidence
+            self.predictions.pop(label, None)
 
         B = observed
         delta_theta = phase
@@ -480,5 +527,7 @@ def epistemic_boundary() -> dict[str, str]:
         "agi": "NOT_ESTABLISHED",
         "consciousness": "NOT_ESTABLISHED",
         "new_physics": "NOT_ESTABLISHED",
-        "note": "Mathematical consistency and software PASS do not establish physical truth.",
+        "value_authority": "HUMAN_CREATOR_LAW",
+        "theology_status": "VALUE_GUIDANCE_NOT_PHYSICAL_PROOF",
+        "note": "Mathematical consistency and software PASS do not establish physical truth. Faith and identity may guide values and approval; they are not treated as laboratory evidence.",
     }
