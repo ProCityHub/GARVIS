@@ -40,19 +40,22 @@ def test_creation_is_enabled_and_sealed() -> None:
     assert auth.authorization_version == 1
 
 
-def test_merge_is_in_default_allowed_actions() -> None:
-    assert ThanosAction.MERGE in DEFAULT_ALLOWED_ACTIONS
-    assert ThanosAction.MERGE.value in create_authorization().allowed_actions
+def test_merge_is_not_in_default_allowed_actions() -> None:
+    assert ThanosAction.MERGE not in DEFAULT_ALLOWED_ACTIONS
+    assert ThanosAction.MERGE.value not in create_authorization().allowed_actions
+    assert ThanosAction.REQUEST_MERGE in DEFAULT_ALLOWED_ACTIONS
 
 
-def test_active_authorization_permits_merge() -> None:
-    permits(create_authorization(), ThanosAction.MERGE)
+def test_active_authorization_cannot_direct_merge() -> None:
+    with pytest.raises(ThanosScopeError):
+        permits(create_authorization(), ThanosAction.MERGE)
+    permits(create_authorization(), ThanosAction.REQUEST_MERGE)
 
 
-def test_repeated_merge_checks_do_not_consume_authorization() -> None:
+def test_repeated_merge_requests_do_not_consume_authorization() -> None:
     auth = create_authorization()
     for _ in range(50):
-        permits(auth, ThanosAction.MERGE)
+        permits(auth, ThanosAction.REQUEST_MERGE)
     assert auth.is_active is True
 
 
@@ -87,10 +90,11 @@ def test_tampered_authorization_blocks_merge() -> None:
         permits(tampered, ThanosAction.MERGE)
 
 
-def test_status_reports_autonomous_merge_when_green() -> None:
+def test_status_reports_merge_request_boundary() -> None:
     status = render_status(create_authorization())
-    assert "AUTONOMOUS_MERGE_WHEN_GREEN=ENABLED" in status
-    assert "OWNER_MERGE_CHECKPOINTS_PER_CYCLE=0" in status
+    assert "AUTONOMOUS_MERGE_WHEN_GREEN=DISABLED" in status
+    assert "REQUEST_MERGE=ENABLED" in status
+    assert "OWNER_MERGE_CHECKPOINTS_PER_CYCLE=1" in status
 
 
 def test_authorization_is_not_consumed_by_use() -> None:
@@ -333,11 +337,15 @@ def _green(
     )
 
 
-def test_green_ordinary_change_merges_autonomously() -> None:
+def test_green_ordinary_change_becomes_merge_request_candidate() -> None:
     decision = evaluate_merge_gate(create_authorization(), _green())
-    assert decision.allowed is True
-    assert decision.blocking_reasons == ()
-    assert decision.requires_owner_review is False
+    assert decision.allowed is False
+    assert decision.technically_ready is True
+    assert decision.requires_owner_review is True
+    assert any(
+        "exact-SHA owner merge authorization required" in reason
+        for reason in decision.blocking_reasons
+    )
 
 
 def test_moved_head_blocks_merge() -> None:

@@ -128,9 +128,12 @@ class ThanosAction(str, Enum):
     MERGE = "merge"
 
 
-#: The full standing grant. MERGE is included: an active authorization
-#: permits autonomous squash-merge of ordinary GARVIS changes.
-DEFAULT_ALLOWED_ACTIONS = tuple(ThanosAction)
+#: Legacy standing grant retained for compatibility. Direct MERGE is never
+#: standing authority; REQUEST_MERGE may produce a non-mutating request.
+DEFAULT_ALLOWED_ACTIONS = tuple(
+    action for action in ThanosAction
+    if action is not ThanosAction.MERGE
+)
 
 #: Paths whose modification must not be merged by an autonomous cycle.
 #: The authoritative enforcement is GitHub branch protection + CODEOWNERS;
@@ -523,11 +526,12 @@ def render_status(
         f"AUTONOMOUS_PUSH={active}",
         f"AUTONOMOUS_PR={active}",
         f"AUTONOMOUS_CI_REPAIR={active}",
-        f"AUTONOMOUS_MERGE_WHEN_GREEN={active}",
+        "AUTONOMOUS_MERGE_WHEN_GREEN=DISABLED",
+        f"REQUEST_MERGE={active}",
         f"AUTONOMOUS_RESTART={active}",
         f"AUTONOMOUS_ROLLBACK={active}",
         "PER_STAGE_APPROVAL_PROMPTS=0",
-        "OWNER_MERGE_CHECKPOINTS_PER_CYCLE=0",
+        "OWNER_MERGE_CHECKPOINTS_PER_CYCLE=1",
         f"AUTHORIZATION_ID={authorization.authorization_id}",
         f"RECORD_HASH={authorization.record_hash[:16]}",
         f"TARGET_VERSION={target_version}",
@@ -574,10 +578,11 @@ class MergeDecision:
     allowed: bool
     blocking_reasons: tuple[str, ...]
     protected_paths: tuple[str, ...]
+    technically_ready: bool = False
 
     @property
     def requires_owner_review(self) -> bool:
-        return bool(self.protected_paths)
+        return True
 
 
 def evaluate_merge_gate(
@@ -599,7 +604,7 @@ def evaluate_merge_gate(
     try:
         permits(
             authorization,
-            ThanosAction.MERGE,
+            ThanosAction.REQUEST_MERGE,
             repository=preconditions.repository,
             runtime_scope=runtime_scope,
         )
@@ -628,8 +633,13 @@ def evaluate_merge_gate(
             "profile: " + ", ".join(protected)
         )
 
+    technically_ready = not reasons
+    reasons.append(
+        "explicit exact-SHA owner merge authorization required"
+    )
     return MergeDecision(
-        allowed=not reasons,
+        allowed=False,
         blocking_reasons=tuple(reasons),
         protected_paths=protected,
+        technically_ready=technically_ready,
     )

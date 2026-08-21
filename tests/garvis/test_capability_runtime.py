@@ -200,6 +200,7 @@ class _CouncilFailingSupervisor:
 
 class _CouncilPassingReport:
     request_sha256 = "0" * 64
+    approved = True
     consultation_available = True
     council_participation_count = 10
     angel_participation_count = 8

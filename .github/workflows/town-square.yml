@@ -1,36 +1,23 @@
 name: GARVIS Town Square
 
-# The Town Square is where agents communicate.
-# It runs on a schedule and on demand, reading all pending agent messages
-# from the bus and routing them to their targets via GitHub Issues.
-#
-# It also detects cross-agent correlations — when multiple agents report
-# the same issue, it creates a coordination message so they can work together.
-
 on:
   schedule:
-    # Every 30 minutes
     - cron: '*/30 * * * *'
   workflow_dispatch:
-    inputs:
-      agent_id:
-        description: 'Specific agent to check messages for'
-        required: false
-        type: string
 
 jobs:
-  coordinate:
-    name: Route Agent Messages
+  observe:
+    name: Observe Agent Messages
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-      issues: write
-      pull-requests: write
+      contents: read
+      issues: read
+      pull-requests: read
 
     steps:
       - uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -39,62 +26,27 @@ jobs:
 
       - name: Brain gate — predict
         run: |
-          python3 ci-fix-bot/brain_gate.py predict \
-            --agent town-square \
-            --label "town-square-${{ github.run_id }}" \
-            --predicted 1.0 \
-            --confidence 0.9
-      - name: Route pending messages
-        env:
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Route all pending messages via the agent bus
-          python3 ci-fix-bot/agent_bus.py route \
-            --repo . \
-            --github-repo "$GITHUB_REPOSITORY" 2>&1 | tee /tmp/town-square-result.json
+          python3 ci-fix-bot/brain_gate.py predict             --agent town-square             --label "town-square-${{ github.run_id }}"             --predicted 1.0             --confidence 0.9
 
-          # Show the result
-          python3 -c "
-          import json
-          with open('/tmp/town-square-result.json') as f:
-              result = json.load(f)
-          print(f'Messages routed: {result.get(\"routed\", 0)}')
-          print(f'Issues created: {result.get(\"issues_created\", [])}')
-          print(f'Cross-agent correlations: {len(result.get(\"correlations\", []))}')
-          for c in result.get('correlations', []):
-              print(f'  - Pattern {c[\"fingerprint\"]}: {c[\"agents\"]} ({c[\"count\"]} messages)')
-          "
-
-      - name: List all agent messages
+      - name: Observe agent messages
         run: python3 ci-fix-bot/agent_bus.py list --repo .
 
-      - name: Check agent health
+      - name: Observe agent health
         run: |
-          python3 -c "
+          python3 - <<'PYINNER'
           import json
           from pathlib import Path
+          path = Path("ci-fix-bot/agent_bus.json")
+          if not path.exists():
+              print("Agent bus not initialized.")
+              raise SystemExit(0)
+          bus = json.loads(path.read_text())
+          status = bus.get("agent_status", {})
+          print(json.dumps(status, indent=2, sort_keys=True))
+          PYINNER
 
-          bus_path = Path('ci-fix-bot/agent_bus.json')
-          if bus_path.exists():
-              with open(bus_path) as f:
-                  bus = json.load(f)
-
-              status = bus.get('agent_status', {})
-              if not status:
-                  print('No agent status reports yet.')
-              else:
-                  print('\nAgent Health Report:')
-                  for aid, s in status.items():
-                      print(f'  {aid:30s}  {s[\"status\"]:15s}  findings: {len(s.get(\"findings\", []))}')
-          else:
-              print('Agent bus not initialized yet.')
-          "
       - name: Brain gate — observe & falsify
         if: always()
         run: |
-          python3 ci-fix-bot/brain_gate.py observe \
-            --agent town-square \
-            --label "town-square-${{ github.run_id }}" \
-            --observed "${{ (job.status == 'success' && 1.0) || 0.0 }}" || true
+          python3 ci-fix-bot/brain_gate.py observe             --agent town-square             --label "town-square-${{ github.run_id }}"             --observed "${{ (job.status == 'success' && 1.0) || 0.0 }}" || true
           python3 ci-fix-bot/brain_gate.py falsify --agent town-square || true

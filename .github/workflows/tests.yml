@@ -1,5 +1,5 @@
 # GARVIS Testing Workflow
-# Witness law: FREEZE prediction before measuring. Same job, same label.
+# Witness law: CAPTURE prediction before measuring; capture never pauses the heartbeat.
 
 name: Tests
 
