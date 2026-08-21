@@ -25,11 +25,10 @@ from .research_governance import (
     render_governance_status,
     research_verification_contract,
 )
-from .thanos_mode import (
-    ThanosAction,
-    ThanosAuthorizationStore,
-    ThanosError,
-    permits,
+from .creator_authority import (
+    CreatorAction,
+    CreatorAuthority,
+    require_creator_authority,
 )
 from .local_file_access import (
     LocalAccessError,
@@ -68,12 +67,18 @@ class HeartbeatSupervisor(Protocol):
 
 @dataclass(frozen=True)
 class CapabilityRuntimeConfig:
-    network_mode: str = "approval"
+    network_mode: str = "creator"
 
     @classmethod
     def from_environment(cls) -> CapabilityRuntimeConfig:
-        mode = os.getenv("GARVIS_NETWORK_MODE", "approval").strip().casefold()
-        return cls(mode if mode in {"off", "approval", "thanos"} else "approval")
+        mode = os.getenv("GARVIS_NETWORK_MODE", "creator").strip().casefold()
+        if mode == "thanos":
+            mode = "creator"
+        return cls(
+            mode
+            if mode in {"off", "approval", "creator"}
+            else "creator"
+        )
 
 
 # GARVIS_18_BRAIN_AUDIT_SECURITY_REPAIR_V1
@@ -98,7 +103,7 @@ class CapabilityAwareRuntime:
         local_access_store: LocalFileAccessStore | None = None,
         researcher: Researcher | None = None,
         config: CapabilityRuntimeConfig | None = None,
-        thanos_store: ThanosAuthorizationStore | None = None,
+        creator_authority: CreatorAuthority | None = None,
         heartbeat_supervisor: HeartbeatSupervisor | None = None,
         session_id: str = "default",
     ) -> None:
@@ -107,22 +112,9 @@ class CapabilityAwareRuntime:
         self.local_access_store = local_access_store or LocalFileAccessStore()
         self.researcher = researcher or InternetResearchClient()
         self.config = config or CapabilityRuntimeConfig.from_environment()
-        default_thanos_store = Path(
-            os.getenv(
-                "GARVIS_THANOS_STORE",
-                str(
-                    Path.home()
-                    / ".garvis"
-                    / "thanos"
-                    / "authorization.json"
-                ),
-            )
-        ).expanduser()
-        self.thanos_store = (
-            thanos_store
-            or ThanosAuthorizationStore(
-                default_thanos_store
-            )
+        self.creator_authority = (
+            creator_authority
+            or CreatorAuthority()
         )
         self.session_id = session_id
 
@@ -200,21 +192,15 @@ class CapabilityAwareRuntime:
         self.approval_store.close()
         self.local_access_store.close()
 
-    def _thanos_research_authorized(self) -> tuple[bool, str]:
-        """Verify standing THANOS authority before internet research."""
+    def _creator_research_authorized(self) -> tuple[bool, str]:
+        """Verify creator-owned standing authority before internet research."""
 
         try:
-            authorization = self.thanos_store.load()
-
-            if authorization is None:
-                return False, "THANOS standing authorization is absent"
-
-            permits(
-                authorization,
-                ThanosAction.RESEARCH,
+            require_creator_authority(
+                self.creator_authority,
+                CreatorAction.RESEARCH,
             )
-
-        except ThanosError as exc:
+        except PermissionError as exc:
             return False, str(exc)
 
         return True, ""
@@ -470,8 +456,8 @@ class CapabilityAwareRuntime:
         if self.config.network_mode == "off":
             return "Internet research is disabled. No network request was made."
 
-        if self.config.network_mode == "thanos":
-            allowed, reason = self._thanos_research_authorized()
+        if self.config.network_mode == "creator":
+            allowed, reason = self._creator_research_authorized()
 
             if not allowed:
                 self.approval_store.audit(
@@ -506,7 +492,9 @@ class CapabilityAwareRuntime:
                 session_id=self.session_id,
                 request_id=resolution.request.request_id,
                 detail={
-                    "action": ThanosAction.RESEARCH.value
+                    "action": CreatorAction.RESEARCH.value,
+                    "authority_source": "CREATOR_DIRECTIVE",
+                    "creator": "Adrien D. Thomas",
                 },
             )
 
