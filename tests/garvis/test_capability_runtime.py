@@ -5,6 +5,7 @@ from garvis.capability_broker import ApprovalStore, ApprovalStore as _CouncilApp
 from garvis.capability_runtime import (
     CapabilityAwareRuntime,
     CapabilityAwareRuntime as _CouncilRuntime,
+    CapabilityRuntimeConfig,
     CapabilityRuntimeConfig as _CouncilRuntimeConfig,
 )
 from garvis.internet_research import ResearchReport, ResearchSource
@@ -49,6 +50,7 @@ def make_runtime(tmp_path: Path, local: FakeLocal, research: FakeResearcher):
         approval_store=ApprovalStore(tmp_path / "broker.db"),
         local_access_store=LocalFileAccessStore(tmp_path / "local.db"),
         researcher=research,
+        config=CapabilityRuntimeConfig("approval"),
     )
 
 
