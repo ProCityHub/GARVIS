@@ -30,10 +30,10 @@ class CouncilAdvisoryReport:
 
 
 class FullAgentHeartbeatSupervisor:
-    """Default heartbeat supervisor implementation.
+    """Advisory council implementation.
 
-    Always makes the council available and approves unless the request
-    contains an explicit deny pattern.
+    This report is candidate advice only. It is not operational authority,
+    and protected execution must separately honor its approved field.
     """
 
     DENY_PATTERNS = ("rm -rf /", "format c:", "drop table")
@@ -57,7 +57,7 @@ class FullAgentHeartbeatSupervisor:
             council_participation_count=1,
             angel_participation_count=0,
             reasoning=(
-                "auto-approved by stub supervisor"
+                "advisory result: no deny pattern matched"
                 if not denied
                 else "matched deny pattern"
             ),

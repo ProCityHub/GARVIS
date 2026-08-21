@@ -358,27 +358,25 @@ def record_merge_decision(
     *,
     now: str | None = None,
 ) -> UpgradeCycle:
-    """Apply a merge-gate decision to a cycle waiting in MERGING."""
+    """Record merge readiness without performing or standing-authorizing merge."""
 
-    if decision.allowed:
-        return advance(
-            cycle,
-            CycleState.SYNCHRONIZING,
-            authorization,
-            action=ThanosAction.MERGE,
-            note="autonomous squash merge: all preconditions satisfied",
-            now=now,
-        )
+    reasons = list(decision.blocking_reasons)
+    if decision.technically_ready:
+        reasons = [
+            "merge candidate is technically ready; "
+            "explicit exact-SHA owner merge authorization required"
+        ]
+
+    blocker = "; ".join(reasons)
     return advance(
         cycle,
         CycleState.BLOCKED,
         authorization,
-        action=ThanosAction.MONITOR_CI,
-        note="; ".join(decision.blocking_reasons),
+        action=ThanosAction.REQUEST_MERGE,
+        note=blocker,
         now=now,
-        blocker="; ".join(decision.blocking_reasons),
+        blocker=blocker,
     )
-
 
 class CycleStore:
     """Atomic durable persistence for the active and historical cycles."""

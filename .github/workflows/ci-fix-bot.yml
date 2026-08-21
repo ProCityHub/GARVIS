@@ -4,8 +4,8 @@ name: GARVIS CI Fix Bot
 # It:
 # 1. Fingerprints the failure and records it in the Pattern Registry
 # 2. Runs the fix engine against known patterns
-# 3. For fixable patterns: pushes a fix PR and notifies relevant agents
-# 4. For unknown patterns: creates an issue + broadcasts to agents for help
+# 3. For fixable patterns: prepares a repair proposal and preserves evidence
+# 4. For unknown patterns: preserves diagnosis and broadcasts locally to agents
 #
 # Agent communication: uses the Agent Bus to notify other agents of findings.
 # Pattern lifecycle: DETECTED → DIAGNOSED → REVIEWED → TESTED → PROMOTED
@@ -28,9 +28,9 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'failure' }}
     permissions:
       actions: read
-      contents: write
-      issues: write
-      pull-requests: write
+      contents: read
+      issues: read
+      pull-requests: read
 
     steps:
       - uses: actions/checkout@v4
@@ -206,179 +206,29 @@ jobs:
               }
             }
 
-      - name: Create fix PR
+      - name: Preserve proposed repair evidence
         if: steps.fix.outputs.fixed == 'true'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const { execSync } = require('child_process');
-            const result = JSON.parse(fs.readFileSync('/tmp/fix-result.json', 'utf8'));
+        run: |
+          echo "## GARVIS CI proposed repair" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Failed workflow: $FAILED_WORKFLOW" >> "$GITHUB_STEP_SUMMARY"
+          echo "Failed SHA: $FAILED_HEAD_SHA" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo '```text' >> "$GITHUB_STEP_SUMMARY"
+          git diff --stat >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          git diff --check
 
-            if (!result.any_fixed) return;
-
-            const changedFiles = new Set();
-            const fixDescriptions = [];
-            for (const r of result.results) {
-              if (r.fixed) {
-                fixDescriptions.push(`### ${r.pattern}\n\n${r.description}`);
-                (r.files_changed || []).forEach(f => changedFiles.add(f));
-              }
-            }
-
-            if (changedFiles.size === 0) return;
-
-            const workflow = process.env.FAILED_WORKFLOW;
-            const sha = process.env.FAILED_HEAD_SHA;
-            const branch = `ci-fix-bot/${sha.slice(0, 12)}`;
-            const fingerprint = process.env.PATTERN_FINGERPRINT || 'unknown';
-            const patternCount = process.env.PATTERN_COUNT || '1';
-
-            try {
-              execSync(`git config user.name "GARVIS CI Fix Bot"`);
-              execSync(`git config user.email "ci-fix-bot@procityhub.github.io"`);
-              execSync(`git checkout -b ${branch}`);
-              execSync(`git add ${Array.from(changedFiles).join(' ')}`);
-              execSync(`git commit -m "fix(ci): auto-fix ${workflow} failure
-
-            Pattern: ${fingerprint} (seen ${patternCount}x)
-            Failed workflow: ${workflow}
-            Failed commit: ${sha}
-
-            Auto-applied by GARVIS CI Fix Bot."`);
-
-              execSync(`git push origin ${branch}`);
-
-              const pr = await github.rest.pulls.create({
-                ...context.repo,
-                title: `[CI Fix Bot] Auto-fix for ${workflow} (${sha.slice(0, 12)})`,
-                head: branch,
-                base: process.env.FAILED_BRANCH || 'main',
-                body: [
-                  `## Auto-Fix PR`,
-                  ``,
-                  `**Failed workflow:** ${workflow}`,
-                  `**Failed run:** ${process.env.FAILED_HTML_URL}`,
-                  `**Original commit:** \`${sha}\``,
-                  `**Pattern fingerprint:** \`${fingerprint}\``,
-                  `**Pattern seen:** ${patternCount}x`,
-                  ``,
-                  `### Fixes Applied`,
-                  ``,
-                  fixDescriptions.join('\n\n'),
-                  ``,
-                  `### Changed Files`,
-                  ``,
-                  Array.from(changedFiles).map(f => `- \`${f}\``).join('\n'),
-                  ``,
-                  `---`,
-                  `_Auto-applied by **GARVIS CI Fix Bot**._`,
-                ].join('\n'),
-                labels: ['ci-fix-bot', 'auto-fix'],
-              });
-
-              core.info(`Created fix PR #${pr.data.number}`);
-            } catch (e) {
-              core.error(`Failed to create fix PR: ${e.message}`);
-            }
-
-      - name: Create issue for unfixable failures
+      - name: Preserve unfixable diagnosis
         if: steps.fix.outputs.fixed != 'true'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const workflow = process.env.FAILED_WORKFLOW;
-            const sha = process.env.FAILED_HEAD_SHA;
-            const htmlUrl = process.env.FAILED_HTML_URL;
-            const branch = process.env.FAILED_BRANCH;
-            const fingerprint = process.env.PATTERN_FINGERPRINT || 'unknown';
-            const isNew = process.env.PATTERN_IS_NEW === 'true';
-            const patternCount = process.env.PATTERN_COUNT || '1';
-            const signature = process.env.PATTERN_SIGNATURE || 'unknown error';
+        run: |
+          echo "## GARVIS CI diagnosis requires review" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Workflow: $FAILED_WORKFLOW" >> "$GITHUB_STEP_SUMMARY"
+          echo "Failed SHA: $FAILED_HEAD_SHA" >> "$GITHUB_STEP_SUMMARY"
+          echo "Pattern: $PATTERN_FINGERPRINT" >> "$GITHUB_STEP_SUMMARY"
+          echo "No repository mutation was performed." >> "$GITHUB_STEP_SUMMARY"
 
-            let errorLines = [];
-            try {
-              const logs = fs.readFileSync('/tmp/all-logs.txt', 'utf8');
-              errorLines = logs.split('\n').filter(l =>
-                l.includes('error:') || l.includes('Error:') ||
-                l.includes('FAILED') || l.includes('Traceback') ||
-                l.includes('Exception') || l.includes('##[error]')
-              ).slice(0, 25);
-            } catch (e) {}
-
-            const existing = await github.rest.issues.listForRepo({
-              ...context.repo,
-              state: 'open',
-              labels: 'ci-fix-bot'
-            });
-
-            const dup = existing.data.find(i =>
-              i.body && i.body.includes(fingerprint)
-            );
-
-            if (dup) {
-              const newBody = dup.body + `\n\n## New occurrence — ${new Date().toISOString()}\n\n- Workflow: ${workflow}\n- Run: ${htmlUrl}\n- Count: ${patternCount}x\n`;
-              await github.rest.issues.update({
-                ...context.repo,
-                issue_number: dup.number,
-                body: newBody,
-              });
-
-              await github.rest.issues.createComment({
-                ...context.repo,
-                issue_number: dup.number,
-                body: `Recurring failure #${patternCount}: [${workflow}](${htmlUrl}) on \`${sha.slice(0, 12)}\`\n\nPattern: \`${fingerprint}\`\nSignature: ${signature}\n\n**Agent Bus:** Alert broadcast to all agents.`,
-              });
-
-              core.info(`Updated existing issue #${dup.number}`);
-              return;
-            }
-
-            const statusBadge = isNew ? '🆕 NEW PATTERN' : `RECURRING (${patternCount}x)`;
-
-            const body = [
-              `## CI Failure — ${statusBadge}`,
-              ``,
-              `**Pattern fingerprint:** \`${fingerprint}\``,
-              `**Error signature:** ${signature}`,
-              ``,
-              `**Workflow:** ${workflow}`,
-              `**Branch:** ${branch}`,
-              `**Run:** ${htmlUrl}`,
-              `**Commit:** \`${sha}\``,
-              ``,
-              `### Error Excerpt`,
-              ``,
-              '```',
-              errorLines.join('\n') || 'No error lines found',
-              '```',
-              ``,
-              `### Pattern Lifecycle`,
-              ``,
-              `Status: **DETECTED**`,
-              ``,
-              `1. **DIAGNOSED** — Identify root cause and write a fix`,
-              `2. **REVIEWED** — Human reviews and approves the fix`,
-              `3. **TESTED** — Add a regression test`,
-              `4. **PROMOTED** — Fix added to \`fix_engine.py\``,
-              ``,
-              `### Agent Communication`,
-              ``,
-              `**Agent Bus Alert** broadcast to all agents.`,
-              ``,
-              `---`,
-              `_Auto-created by **GARVIS CI Fix Bot**._`,
-            ].join('\n');
-
-            await github.rest.issues.create({
-              ...context.repo,
-              title: `[CI Fix Bot] ${statusBadge}: ${signature.slice(0, 80)}`,
-              body: body,
-              labels: ['ci-failure', 'ci-fix-bot', 'needs-diagnosis', 'agent-bus']
-            });
-
-            core.info('Created issue for unfixable failure');
       - name: Brain gate — observe & falsify
         if: always()
         run: |
