@@ -9,7 +9,15 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 from openai import OpenAI
 from tools.garvis_resilience import SessionLedger, build_context, call_with_retry
 
-from .assistant import GARVIS_INSTRUCTIONS, GarvisReply, assess_request
+from .assistant import (
+    GARVIS_INSTRUCTIONS,
+    GarvisReply,
+    ResearchMemoryProvider,
+    _mandatory_remote_research_memory_context,
+    _remote_research_memory_required,
+    _render_remote_research_memory_instructions,
+    assess_request,
+)
 from .repository_context import ground_message, should_ground_repository
 
 Message = Dict[str, str]
@@ -62,6 +70,9 @@ class ResilientGarvisRuntime:
         ledger: Optional[Any] = None,
         build_messages: BuildContextCallable = build_context,
         call_model: CallModelCallable = call_with_retry,
+        research_memory_provider: Optional[
+            ResearchMemoryProvider
+        ] = None,
     ) -> None:
         clean_session = session_name.strip()
         if not clean_session:
@@ -76,6 +87,10 @@ class ResilientGarvisRuntime:
         self.ledger = ledger or SessionLedger(clean_session)
         self._build_messages = build_messages
         self._call_model = call_model
+        self._research_memory_provider = (
+            research_memory_provider
+            or _mandatory_remote_research_memory_context
+        )
 
     async def respond(
         self,
@@ -97,12 +112,38 @@ class ResilientGarvisRuntime:
         # If the process dies after this line, Adrien's message survives.
         self.ledger.append("user", user_text)
 
+        research_memory = ""
+
+        if _remote_research_memory_required(user_text):
+            try:
+                research_memory = self._research_memory_provider(
+                    user_text,
+                    self.session_name,
+                )
+            except Exception as exc:
+                raise RuntimeError(
+                    "mandatory research memory unavailable"
+                ) from exc
+
+            if not research_memory.strip():
+                raise RuntimeError(
+                    "mandatory research memory returned empty context"
+                )
+
         system_prompt = GARVIS_INSTRUCTIONS
         if system_extension:
             system_prompt = (
                 f"{system_prompt}\n\n"
                 "LOCAL TERMUX CONSTITUTIONAL CONTEXT:\n"
                 f"{system_extension}"
+            )
+
+        if research_memory:
+            system_prompt = (
+                f"{system_prompt}\n\n"
+                + _render_remote_research_memory_instructions(
+                    research_memory
+                )
             )
 
         # Integration point 3: only the bounded recent ledger window is sent.
