@@ -1,0 +1,46 @@
+{
+  "agent_sha256": "5e6fa52afb4fa7065735b9a24477e5374598944f639489960776cfba25fd3449",
+  "candidate": "GARVIS GENESIS-X FP8 DNA-Lattice V1",
+  "claim_status": "HYPOTHESIS_UNDER_TEST",
+  "fp8_local_score": 0.29826651613270166,
+  "lf52_levels": 1,
+  "math": {
+    "frequency_banks": [
+      "prime",
+      "sacred",
+      "neural_analog"
+    ],
+    "lambda_candidates": [
+      0.27,
+      0.6,
+      0.6180339887498948,
+      0.7
+    ],
+    "octagonal_cognition": true,
+    "pruning": [
+      0.27,
+      0.6,
+      0.7
+    ],
+    "weight_families": [
+      "equal",
+      "phi",
+      "prime"
+    ]
+  },
+  "memory_loci": [
+    "CORE",
+    "WORKING",
+    "EPISODIC",
+    "TRACE",
+    "PROCEDURAL",
+    "PROSPECTIVE",
+    "SIMULATION"
+  ],
+  "official_kaggle_score": "PENDING",
+  "parent_agent_sha256": "734a1b1b5ad4177abc611a9fa6e6d8e0dfe33b472e837d5abf7ccc9256f85832",
+  "parent_local_score_reference": 0.155409373275559,
+  "parent_public_score_reference": 0.27,
+  "status": "LOCAL_GATE_PASS",
+  "tn36_levels": 1
+}
