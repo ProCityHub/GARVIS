@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "messages": [],
+  "last_town_square": null,
+  "agent_status": {
+    "ci-fix-bot": {
+      "status": "ready",
+      "findings": [],
+      "last_active": "2026-09-08T13:05:54.550263+00:00",
+      "defined": true
+    },
+    "test-agent": {
+      "status": "ready",
+      "findings": [],
+      "last_active": "2026-09-08T13:05:54.550263+00:00",
+      "defined": true
+    },
+    "falsification-agent": {
+      "status": "ready",
+      "findings": [],
+      "last_active": "2026-09-08T13:05:54.550263+00:00",
+      "defined": true
+    },
+    "numerical-stability-agent": {
+      "status": "ready",
+      "findings": [],
+      "last_active": "2026-09-08T13:05:54.550263+00:00",
+      "defined": true
+    },
+    "code-quality-agent": {
+      "status": "ready",
+      "findings": [],
+      "last_active": "2026-09-08T13:05:54.550263+00:00",
+      "defined": true
+    },
+    "nightly-agent": {
+      "status": "ready",
+      "findings": [],
+      "last_active": "2026-09-08T13:05:54.550263+00:00",
+      "defined": true
+    },
+    "release-agent": {
+      "status": "ready",
+      "findings": [],
+      "last_active": "2026-09-08T13:05:54.550263+00:00",
+      "defined": true
+    },
+    "greeting-agent": {
+      "status": "ready",
+      "findings": [],
+      "last_active": "2026-09-08T13:05:54.550263+00:00",
+      "defined": true
+    },
+    "ci-doctor": {
+      "status": "ready",
+      "findings": [],
+      "last_active": "2026-09-08T13:05:54.550263+00:00",
+      "defined": true
+    },
+    "town-square": {
+      "status": "ready",
+      "findings": [],
+      "last_active": "2026-09-08T13:05:54.550263+00:00",
+      "defined": true
+    }
+  },
+  "agents_defined": [
+    "ci-fix-bot",
+    "test-agent",
+    "falsification-agent",
+    "numerical-stability-agent",
+    "code-quality-agent",
+    "nightly-agent",
+    "release-agent",
+    "greeting-agent",
+    "ci-doctor",
+    "town-square"
+  ],
+  "note": "Seeded by Github Agent under standing authority so Town Square has defined agent jobs/status."
+}
