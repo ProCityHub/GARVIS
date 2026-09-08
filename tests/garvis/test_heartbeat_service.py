@@ -2,6 +2,7 @@ import math
 
 import pytest
 
+from garvis.creator_authority import CreatorAuthority
 from garvis.heartbeat_kernel import (
     ALPHA,
     BETA,
@@ -9,7 +10,6 @@ from garvis.heartbeat_kernel import (
     benchmark_phi,
 )
 from garvis.heartbeat_service import AutomaticHeartbeatService
-from garvis.creator_authority import CreatorAuthority
 from garvis.self_authority import GarvisSelfAuthority, InternalAction
 
 
