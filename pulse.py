@@ -1,6 +1,6 @@
 """
-HYPERCUBE HEARTBEAT — pulse.py
-Runs the living heartbeat of the hypercube network.
+LEGACY HYPERCUBE TELEMETRY PULSE — pulse.py
+Periodic network telemetry only; this is not GARVIS's canonical cognitive heartbeat.
 
 Usage:
     python pulse.py

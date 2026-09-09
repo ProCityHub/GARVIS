@@ -142,7 +142,7 @@ def test_build_local_runtime_normalizes_shared_session_id(
 
 
 
-def test_build_local_runtime_intentionally_defaults_cli_to_thanos(
+def test_build_local_runtime_intentionally_defaults_cli_to_creator(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     captured: dict[str, str | None] = {}
@@ -193,5 +193,5 @@ def test_build_local_runtime_intentionally_defaults_cli_to_thanos(
 
     cli._build_local_runtime()
 
-    assert captured["network_mode_during_construction"] == "thanos"
+    assert captured["network_mode_during_construction"] == "creator"
     assert "GARVIS_NETWORK_MODE" not in os.environ

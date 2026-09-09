@@ -133,7 +133,7 @@ def _build_local_runtime(session_id: str = "default") -> CapabilityAwareRuntime:
     )
 
     if previous_network_mode is None:
-        os.environ["GARVIS_NETWORK_MODE"] = "thanos"
+        os.environ["GARVIS_NETWORK_MODE"] = "creator"
 
     try:
         return CapabilityAwareRuntime(

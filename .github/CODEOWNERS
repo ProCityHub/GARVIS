@@ -13,6 +13,11 @@
 /FROZEN_FILES.txt                  @ProCityHub
 /GOVERNED_FILES.txt                @ProCityHub
 /RETRACTIONS.md                    @ProCityHub
+/src/garvis/creator_authority.py   @ProCityHub
+/src/garvis/capability_runtime.py  @ProCityHub
+/src/garvis/heartbeat_kernel.py    @ProCityHub
+/src/garvis/heartbeat_service.py   @ProCityHub
+/src/garvis/heartbeat_self_dialogue.py @ProCityHub
 /src/garvis/thanos_mode.py         @ProCityHub
 /src/garvis/stage_gate.py          @ProCityHub
 /src/garvis/stage_gate_store.py    @ProCityHub

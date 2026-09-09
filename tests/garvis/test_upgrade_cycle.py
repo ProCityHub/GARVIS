@@ -213,12 +213,14 @@ def _preconditions(
     )
 
 
-def test_green_cycle_merges_without_owner_checkpoint(cycle, auth) -> None:
+def test_green_cycle_stops_at_exact_sha_merge_request(cycle, auth) -> None:
     at_merge = _at_merging(cycle, auth)
     decision = evaluate_merge_gate(auth, _preconditions())
-    merged = record_merge_decision(at_merge, decision, auth)
-    assert merged.state is CycleState.SYNCHRONIZING
-    assert merged.blocker is None
+    assert decision.technically_ready is True
+    blocked = record_merge_decision(at_merge, decision, auth)
+    assert blocked.state is CycleState.BLOCKED
+    assert blocked.blocker is not None
+    assert "exact-SHA owner merge authorization required" in blocked.blocker
 
 
 def test_red_ci_blocks_the_merge(cycle, auth) -> None:
