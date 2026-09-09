@@ -9,11 +9,8 @@ import time
 from pathlib import Path
 from typing import Any, Mapping, Optional
 
-from .creator_authority import (
-    CreatorAction,
-    CreatorAuthority,
-    require_creator_authority,
-)
+from .creator_authority import CreatorAuthority
+from .self_authority import GarvisSelfAuthority, InternalAction, require_self_authority
 from .heartbeat_kernel import (
     CycleStatus,
     HeartbeatKernel,
@@ -39,6 +36,7 @@ class AutomaticHeartbeatService:
         root: Path,
         interval_seconds: float = 1.0,
         creator_authority: Optional[CreatorAuthority] = None,
+        self_authority: Optional[GarvisSelfAuthority] = None,
         repository_root: Optional[Path] = None,
         speak: bool = False,
     ) -> None:
@@ -46,6 +44,7 @@ class AutomaticHeartbeatService:
         self.root.mkdir(parents=True, exist_ok=True)
         self.interval_seconds = max(0.0, float(interval_seconds))
         self.creator_authority = creator_authority or CreatorAuthority()
+        self.self_authority = self_authority or GarvisSelfAuthority()
         self.repository_root = (
             Path(repository_root).expanduser().resolve()
             if repository_root is not None
@@ -54,10 +53,10 @@ class AutomaticHeartbeatService:
         self.speak = bool(speak)
         self._last_spoken_digest = ""
 
-        require_creator_authority(
-            self.creator_authority,
-            CreatorAction.CONTINUE_HEARTBEAT,
-        )
+        require_self_authority(
+                self.self_authority,
+                InternalAction.HEARTBEAT,
+            )
 
         self.predictions = PredictionWitnessLedger(
             self.root / "heartbeat_predictions.sqlite3"
@@ -223,9 +222,9 @@ class AutomaticHeartbeatService:
         def execute_internal(
             proposal: Mapping[str, Any],
         ) -> Mapping[str, Any]:
-            require_creator_authority(
-                self.creator_authority,
-                CreatorAction.CONSOLIDATE,
+            require_self_authority(
+                self.self_authority,
+                InternalAction.CONSOLIDATE,
             )
             self.sequence = int(proposal["next_sequence"])
             next_phase = PHASE_NAMES[
@@ -282,9 +281,9 @@ class AutomaticHeartbeatService:
             }
 
         def learn(state: OABState) -> None:
-            require_creator_authority(
-                self.creator_authority,
-                CreatorAction.LEARN,
+            require_self_authority(
+                self.self_authority,
+                InternalAction.LEARN,
             )
             self._persist_state(state)
             if isinstance(state.raw_post, Mapping):
