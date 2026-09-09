@@ -124,3 +124,137 @@ async def test_empty_user_message_is_rejected() -> None:
 
     with pytest.raises(ValueError, match="message must not be empty"):
         await assistant.respond("   ")
+
+
+# REMOTE CANONICAL RESEARCH MEMORY TESTS
+
+@pytest.mark.asyncio
+async def test_remote_research_memory_is_transient_even_without_session_persistence() -> None:
+    sentinel = "REMOTE_RESEARCH_MEMORY_SENTINEL_817"
+    provider_calls: list[tuple[str, str]] = []
+
+    def memory_provider(query: str, session_id: str) -> str:
+        provider_calls.append((query, session_id))
+        return sentinel
+
+    runner = FakeRunner("research response")
+
+    assistant = GarvisAssistant(
+        runner=runner,
+        persist_memory=False,
+        research_memory_provider=memory_provider,
+    )
+
+    prompt = "Research current Python release changes"
+
+    reply = await assistant.respond(
+        prompt,
+        session_id="remote-memory-test",
+    )
+
+    assert reply.text == "research response"
+    assert provider_calls == [
+        (prompt, "remote-memory-test")
+    ]
+
+    call = runner.calls[0]
+
+    assert call["session"] is None
+    assert call["input"] == prompt
+    assert sentinel not in call["input"]
+
+    transient_agent = call["agent"]
+
+    assert transient_agent is not assistant.agent
+    assert sentinel in str(transient_agent.instructions)
+    assert "ADVISORY CONTEXT ONLY" in str(
+        transient_agent.instructions
+    )
+    assert "not retrieved source evidence" in str(
+        transient_agent.instructions
+    ).lower()
+
+    assert sentinel not in str(assistant.agent.instructions)
+
+
+@pytest.mark.asyncio
+async def test_remote_research_memory_failure_blocks_provider_inference() -> None:
+    runner = FakeRunner("must not execute")
+
+    def unavailable_memory(
+        query: str,
+        session_id: str,
+    ) -> str:
+        del query, session_id
+        raise RuntimeError("memory unavailable")
+
+    assistant = GarvisAssistant(
+        runner=runner,
+        persist_memory=False,
+        research_memory_provider=unavailable_memory,
+    )
+
+    with pytest.raises(
+        GarvisResponseError,
+        match="mandatory research memory unavailable",
+    ):
+        await assistant.respond(
+            "Research current lattice evidence",
+            session_id="remote-memory-test",
+        )
+
+    assert runner.calls == []
+
+
+@pytest.mark.asyncio
+async def test_nonresearch_remote_reasoning_does_not_require_research_memory() -> None:
+    runner = FakeRunner("ordinary answer")
+    provider_calls: list[str] = []
+
+    def memory_provider(
+        query: str,
+        session_id: str,
+    ) -> str:
+        provider_calls.append(query + session_id)
+        return "should not be used"
+
+    assistant = GarvisAssistant(
+        runner=runner,
+        persist_memory=False,
+        research_memory_provider=memory_provider,
+    )
+
+    await assistant.respond(
+        "Explain how drywall compound cures",
+        session_id="ordinary",
+    )
+
+    assert provider_calls == []
+    assert runner.calls[0]["agent"] is assistant.agent
+
+
+
+@pytest.mark.asyncio
+async def test_remote_primary_evidence_phrase_requires_research_memory() -> None:
+    calls: list[str] = []
+
+    def provider(query: str, session_id: str) -> str:
+        calls.append(query)
+        return "ADVISORY_MEMORY_CONTEXT"
+
+    runner = FakeRunner("research answer")
+
+    assistant = GarvisAssistant(
+        runner=runner,
+        persist_memory=False,
+        research_memory_provider=provider,
+    )
+
+    prompt = "Find recent primary evidence about memory consolidation"
+
+    await assistant.respond(
+        prompt,
+        session_id="classifier-regression",
+    )
+
+    assert calls == [prompt]

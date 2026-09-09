@@ -28,6 +28,7 @@ from enum import Enum
 from typing import Optional, Tuple
 
 from garvis.evidence_envelope import EvidenceEnvelope
+from garvis.memory_lifecycle import MemoryControlSignal
 from garvis.psychology.evidence_adapter import (
     EvidenceAssessment,
     adapt_evidence_envelope,
@@ -57,6 +58,7 @@ class CognitiveCycleStage(str, Enum):
     EMIT_HEARTBEAT = "emit_heartbeat"
     RECALL_ATTRACTOR = "recall_attractor"
     EVALUATE_EQUILIBRIUM = "evaluate_equilibrium"
+    EVALUATE_MEMORY_CONTROL = "evaluate_memory_control"
     EVALUATE_PROPOSAL = "evaluate_proposal"
 
 
@@ -100,6 +102,7 @@ def _cycle_sha256(
     pulse: HeartbeatPulse,
     cue_signal_ids: Tuple[str, ...],
     recall_equilibrium: RecallEquilibriumAssessment,
+    memory_control: Optional[MemoryControlSignal],
     stages: Tuple[CognitiveCycleStage, ...],
 ) -> str:
     equilibrium = recall_equilibrium.equilibrium
@@ -130,6 +133,34 @@ def _cycle_sha256(
         "human_approval_required": (
             equilibrium.human_approval_required
         ),
+        "memory_control": (
+            None
+            if memory_control is None
+            else {
+                "cue": memory_control.cue,
+                "procedural_memory_ids": [
+                    item.memory.id
+                    for item in memory_control.procedural_candidates
+                ],
+                "prospective_memory_ids": [
+                    item.memory.id
+                    for item in memory_control.prospective_triggers
+                ],
+                "contradiction_observed": (
+                    memory_control.contradiction_observed
+                ),
+                "foreground_required": (
+                    memory_control.foreground_required
+                ),
+                "execution_authority": (
+                    memory_control.execution_authority
+                ),
+                "silent_consolidation_allowed": (
+                    memory_control.silent_consolidation_allowed
+                ),
+                "reason": memory_control.reason,
+            }
+        ),
         "stages": [stage.value for stage in stages],
     }
 
@@ -155,6 +186,7 @@ class LatticeCognitiveCycleResult:
     cue_signal_ids: Tuple[str, ...]
     recall: RecurrentRecallResult
     recall_equilibrium: RecallEquilibriumAssessment
+    memory_control: Optional[MemoryControlSignal]
     completed_stages: Tuple[CognitiveCycleStage, ...]
     cycle_sha256: str
     external_action_allowed: bool = False
@@ -166,8 +198,15 @@ class LatticeCognitiveCycleResult:
     )
 
     @property
-    def proposal_eligible(self) -> bool:
+    def evidence_proposal_eligible(self) -> bool:
         return self.recall_equilibrium.equilibrium.proposal_eligible
+
+    @property
+    def proposal_eligible(self) -> bool:
+        return self.evidence_proposal_eligible and not (
+            self.memory_control is not None
+            and self.memory_control.foreground_required
+        )
 
     @property
     def human_approval_required(self) -> bool:
@@ -179,8 +218,14 @@ class LatticeCognitiveCycleResult:
 
     @property
     def decision(self) -> str:
-        if not self.proposal_eligible:
+        if not self.evidence_proposal_eligible:
             return "BLOCKED"
+
+        if (
+            self.memory_control is not None
+            and self.memory_control.foreground_required
+        ):
+            return "MEMORY_FOREGROUND_REVIEW_REQUIRED"
 
         if self.human_approval_required:
             return "HUMAN_REVIEW_REQUIRED"
@@ -202,6 +247,7 @@ def run_lattice_cognitive_cycle(
     context_stability: float = 1.0,
     constraints_passed: bool = True,
     external_action: bool = False,
+    memory_control: Optional[MemoryControlSignal] = None,
     equilibrium_threshold: float = 0.95,
     source_id: str = "hypercubeheartbeat",
 ) -> LatticeCognitiveCycleResult:
@@ -209,6 +255,16 @@ def run_lattice_cognitive_cycle(
 
     if cycle < 0:
         raise ValueError("cycle must be zero or greater")
+
+    if memory_control is not None:
+        if memory_control.execution_authority:
+            raise ValueError(
+                "memory control cannot grant execution authority"
+            )
+        if memory_control.silent_consolidation_allowed:
+            raise ValueError(
+                "memory control cannot authorize silent consolidation"
+            )
 
     assessment = adapt_evidence_envelope(envelope)
 
@@ -259,6 +315,7 @@ def run_lattice_cognitive_cycle(
         CognitiveCycleStage.EMIT_HEARTBEAT,
         CognitiveCycleStage.RECALL_ATTRACTOR,
         CognitiveCycleStage.EVALUATE_EQUILIBRIUM,
+        CognitiveCycleStage.EVALUATE_MEMORY_CONTROL,
         CognitiveCycleStage.EVALUATE_PROPOSAL,
     )
 
@@ -273,6 +330,7 @@ def run_lattice_cognitive_cycle(
         cue_signal_ids=selected_cues,
         recall=recall,
         recall_equilibrium=recall_equilibrium,
+        memory_control=memory_control,
         completed_stages=completed_stages,
         cycle_sha256=_cycle_sha256(
             cycle=cycle,
@@ -281,6 +339,7 @@ def run_lattice_cognitive_cycle(
             pulse=pulse,
             cue_signal_ids=selected_cues,
             recall_equilibrium=recall_equilibrium,
+            memory_control=memory_control,
             stages=completed_stages,
         ),
     )
