@@ -266,6 +266,42 @@ def clean_model_output(text: str) -> str:
     return answer
 
 
+def _research_memory_required(
+    envelope: FilingEnvelope,
+    external_context: str,
+) -> bool:
+    """Return whether this reasoning cycle requires canonical research memory."""
+
+    from garvis.memory_lifecycle import research_memory_required
+
+    return (
+        bool(external_context.strip())
+        or envelope.destination == "epistemic_registry"
+        or research_memory_required(envelope.request)
+    )
+
+
+def _recall_runtime_memory_context(
+    memory_store: object,
+    envelope: FilingEnvelope,
+    *,
+    session_id: str,
+    research_memory_required: bool,
+) -> str:
+    """Route research through mandatory advisory memory without evidence promotion."""
+
+    if research_memory_required:
+        return memory_store.render_research_context(
+            envelope.request,
+            session_id=session_id,
+        )
+
+    return memory_store.render_context(
+        envelope.request,
+        session_id=session_id,
+    )
+
+
 class LocalLanguageRuntime:
     def __init__(
         self,
@@ -287,15 +323,23 @@ class LocalLanguageRuntime:
         workspace_context: str = "",
     ) -> str:
         envelope = classify_request(message)
+        research_memory_required = _research_memory_required(
+            envelope,
+            external_context,
+        )
         memory_store = None
         memory_context = ""
         repository_context = ""
-        memory_enabled = os.getenv("GARVIS_MEMORY_ENABLED", "1").casefold() not in {
-            "0",
-            "false",
-            "no",
-            "off",
-        }
+        memory_enabled = (
+            research_memory_required
+            or os.getenv("GARVIS_MEMORY_ENABLED", "1").casefold()
+            not in {
+                "0",
+                "false",
+                "no",
+                "off",
+            }
+        )
         if memory_enabled:
             try:
                 from garvis.memory_lifecycle import (
@@ -308,14 +352,22 @@ class LocalLanguageRuntime:
 
                 memory_store = MemoryStore.from_environment()
                 ensure_core_memories(memory_store)
-                core_context = render_core_context(memory_store)
-                recalled_context = memory_store.render_context(
-                    envelope.request,
+                recalled_context = _recall_runtime_memory_context(
+                    memory_store,
+                    envelope,
                     session_id=self.session_id,
+                    research_memory_required=research_memory_required,
                 )
-                memory_context = "\n".join(
-                    part for part in (core_context, recalled_context) if part
-                )
+
+                if research_memory_required:
+                    memory_context = recalled_context
+                else:
+                    core_context = render_core_context(memory_store)
+                    memory_context = "\n".join(
+                        part
+                        for part in (core_context, recalled_context)
+                        if part
+                    )
                 memory_store.remember(
                     envelope.request,
                     session_id=self.session_id,
@@ -329,6 +381,12 @@ class LocalLanguageRuntime:
                 )
             except Exception as exc:
                 memory_store = None
+
+                if research_memory_required:
+                    raise RuntimeError(
+                        "mandatory research memory unavailable"
+                    ) from exc
+
                 if os.getenv("GARVIS_MEMORY_DEBUG", "0") == "1":
                     print(f"GARVIS memory warning: {exc}", file=sys.stderr)
 

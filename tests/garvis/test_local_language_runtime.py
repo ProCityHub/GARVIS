@@ -70,3 +70,96 @@ class LocalLanguageRuntimeTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+# CANONICAL RESEARCH MEMORY RUNTIME TESTS
+
+def test_epistemic_request_requires_research_memory_context() -> None:
+    from garvis.local_language_runtime import (
+        _recall_runtime_memory_context,
+        _research_memory_required,
+        classify_request,
+    )
+
+    class FakeMemory:
+        def __init__(self) -> None:
+            self.research_calls = 0
+            self.general_calls = 0
+
+        def render_research_context(
+            self,
+            query: str,
+            *,
+            session_id: str,
+        ) -> str:
+            self.research_calls += 1
+            return (
+                "[research-memory-control consulted=true "
+                "execution_authority=false] "
+                + query
+                + " "
+                + session_id
+            )
+
+        def render_context(
+            self,
+            query: str,
+            *,
+            session_id: str,
+        ) -> str:
+            self.general_calls += 1
+            return "GENERAL " + query + " " + session_id
+
+    envelope = classify_request(
+        "research procedural memory and evidence boundaries"
+    )
+
+    required = _research_memory_required(envelope, "")
+    fake = FakeMemory()
+
+    context = _recall_runtime_memory_context(
+        fake,
+        envelope,
+        session_id="research-test",
+        research_memory_required=required,
+    )
+
+    assert required is True
+    assert "consulted=true" in context
+    assert "execution_authority=false" in context
+    assert fake.research_calls == 1
+    assert fake.general_calls == 0
+
+
+def test_external_research_context_forces_research_memory_mode() -> None:
+    from garvis.local_language_runtime import (
+        _research_memory_required,
+        classify_request,
+    )
+
+    envelope = classify_request(
+        "What are current drywall prices?"
+    )
+
+    assert envelope.destination != "epistemic_registry"
+    assert (
+        _research_memory_required(
+            envelope,
+            "external internet evidence",
+        )
+        is True
+    )
+
+
+
+def test_recent_release_question_requires_research_memory() -> None:
+    from garvis.local_language_runtime import (
+        _research_memory_required,
+        classify_request,
+    )
+
+    envelope = classify_request(
+        "Find out whether Python 3.14 has been released"
+    )
+
+    assert _research_memory_required(envelope, "") is True

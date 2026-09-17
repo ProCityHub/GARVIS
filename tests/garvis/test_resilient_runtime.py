@@ -137,3 +137,161 @@ async def test_failed_model_call_preserves_user_input() -> None:
     assert ledger.turns == [
         {"role": "user", "content": "survive the crash"},
     ]
+
+
+# RESILIENT REMOTE CANONICAL RESEARCH MEMORY TESTS
+
+@pytest.mark.asyncio
+async def test_resilient_research_memory_is_transient_system_context() -> None:
+    sentinel = "RESILIENT_RESEARCH_MEMORY_SENTINEL_817"
+
+    ledger = FakeLedger()
+    model = CapturingModel("research answer")
+    provider_calls: list[tuple[str, str]] = []
+
+    def memory_provider(
+        query: str,
+        session_id: str,
+    ) -> str:
+        provider_calls.append((query, session_id))
+        return sentinel
+
+    runtime = ResilientGarvisRuntime(
+        model="test-model",
+        session_name="research-session",
+        repository_root=Path.cwd(),
+        client=object(),
+        ledger=ledger,
+        build_messages=fake_build_context,
+        call_model=model,
+        research_memory_provider=memory_provider,
+    )
+
+    prompt = "Research current Python release changes"
+
+    reply = await runtime.respond(prompt)
+
+    assert reply.text == "research answer"
+
+    assert provider_calls == [
+        (prompt, "research-session")
+    ]
+
+    assert ledger.turns == [
+        {"role": "user", "content": prompt},
+        {"role": "assistant", "content": "research answer"},
+    ]
+
+    assert sentinel not in str(ledger.turns)
+
+    assert sentinel in model.messages[0]["content"]
+    assert "ADVISORY CONTEXT ONLY" in (
+        model.messages[0]["content"]
+    )
+
+    user_messages = [
+        item["content"]
+        for item in model.messages
+        if item.get("role") == "user"
+    ]
+
+    assert user_messages[-1] == prompt
+    assert sentinel not in user_messages[-1]
+
+
+@pytest.mark.asyncio
+async def test_resilient_memory_failure_blocks_model_inference() -> None:
+    ledger = FakeLedger()
+    model = CapturingModel("must not execute")
+
+    def unavailable_memory(
+        query: str,
+        session_id: str,
+    ) -> str:
+        del query, session_id
+        raise RuntimeError("memory unavailable")
+
+    runtime = ResilientGarvisRuntime(
+        model="test-model",
+        session_name="research-session",
+        repository_root=Path.cwd(),
+        client=object(),
+        ledger=ledger,
+        build_messages=fake_build_context,
+        call_model=model,
+        research_memory_provider=unavailable_memory,
+    )
+
+    prompt = "Research current lattice evidence"
+
+    with pytest.raises(
+        RuntimeError,
+        match="mandatory research memory unavailable",
+    ):
+        await runtime.respond(prompt)
+
+    assert model.messages == []
+
+    assert ledger.turns == [
+        {"role": "user", "content": prompt}
+    ]
+
+
+@pytest.mark.asyncio
+async def test_resilient_nonresearch_does_not_consult_research_memory() -> None:
+    ledger = FakeLedger()
+    model = CapturingModel("ordinary answer")
+    provider_calls: list[str] = []
+
+    def memory_provider(
+        query: str,
+        session_id: str,
+    ) -> str:
+        provider_calls.append(query + session_id)
+        return "should not be used"
+
+    runtime = ResilientGarvisRuntime(
+        model="test-model",
+        session_name="ordinary-session",
+        repository_root=Path.cwd(),
+        client=object(),
+        ledger=ledger,
+        build_messages=fake_build_context,
+        call_model=model,
+        research_memory_provider=memory_provider,
+    )
+
+    await runtime.respond(
+        "Explain how drywall compound cures"
+    )
+
+    assert provider_calls == []
+
+
+
+@pytest.mark.asyncio
+async def test_resilient_recent_change_phrase_requires_research_memory() -> None:
+    ledger = FakeLedger()
+    model = CapturingModel("research answer")
+    calls: list[str] = []
+
+    def provider(query: str, session_id: str) -> str:
+        calls.append(query)
+        return "ADVISORY_MEMORY_CONTEXT"
+
+    runtime = ResilientGarvisRuntime(
+        model="test-model",
+        session_name="classifier-regression",
+        repository_root=Path.cwd(),
+        client=object(),
+        ledger=ledger,
+        build_messages=fake_build_context,
+        call_model=model,
+        research_memory_provider=provider,
+    )
+
+    prompt = "What changed recently in OpenAI API documentation?"
+
+    await runtime.respond(prompt)
+
+    assert calls == [prompt]
