@@ -47,9 +47,7 @@ def test_complete_cycle_reaches_human_review_boundary() -> None:
 
     equilibrium = result.recall_equilibrium.equilibrium
 
-    assert result.assessment.evidence_sufficiency == (
-        pytest.approx(1.0)
-    )
+    assert result.assessment.evidence_sufficiency == (pytest.approx(1.0))
     assert result.pulse.phase is PulsePhase.ACTIVATE
     assert result.pulse.raw_union == pytest.approx(1.6)
     assert result.pulse.normalized_center == pytest.approx(1.0)
@@ -96,9 +94,7 @@ def test_partial_cue_propagates_through_memory() -> None:
     assert partial.cue_signal_ids == selected
     assert state[partial.consolidated_memory.center_node] > 0.0
     assert sum(value > 0.0 for value in state.values()) >= 2
-    assert partial.completed_stages[-1] is (
-        CognitiveCycleStage.EVALUATE_PROPOSAL
-    )
+    assert partial.completed_stages[-1] is (CognitiveCycleStage.EVALUATE_PROPOSAL)
 
 
 def test_unknown_cue_is_rejected() -> None:
@@ -168,9 +164,7 @@ def test_cycle_number_changes_cycle_hash() -> None:
         cycle=2,
     )
 
-    assert first.pulse.compute_sha256() != (
-        second.pulse.compute_sha256()
-    )
+    assert first.pulse.compute_sha256() != (second.pulse.compute_sha256())
     assert first.cycle_sha256 != second.cycle_sha256
 
 
@@ -213,10 +207,7 @@ def test_memory_control_does_not_rewrite_evidence_or_consolidation() -> None:
         == baseline.consolidated_memory.memory.compute_sha256()
     )
     assert controlled.recall == baseline.recall
-    assert (
-        controlled.evidence_proposal_eligible
-        == baseline.evidence_proposal_eligible
-    )
+    assert controlled.evidence_proposal_eligible == baseline.evidence_proposal_eligible
     assert controlled.decision == baseline.decision
     assert controlled.external_action_allowed is False
 
@@ -290,12 +281,8 @@ def test_memory_control_stage_precedes_proposal_stage() -> None:
         memory_control=_memory_control(),
     )
 
-    memory_index = result.completed_stages.index(
-        CognitiveCycleStage.EVALUATE_MEMORY_CONTROL
-    )
-    proposal_index = result.completed_stages.index(
-        CognitiveCycleStage.EVALUATE_PROPOSAL
-    )
+    memory_index = result.completed_stages.index(CognitiveCycleStage.EVALUATE_MEMORY_CONTROL)
+    proposal_index = result.completed_stages.index(CognitiveCycleStage.EVALUATE_PROPOSAL)
 
     assert memory_index < proposal_index
 
