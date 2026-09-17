@@ -1,12 +1,11 @@
 import pytest
-
 from garvis.evidence_envelope import build_evidence_envelope
-from garvis.memory_lifecycle import MemoryControlSignal
 from garvis.lattice_cognition import (
     CognitiveCycleStage,
     PulsePhase,
     run_lattice_cognitive_cycle,
 )
+from garvis.memory_lifecycle import MemoryControlSignal
 
 
 def build_strong_envelope():
