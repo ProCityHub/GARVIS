@@ -21,6 +21,11 @@
 # and obtain code-owner review.
 
 # Authorization and gating
+src/garvis/creator_authority.py
+src/garvis/capability_runtime.py
+src/garvis/heartbeat_kernel.py
+src/garvis/heartbeat_service.py
+src/garvis/heartbeat_self_dialogue.py
 src/garvis/thanos_mode.py
 src/garvis/stage_gate.py
 src/garvis/stage_gate_store.py

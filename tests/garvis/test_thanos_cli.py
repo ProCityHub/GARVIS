@@ -1,4 +1,4 @@
-"""Tests for the ``garvis thanos`` command-line interface."""
+"""THANOS is legacy-only; heartbeat liveness is creator-owned."""
 
 from __future__ import annotations
 
@@ -13,106 +13,42 @@ def home(tmp_path, monkeypatch):
     return tmp_path
 
 
-def test_enable_reports_standing_authority(home, capsys) -> None:
+def test_enable_does_not_create_thanos_authority(home, capsys) -> None:
     assert main(["enable"]) == 0
     out = capsys.readouterr().out
-    assert "THANOS_MODE=ENABLED" in out
-    assert "OWNER=Adrien D. Thomas" in out
-    assert "PER_STAGE_APPROVAL_PROMPTS=0" in out
-    assert "OWNER_MERGE_CHECKPOINTS_PER_CYCLE=0" in out
-    assert "AUTONOMOUS_MERGE_WHEN_GREEN=ENABLED" in out
-    assert "TARGET_VERSION=2.0.0-beta.1" in out
+    assert "THANOS=LEGACY_ONLY" in out
+    assert "THANOS_OPERATIONAL_AUTHORITY=DISABLED" in out
+    assert "AUTHORITY_SOURCE=CREATOR_DIRECTIVE" in out
+    assert "CREATOR=Adrien D. Thomas" in out
+    assert not (home / "thanos.json").exists()
 
 
-def test_enable_does_not_claim_unbuilt_subsystems(home, capsys) -> None:
-    main(["enable"])
+def test_run_executes_real_heartbeat(home, capsys) -> None:
+    assert main(["run"]) == 0
     out = capsys.readouterr().out
-    assert "ROLLBACK=NOT_IMPLEMENTED" in out
-    assert "REPAIR_ENGINE=NOT_IMPLEMENTED" in out
-    assert "CAPABILITY_REGISTRY=NOT_IMPLEMENTED" in out
+    assert "HEARTBEAT_STATUS=COMPLETED" in out
+    assert "NOT_IMPLEMENTED" not in out
 
 
-def test_enable_is_idempotent_refusal(home, capsys) -> None:
-    main(["enable"])
+def test_health_is_real_not_hardcoded(home, capsys) -> None:
+    main(["run"])
     capsys.readouterr()
-    assert main(["enable"]) == 1
-    assert "REFUSED=ALREADY_ENABLED" in capsys.readouterr().out
-
-
-def test_status_survives_a_restart(home, capsys) -> None:
-    main(["enable"])
-    capsys.readouterr()
-    assert main(["status"]) == 0
+    assert main(["health"]) == 0
     out = capsys.readouterr().out
-    assert "THANOS_MODE=ENABLED" in out
-    assert "ACTIVE_CYCLE=NONE" in out
+    assert "heartbeat_running" in out
+    assert "RUNTIME_HEALTH_CHECK=NOT_IMPLEMENTED" not in out
 
 
-def test_pause_and_resume_round_trip(home, capsys) -> None:
-    main(["enable"])
-    capsys.readouterr()
-    main(["pause"])
-    assert "THANOS_MODE=PAUSED" in capsys.readouterr().out
-    main(["resume"])
-    assert "THANOS_MODE=ENABLED" in capsys.readouterr().out
-
-
-def test_revoke_requires_a_reason(home) -> None:
-    main(["enable"])
-    with pytest.raises(SystemExit):
-        main(["revoke"])
-
-
-def test_revoke_then_reenable_preserves_history(home, capsys) -> None:
-    main(["enable"])
-    main(["revoke", "--reason", "owner stop"])
-    capsys.readouterr()
-    assert main(["enable"]) == 0
-    assert "SUPERSEDING_REVOKED_AUTHORIZATION" in capsys.readouterr().out
-
-    assert main(["history"]) == 0
-    out = capsys.readouterr().out
-    assert "REVOKED" in out
-    assert "CHAIN_LENGTH=3" in out
-
-
-def test_revocation_is_not_a_permanent_lockout(home, capsys) -> None:
-    main(["enable"])
-    main(["revoke", "--reason", "owner stop"])
-    main(["enable"])
-    capsys.readouterr()
-    assert main(["status"]) == 0
-    assert "THANOS_MODE=ENABLED" in capsys.readouterr().out
-
-
-def test_run_reports_not_implemented_rather_than_success(home, capsys) -> None:
-    main(["enable"])
-    capsys.readouterr()
-    assert main(["run"]) == 3
-    out = capsys.readouterr().out
-    assert "AUTONOMOUS_REPAIR_LOOP=NOT_IMPLEMENTED" in out
-    assert "PASS" not in out
-
-
-def test_health_reports_not_implemented(home, capsys) -> None:
-    assert main(["health"]) == 3
-    assert "RUNTIME_HEALTH_CHECK=NOT_IMPLEMENTED" in capsys.readouterr().out
-
-
-def test_pause_without_authorization_is_refused(home, capsys) -> None:
-    assert main(["pause"]) == 1
-    assert "REFUSED=NO_AUTHORIZATION" in capsys.readouterr().out
-
-
-def test_tampered_store_is_reported(home, capsys) -> None:
-    main(["enable"])
-    capsys.readouterr()
-    path = home / "thanos.json"
-    path.write_text(path.read_text().replace("Adrien D. Thomas", "Someone Else"))
-    main(["status"])
-    assert "THANOS_STATE=TAMPERED" in capsys.readouterr().out
-
-
-def test_empty_history(home, capsys) -> None:
-    assert main(["history"]) == 0
-    assert "AUTHORIZATION_CHAIN=EMPTY" in capsys.readouterr().out
+def test_legacy_mutation_commands_are_noops(home, capsys) -> None:
+    for argv in (
+        ["pause"],
+        ["resume"],
+        ["history"],
+        ["revoke", "--reason", "test"],
+    ):
+        assert main(argv) == 0
+        assert (
+            "RESULT=NO_THANOS_AUTHORITY_MUTATION"
+            in capsys.readouterr().out
+        )
+    assert not (home / "thanos.json").exists()
