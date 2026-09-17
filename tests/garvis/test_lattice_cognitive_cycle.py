@@ -1,4 +1,5 @@
 import pytest
+
 from garvis.evidence_envelope import build_evidence_envelope
 from garvis.lattice_cognition import (
     CognitiveCycleStage,
