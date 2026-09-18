@@ -29,7 +29,7 @@ class CreatorAction(str, Enum):
     REASON = "reason"
     PLAN = "plan"
     SIMULATE = "simulate"
-    FREEZE_PREDICTION = "freeze-prediction"
+    CAPTURE_PREDICTION_WITNESS = "capture-prediction-witness"
     VERIFY = "verify"
     LEARN = "learn"
     CONSOLIDATE = "consolidate"

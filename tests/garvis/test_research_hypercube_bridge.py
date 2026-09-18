@@ -228,3 +228,121 @@ async def test_model_cannot_self_certify_failed_math(tmp_path: Path) -> None:
     assert result["math_verification_passed"] is False
     assert result["usable_for_mathematical_followup"] is False
     assert result["model_output_is_self_certifying"] is False
+
+
+# CANONICAL RESEARCH MEMORY BRIDGE TESTS
+
+def test_research_memory_reaches_reasoning_not_evidence_ledger(
+    tmp_path,
+) -> None:
+    import asyncio
+    import json
+
+    sentinel = (
+        "MEMORY_ONLY_SENTINEL_NOT_SOURCE_EVIDENCE_9173"
+    )
+
+    class CapturingAssistant:
+        def __init__(self) -> None:
+            self.prompt = ""
+
+        async def respond(
+            self,
+            prompt: str,
+            *,
+            session_id: str,
+        ):
+            self.prompt = prompt
+
+            class Reply:
+                text = json.dumps(
+                    {
+                        "snapshot": valid_snapshot(),
+                        "math_claims": packet()["math_claims"],
+                    }
+                )
+
+            assert session_id == "research-hypercube"
+            return Reply()
+
+    assistant = CapturingAssistant()
+    ledger_path = tmp_path / "evidence.json"
+    output_path = tmp_path / "result.json"
+
+    bridge = HypercubeResearchBridge(
+        repository_root=tmp_path,
+        model="test-model",
+        ledger_path=ledger_path,
+        research_client=FakeResearchClient(),
+        assistant=assistant,
+        memory_context_provider=lambda _query: sentinel,
+    )
+
+    result = asyncio.run(
+        bridge.run(
+            "research memory evidence boundary",
+            output_path,
+        )
+    )
+
+    assert "ADVISORY RESEARCH MEMORY" in assistant.prompt
+    assert sentinel in assistant.prompt
+    assert "NOT SOURCE EVIDENCE" in assistant.prompt
+
+    assert result["source_count"] == 1
+    assert len(result["evidence_record_ids"]) == 1
+    assert result["model_output_is_self_certifying"] is False
+
+    ledger_text = ledger_path.read_text()
+    assert sentinel not in ledger_text
+
+    result_text = output_path.read_text()
+    assert sentinel not in result_text
+
+
+def test_bridge_consults_memory_before_network_research(
+    tmp_path,
+) -> None:
+    events = []
+
+    class OrderedResearch:
+        def research(self, query: str):
+            events.append("network")
+            return FakeResearchClient().research(query)
+
+    class NeverCalledAssistant:
+        async def respond(self, prompt: str, *, session_id: str):
+            raise AssertionError(
+                "assistant should not be reached when memory fails"
+            )
+
+    def unavailable_memory(_query: str) -> str:
+        events.append("memory")
+        raise RuntimeError("memory unavailable")
+
+    bridge = HypercubeResearchBridge(
+        repository_root=tmp_path,
+        model="test-model",
+        ledger_path=tmp_path / "evidence.json",
+        research_client=OrderedResearch(),
+        assistant=NeverCalledAssistant(),
+        memory_context_provider=unavailable_memory,
+    )
+
+    import asyncio
+
+    try:
+        asyncio.run(
+            bridge.run(
+                "research should fail before network",
+                tmp_path / "result.json",
+            )
+        )
+    except Exception as exc:
+        assert "mandatory research memory unavailable" in str(exc)
+    else:
+        raise AssertionError(
+            "mandatory research memory failure did not fail closed"
+        )
+
+    assert events == ["memory"]

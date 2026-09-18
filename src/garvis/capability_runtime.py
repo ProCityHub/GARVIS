@@ -154,6 +154,9 @@ class CapabilityAwareRuntime:
                         "consultation_available": (
                             report.consultation_available
                         ),
+                        "approved": bool(
+                            getattr(report, "approved", False)
+                        ),
                         "council_participation_count": (
                             report.council_participation_count
                         ),
@@ -166,10 +169,12 @@ class CapabilityAwareRuntime:
             except Exception:
                 pass
 
-            return (
-                report.consultation_available
-                or not protected
-            )
+            if protected:
+                return bool(
+                    report.consultation_available
+                    and getattr(report, "approved", False)
+                )
+            return True
         except Exception as exc:
             try:
                 self.approval_store.audit(

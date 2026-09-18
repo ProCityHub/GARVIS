@@ -18,7 +18,8 @@ from agents import Agent, Runner, SQLiteSession
 
 from .anthropic_backend import configure_anthropic, is_anthropic_model
 from .bounded_session import BoundedSession
-from .core_memory import core_identity_prompt
+from .core_memory import core_identity_prompt, ensure_core_memories
+from .memory_lifecycle import MemoryStore, research_memory_required
 from .provider_bridge import (
     configure_openai_compatible,
     is_openai_compatible_model,
@@ -85,6 +86,56 @@ class GarvisResponseError(RuntimeError):
 
 RunCallable = Callable[..., Awaitable[Any]]
 SessionFactory = Callable[[str, Path], Any]
+ResearchMemoryProvider = Callable[[str, str], str]
+
+
+def _remote_research_memory_required(message: str) -> bool:
+    """Return whether remote model reasoning requires canonical research memory."""
+
+    return research_memory_required(message)
+
+
+def _mandatory_remote_research_memory_context(
+    query: str,
+    session_id: str,
+) -> str:
+    """Load canonical research memory without promoting it to evidence."""
+
+    try:
+        with MemoryStore.from_environment() as store:
+            ensure_core_memories(store)
+            context = store.render_research_context(
+                query,
+                session_id=session_id,
+            )
+    except Exception as exc:
+        raise GarvisResponseError(
+            "mandatory research memory unavailable"
+        ) from exc
+
+    if not context.strip():
+        raise GarvisResponseError(
+            "mandatory research memory returned empty context"
+        )
+
+    return context
+
+
+def _render_remote_research_memory_instructions(
+    memory_context: str,
+) -> str:
+    """Render transient model-only research memory with explicit boundaries."""
+
+    return (
+        "CANONICAL RESEARCH MEMORY — ADVISORY CONTEXT ONLY:\n"
+        + memory_context
+        + "\n\nBOUNDARY:\n"
+        "Recalled memory may inform reasoning and foreground review. "
+        "It is not retrieved source evidence, a verified empirical result, "
+        "execution authorization, provider authority, or a truth guarantee. "
+        "Simulation and model-generated memory remain non-evidence."
+    )
+
 
 _INFORMATIONAL_PREFIXES = (
     "analyze ",
@@ -190,6 +241,9 @@ class GarvisAssistant:
         runner: Optional[RunCallable] = None,
         session_factory: Optional[SessionFactory] = None,
         repository_root: Optional[Path] = None,
+        research_memory_provider: Optional[
+            ResearchMemoryProvider
+        ] = None,
     ) -> None:
         if max_turns < 1:
             raise ValueError("max_turns must be at least 1")
@@ -201,14 +255,19 @@ class GarvisAssistant:
             self.model = configure_openai_compatible(self.model)
         self.max_turns = max_turns
         self.persist_memory = persist_memory
+        self.instructions = instructions
         self.session_db = session_db or self._default_session_db()
         self._runner: RunCallable = runner or Runner.run
         self._session_factory = session_factory or _default_session_factory
         self.repository_root = repository_root or Path.cwd()
+        self._research_memory_provider = (
+            research_memory_provider
+            or _mandatory_remote_research_memory_context
+        )
         self._sessions: Dict[str, Any] = {}
         self.agent = Agent(
             name="GARVIS",
-            instructions=instructions,
+            instructions=self.instructions,
             model=self.model,
         )
 
@@ -242,6 +301,41 @@ class GarvisAssistant:
             raise ValueError("message must not be empty")
 
         assessment = assess_request(clean_message)
+
+        run_agent = self.agent
+
+        if _remote_research_memory_required(clean_message):
+            try:
+                research_memory = self._research_memory_provider(
+                    clean_message,
+                    session_id,
+                )
+            except GarvisResponseError:
+                raise
+            except Exception as exc:
+                raise GarvisResponseError(
+                    "mandatory research memory unavailable"
+                ) from exc
+
+            if not research_memory.strip():
+                raise GarvisResponseError(
+                    "mandatory research memory returned empty context"
+                )
+
+            transient_instructions = (
+                self.instructions
+                + "\n\n"
+                + _render_remote_research_memory_instructions(
+                    research_memory
+                )
+            )
+
+            run_agent = Agent(
+                name="GARVIS",
+                instructions=transient_instructions,
+                model=self.model,
+            )
+
         run_input = clean_message
         if assessment.requires_approval:
             run_input = (
@@ -255,7 +349,7 @@ class GarvisAssistant:
             run_input = ground_message(run_input, self.repository_root)
 
         result = await self._runner(
-            self.agent,
+            run_agent,
             run_input,
             session=self._get_session(session_id),
             max_turns=self.max_turns,

@@ -19,7 +19,7 @@ def test_internal_heartbeat_actions_are_standing() -> None:
     for action in (
         CreatorAction.RESEARCH,
         CreatorAction.REASON,
-        CreatorAction.FREEZE_PREDICTION,
+        CreatorAction.CAPTURE_PREDICTION_WITNESS,
         CreatorAction.VERIFY,
         CreatorAction.LEARN,
         CreatorAction.CONTINUE_HEARTBEAT,

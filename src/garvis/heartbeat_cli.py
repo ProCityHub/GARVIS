@@ -27,7 +27,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--root", type=Path, default=None)
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("run-once")
-    sub.add_parser("daemon")
+    daemon = sub.add_parser("daemon")
+    daemon.add_argument("--speak", action="store_true")
     sub.add_parser("health")
     return parser
 
@@ -35,7 +36,8 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: Sequence[str] = None) -> int:
     args = build_parser().parse_args(argv)
     service = AutomaticHeartbeatService(
-        args.root or default_root()
+        args.root or default_root(),
+        speak=bool(getattr(args, "speak", False)),
     )
     try:
         if args.command == "run-once":

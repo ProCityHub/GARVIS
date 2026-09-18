@@ -1,8 +1,8 @@
 """GARVIS automatic Hypercube Heartbeat kernel.
 
 The phi relation is a HYPOTHESIS_UNDER_TEST. The identity
-1/phi + 1/phi^2 = 1 is mathematical. Prediction freezing is an automatic
-witness operation, not a human pause.
+1/phi + 1/phi^2 = 1 is mathematical. Prediction witness capture is an
+automatic non-blocking evidence operation, not a pause state.
 """
 
 from __future__ import annotations
@@ -103,7 +103,7 @@ class OABState:
     provenance: Mapping[str, Any] = field(default_factory=dict)
 
 
-class FrozenPredictionLedger:
+class PredictionWitnessLedger:
     def __init__(self, path: Path) -> None:
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
@@ -131,7 +131,7 @@ class FrozenPredictionLedger:
         )
         self.db.commit()
 
-    def freeze(
+    def capture(
         self,
         cycle_id: str,
         prediction: Mapping[str, Any],
@@ -178,6 +178,9 @@ class FrozenPredictionLedger:
 
     def close(self) -> None:
         self.db.close()
+
+
+FrozenPredictionLedger = PredictionWitnessLedger
 
 
 class SideEffectQueue:
@@ -295,7 +298,7 @@ def benchmark_phi(
 class HeartbeatKernel:
     def __init__(
         self,
-        prediction_ledger: FrozenPredictionLedger,
+        prediction_ledger: PredictionWitnessLedger,
         side_effect_queue: SideEffectQueue,
     ) -> None:
         self.prediction_ledger = prediction_ledger
@@ -350,8 +353,8 @@ class HeartbeatKernel:
         raw_pre = observe()
         prediction = dict(predict(raw_pre))
 
-        # Automatic witness freeze; no manual approval or pause.
-        prediction_id, prediction_sha = self.prediction_ledger.freeze(
+        # Automatic witness capture; no manual approval or pause.
+        prediction_id, prediction_sha = self.prediction_ledger.capture(
             cycle_id,
             prediction,
         )
