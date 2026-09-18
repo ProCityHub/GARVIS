@@ -56,6 +56,7 @@ def test_explicit_openai_names_still_route_to_openai():
 
 def test_known_provider_families_still_route():
     expected = {
+        "flexai/test": "flexai",
         "anthropic/claude-test": "anthropic",
         "claude-sonnet-test": "anthropic",
         "claude/test": "anthropic",
@@ -107,3 +108,38 @@ def test_android_app_cannot_self_declare_programmable_adapter():
         assert "verified integration adapter" in str(exc)
     else:
         raise AssertionError("unverified Android app became programmable")
+
+
+def test_flexai_identity_requires_explicit_namespace_and_stays_candidate_only():
+    identity = identify_provider("flexai/example-model")
+    assert identity.provider_id == "flexai"
+    assert identity.adapter is AdapterKind.FLEXAI_HTTP
+    assert identity.required_env_names == ("FLEXAI_API_KEY",)
+    assert identity.adapter_supported is True
+
+    organ = remote_model_organ(
+        "flexai/example-model",
+        env={"FLEXAI_API_KEY": "secret-flexai"},
+    )
+    assert organ.configured is True
+    assert organ.programmable is True
+    assert organ.authority is Authority.CANDIDATE_ONLY
+
+
+def test_flexai_key_cannot_create_identity_or_leak_from_safe_report():
+    secret = "flexai-secret-value"
+    registry = build_registry(
+        ["totally-unknown-model", "flexai/example-model"],
+        env={"FLEXAI_API_KEY": secret},
+    )
+
+    unknown = [
+        item
+        for item in registry.all()
+        if item.model == "totally-unknown-model"
+    ][0]
+    assert unknown.provider_id == "unknown"
+    assert unknown.programmable is False
+
+    encoded = json.dumps(registry.safe_report(), sort_keys=True)
+    assert secret not in encoded

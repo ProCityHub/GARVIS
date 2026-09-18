@@ -34,6 +34,7 @@ class AdapterKind(str, Enum):
     OPENAI_NATIVE = "openai_native"
     ANTHROPIC_NATIVE = "anthropic_native"
     OPENAI_COMPATIBLE = "openai_compatible"
+    FLEXAI_HTTP = "flexai_http"
     MANUAL_ONLY = "manual_only"
     MISSING = "missing"
     UNKNOWN = "unknown"
@@ -105,6 +106,13 @@ def identify_provider(model: str) -> ProviderIdentity:
             provider_id="garvis",
             adapter=AdapterKind.GARVIS_LOCAL,
             adapter_supported=True,
+        )
+
+    if lowered.startswith("flexai/"):
+        return ProviderIdentity(
+            provider_id="flexai",
+            adapter=AdapterKind.FLEXAI_HTTP,
+            required_env_names=("FLEXAI_API_KEY",),
         )
 
     if lowered.startswith("anthropic/") or lowered.startswith("claude-") or lowered.startswith("claude/"):
