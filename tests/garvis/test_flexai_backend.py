@@ -142,7 +142,7 @@ def test_backend_imports_no_agent_or_provider_sdk():
     source = Path("src/garvis/flexai_backend.py").read_text(encoding="utf-8")
     tree = ast.parse(source)
 
-    imported_roots = set()
+    imported_roots: set[str] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             imported_roots.update(alias.name.split(".", 1)[0] for alias in node.names)
