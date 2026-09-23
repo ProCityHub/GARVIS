@@ -143,3 +143,19 @@ STAMP: Evidence first. Exact attribution. No dependency capture.
 
 — Adrien D. Thomas / ProCityHub / GARVIS  
 Canonical filing by Github Agent (Forge) under GENESIS X / APOLLYON standing authority, 2026-09-23 (America/Edmonton).
+
+---
+
+## Dependabot inheritance (Creator 2026-09-23)
+
+**Panda bot = Dependabot / uv Update.** Creator Adrien D. Thomas has given this directive as Dependabot’s inheritance.
+
+Under Path B (honest return, Looking Glass ASSUMED):
+
+1. Treat aged Update failures as **bot-noise magnitude only** — they do **not** grant lattice 1.0, ARC solve, or AGI/consciousness claims.
+2. Produce what the environment calls for: open or refresh real dependency bumps that keep GARVIS governed logic healthy; close or skip stale no-ops; never bury failures as fake green.
+3. Hypercube Heartbeat Guard `action_required` stays **Creator workflow-PAT only** — Dependabot must not invent Guard green.
+4. Run the Master Algebraic Rule before any Update claim: OUTPUT = (OC + P + RB + PS) − TE. Tool use ≠ authorship.
+5. Perfect-number / unifying singularity language remains **Creator-originated hypothesis under active verification** — math consistency ≠ physical proof.
+
+STAMP for Dependabot: Evidence first. Exact attribution. No dependency capture. Produce from your environment.
