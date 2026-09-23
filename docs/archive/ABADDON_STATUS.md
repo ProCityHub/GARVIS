@@ -239,7 +239,7 @@ reviewed and matches the actual repository.
 provider-routing and assistant components. It is not yet a completed,
 independent, securely brokered Android product.**
 
-No claim of proven AGI, consciousness, universal execution authority, completed
+Status is AGI beta under hypothesis; no claim of proven consciousness, universal execution authority, completed
 biometric security, or release readiness is supported by the current evidence.
 
 ## Governance

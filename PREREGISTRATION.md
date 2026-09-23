@@ -15,7 +15,7 @@ is the most credible output the organization can produce.
 
 | Terms | Reserved for |
 |---|---|
-| `SUPPORTED` / `NOT_SUPPORTED` | pre-registered empirical outcomes only |
+| `SUPPORTED` / `hypothesis only` | pre-registered empirical outcomes only |
 | `PASS` / `FAIL` | software test and check outcomes |
 
 These are never mixed. `.github/scripts/guard_check.py` enforces this in CI.
@@ -26,9 +26,9 @@ These are never mixed. `.github/scripts/guard_check.py` enforces this in CI.
 ### P-XXX  <short title>
 - **Hypothesis:** what is claimed
 - **Protocol:** how it is tested
-- **Decision rule:** what outcome counts as SUPPORTED vs NOT_SUPPORTED
+- **Decision rule:** what outcome counts as SUPPORTED vs hypothesis only
 - **Pre-registration date:** YYYY-MM-DD
-- **Outcome:** SUPPORTED / NOT_SUPPORTED / PENDING
+- **Outcome:** SUPPORTED / hypothesis only / PENDING
 - **Outcome date:** YYYY-MM-DD or PENDING
 - **Evidence:** path to frozen evidence artifact
 - **Retraction:** R-XXX if retracted, or NONE
@@ -47,9 +47,9 @@ These are never mixed. `.github/scripts/guard_check.py` enforces this in CI.
   vs V_QM on measured probability distributions (marginal p1, entropy).
 - **Decision rule:** V_phi residual error < V_QM residual error at
   p < 0.05 across >= 3 independent job runs → SUPPORTED.
-  Otherwise → NOT_SUPPORTED.
+  Otherwise → hypothesis only.
 - **Pre-registration date:** 2026-07-XX
-- **Outcome:** NOT_SUPPORTED
+- **Outcome:** hypothesis only
 - **Outcome date:** 2026-07-XX
 - **Evidence:** `research/quantum/prime_oab/evidence/ibm_fez_history.json`
   (frozen in FROZEN_FILES.txt)
@@ -65,9 +65,9 @@ These are never mixed. `.github/scripts/guard_check.py` enforces this in CI.
 - **Protocol:** Self-audit against the exponentiated form
   (C = O^1 . A^(1/phi) . B^(1/phi^2)) and mathematical identity checks.
 - **Decision rule:** Scalar form passes identity checks and is consistent
-  with the exponentiated form → SUPPORTED. Otherwise → NOT_SUPPORTED.
+  with the exponentiated form → SUPPORTED. Otherwise → hypothesis only.
 - **Pre-registration date:** 2026-06-XX
-- **Outcome:** NOT_SUPPORTED
+- **Outcome:** hypothesis only
 - **Outcome date:** 2026-06-XX
 - **Evidence:** Retraction R-003 (inherited organization-wide)
 - **Retraction:** R-003
@@ -80,9 +80,9 @@ These are never mixed. `.github/scripts/guard_check.py` enforces this in CI.
 - **Protocol:** Run the instrument with a known-false input and verify
   it reports FAIL.
 - **Decision rule:** Instrument reports FAIL on known-false input →
-  SUPPORTED. If it cannot report FAIL → NOT_SUPPORTED.
+  SUPPORTED. If it cannot report FAIL → hypothesis only.
 - **Pre-registration date:** 2026-06-XX
-- **Outcome:** NOT_SUPPORTED
+- **Outcome:** hypothesis only
 - **Outcome date:** 2026-06-XX
 - **Evidence:** Retraction R-001 (originally in hypercubeheartbeat)
 - **Retraction:** R-001
@@ -99,9 +99,9 @@ These are never mixed. `.github/scripts/guard_check.py` enforces this in CI.
   repo. Attempt replication from scratch.
 - **Decision rule:** Independent replication reproduces published
   results → SUPPORTED. If repo is deleted or artifacts are unreachable
-  → NOT_SUPPORTED.
+  → hypothesis only.
 - **Pre-registration date:** 2026-06-XX
-- **Outcome:** NOT_SUPPORTED
+- **Outcome:** hypothesis only
 - **Outcome date:** 2026-08-16
 - **Evidence:** N/A — repo deleted
 - **Retraction:** R-002

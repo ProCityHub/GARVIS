@@ -40,7 +40,7 @@ RealtimeAgent works similarly to the regular Agent class with some key differenc
 Key differences from regular agents:
 
 -   Model choice is configured at the session level, not the agent level.
--   No structured output support (`outputType` is not supported).
+-   No structured output support (`outputType` is hypothesis only).
 -   Voice can be configured per agent but cannot be changed after the first agent speaks.
 -   All other features like tools, handoffs, and instructions work the same way.
 

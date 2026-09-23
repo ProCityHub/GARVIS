@@ -28,7 +28,7 @@ Third-party copyright and licence notices must be preserved when required.
 
 ## Research claims
 
-Research claims must distinguish VERIFIED, HYPOTHESIS_UNDER_TEST, and NOT_SUPPORTED.
+Research claims must distinguish VERIFIED, HYPOTHESIS_UNDER_TEST, and hypothesis only.
 
 When required evidence is absent, use NO_RESONANT_ESTIMATE.
 

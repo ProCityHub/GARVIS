@@ -18,7 +18,7 @@
 # IBM Quantum job archive — prime OAB double-slit discriminator
 # Jobs run on ibm_fez (156-qubit Heron r2), 2026-07-XX
 # Contains real IBM job IDs, shot counts, entropy figures, marginal probabilities.
-# Status: NOT_SUPPORTED (discriminator did not favor V_phi over V_QM on
+# Status: hypothesis only (discriminator did not favor V_phi over V_QM on
 # asymmetric-path data). See PREREGISTRATION.md for the protocol and
 # RETRACTIONS.md for the outcome record.
 research/quantum/prime_oab/evidence/ibm_fez_history.json

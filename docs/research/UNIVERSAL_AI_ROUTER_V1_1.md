@@ -54,7 +54,7 @@ environment configuration may signal availability only.
 
 ## Scientific / project boundary
 
-This work supports the GARVIS AGI research program. It does not establish AGI,
+This work supports the GARVIS AGI research program. It leaves AGI at AGI beta under hypothesis,
 consciousness, singularity, or a new physical law.
 
 ## Governance

@@ -8,7 +8,7 @@
 
 GARVIS is a ProCityHub research and software project created and conceptually architected by Adrien D. Thomas. The repository is being restructured toward a native ProCityHub architecture that separates cognition, evidence, governance, execution authority, research hypotheses, interfaces, and external technology boundaries.
 
-GARVIS is not presented here as proven AGI, consciousness, or a new physical law.
+GARVIS is framed here as AGI beta under hypothesis; not proven consciousness or a new physical law.
 
 ## Creator, authorship, and contribution boundary
 
@@ -51,7 +51,7 @@ The target native architecture separates these project-defined domains:
 
 See ARCHITECTURE.md.
 
-### NOT_SUPPORTED
+### hypothesis only
 
 Software behavior, mathematical consistency, simulations, benchmark activity, metaphor, spiritual interpretation, or model-generated text do not by themselves prove AGI, consciousness, ontology, prophecy, historical causation, or new physics.
 
@@ -83,7 +83,7 @@ Because 1/phi + 1/phi^2 = 1, the A and B exponents sum exactly to 1.
 
 Status: HYPOTHESIS_UNDER_TEST.
 
-Current empirical status: NOT_SUPPORTED unless new reproducible evidence changes that classification.
+Current empirical status: hypothesis only unless new reproducible evidence changes that classification.
 
 The retracted scalar expression C = (O * A * B) * phi is not canonical.
 

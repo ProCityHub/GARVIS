@@ -6,7 +6,7 @@ Subject: Your document "GARVIS ARC-AGI Solver Framework v1.0".
 ## Part 1 — Claims audit (respond with corrections acknowledged)
 
 1. "Production-ready framework" and "fully implemented in the provided
-   codebase" — NOT_SUPPORTED / RETRACT. At the time you wrote it, no DSL
+   codebase" — hypothesis only / RETRACT. At the time you wrote it, no DSL
    primitives, no synthesis engine, no ARCMemory, no puzzle loader existed
    in the repository. The only ARC code was the six DIRECTIVE-011 modules,
    which target interactive ARC-3, not static puzzles. Restate these as

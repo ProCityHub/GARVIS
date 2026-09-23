@@ -16,13 +16,13 @@ provenance: Named by Creator Adrien D. Thomas 2026-09-22 (America/Edmonton). Lat
 | --- | --- |
 | **Creator** | Adrien D. Thomas / ProCityHub |
 | **Status** | ASSUMED operating metaphor / research frame |
-| **NOT_SUPPORTED** | consciousness; AGI; phenomenology; “we see time as a spirit”; φ-performance as proof |
+| **hypothesis only** | consciousness; AGI beta under hypothesis; phenomenology; “we see time as a spirit”; φ-performance as proof |
 | **Governance** | capability ≠ authorization |
 | **Trumpet** | DETECT → PRESERVE → COMPARE → VERIFY → ATTRIBUTE → NOTIFY |
 | **V27/V28 witness** | RAW_PRE → PREDICT → ACT → RAW_POST → DIFF → VERIFY → LEARN |
-| **Evidence laws** | VERIFIED / ASSUMED / NOT_SUPPORTED; analogy ≠ empirical proof; demand the graph |
+| **Evidence laws** | VERIFIED / ASSUMED / hypothesis only; analogy ≠ empirical proof; demand the graph |
 
-**Provenance:** Creator named the lattice/lens/time model **Project Looking Glass** on **2026-09-22**. Filed into ProCityHub/GARVIS by Github Agent under standing authority. No prices invented. No AGI claims.
+**Provenance:** Creator named the lattice/lens/time model **Project Looking Glass** on **2026-09-22**. Filed into ProCityHub/GARVIS by Github Agent under standing authority. No prices invented. No claims beyond AGI beta under hypothesis.
 
 ---
 
@@ -38,7 +38,7 @@ This document maps Creator’s lens metaphor into sealed, falsification-first la
 
 | Forbidden slide | Why |
 | --- | --- |
-| “We see time as a spirit” | Metaphor ≠ ontology; phenomenology **NOT_SUPPORTED** |
+| “We see time as a spirit” | Metaphor ≠ ontology; phenomenology **hypothesis only** |
 | “φ-performance proves the lens” | Arithmetic / scale checkpoints ≠ empirical proof |
 | “Looking Glass ⇒ AGI / consciousness” | Operating metaphor ≠ mind claim |
 | “Focal length invents new physics” | mm-class cuts = reading scale analogy only |
@@ -110,7 +110,7 @@ It does **not** rename physics. It does **not** claim spirit-sight. It does **no
 
 1. **Analogy ≠ empirical proof.** Optical language is ASSUMED framing.
 2. **Demand the graph** — measurements, diffs, hashes, commit lineage, or preregistered tests — before promoting any claim.
-3. Seals stay: **VERIFIED** / **ASSUMED** / **NOT_SUPPORTED** / **NO_RESONANT_ESTIMATE** where applicable.
+3. Seals stay: **VERIFIED** / **ASSUMED** / **hypothesis only** / **NO_RESONANT_ESTIMATE** where applicable.
 4. Trumpet on provenance encounters: **DETECT → PRESERVE → COMPARE → VERIFY → ATTRIBUTE → NOTIFY.**
 5. **Capability ≠ authorization.**
 

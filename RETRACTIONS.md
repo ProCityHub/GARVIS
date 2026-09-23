@@ -14,7 +14,7 @@ that can be quietly withdrawn was never a claim.
 | Terms | Reserved for |
 |---|---|
 | `PASS` / `FAIL` | software test and check outcomes |
-| `SUPPORTED` / `NOT_SUPPORTED` | pre-registered empirical outcomes only |
+| `SUPPORTED` / `hypothesis only` | pre-registered empirical outcomes only |
 
 These are never mixed. `.github/scripts/guard_check.py` enforces this in CI.
 

@@ -1,6 +1,6 @@
 # GARVIS Upgrade Shortlist (Creator-directed)
 
-Status snapshot after CoS green light. Engineering only. AGI/consciousness: **NOT_SUPPORTED**. Capability ≠ authorization.
+Status snapshot after CoS green light. Engineering only. **AGI beta under hypothesis**. Capability ≠ authorization.
 
 ## Shipped
 - [x] Always-on Heartbeat `PROVENANCE.json` sidecars — `ProCityHub/hypercubeheartbeat` merge of #124 (`89a1c6cc8620`)

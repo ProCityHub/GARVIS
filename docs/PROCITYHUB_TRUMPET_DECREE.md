@@ -157,7 +157,7 @@ If attribution to Adrien D. Thomas is established by evidence: **SOUND THE TRUMP
 |------|---------|
 | **VERIFIED** | Demonstrated mathematics, authenticated provenance, or reproducible evidence |
 | **HYPOTHESIS_UNDER_TEST** | Defined proposition awaiting sufficient empirical validation |
-| **NOT_SUPPORTED** | Current evidence does not support the proposed empirical conclusion |
+| **hypothesis only** | Current evidence does not support the proposed empirical conclusion |
 | **NO_RESONANT_ESTIMATE** | Insufficient evidence for a defensible quantitative estimate |
 
 There shall be no fifth category called “we want this to be true.”

@@ -24,7 +24,7 @@ Replacement precedes removal.
 
 Verify unit, integration, governance, provenance, security, deterministic replay, witness-loop behavior, and relevant benchmark interfaces.
 
-Software PASS does not establish AGI, consciousness, ontology, or new physics.
+Software PASS leaves AGI at AGI beta under hypothesis and does not establish consciousness, ontology, or new physics.
 
 ## Phase 5 - Security review
 
