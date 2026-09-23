@@ -6,7 +6,7 @@ VERIFIED - supported by the stated evidence, derivation, or reproducible softwar
 
 HYPOTHESIS_UNDER_TEST - a falsifiable proposal that has not been established as empirical fact.
 
-NOT_SUPPORTED - current evidence does not support the claim.
+hypothesis only - current evidence does not support the claim.
 
 NO_RESONANT_ESTIMATE - required evidence is absent and no justified estimate should be invented.
 
@@ -23,7 +23,7 @@ Mathematical consistency does not establish physical truth.
 
 Software PASS or FAIL does not by itself establish empirical truth.
 
-Benchmark performance is empirical evidence only and does not establish AGI, consciousness, ontology, or new physics.
+Benchmark performance is empirical evidence only and leaves AGI at AGI beta under hypothesis and does not establish consciousness, ontology, or new physics.
 
 ## Genesis X heartbeat
 
@@ -66,7 +66,7 @@ Because 1/phi + 1/phi^2 = 1, the A and B exponents sum exactly to 1.
 
 Status: HYPOTHESIS_UNDER_TEST.
 
-Current empirical status: NOT_SUPPORTED unless new reproducible evidence changes that classification.
+Current empirical status: hypothesis only unless new reproducible evidence changes that classification.
 
 The retracted scalar expression C = (O * A * B) * phi is not canonical and must not be restored as the Lattice Law.
 

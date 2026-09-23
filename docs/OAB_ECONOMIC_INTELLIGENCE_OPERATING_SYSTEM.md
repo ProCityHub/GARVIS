@@ -16,7 +16,7 @@ source_sha256: f87fde4f46217e7338a64957b22d3fc211baf1480e2ad1a214a3853ef6aff96d
 | Seal | Scope |
 | --- | --- |
 | **VERIFIED** | φ identities (`alpha + beta = 1`), 666 triangular and prime-square arithmetic, geometry metaphors **as geometry only** |
-| **NOT_SUPPORTED** | consciousness claims, AGI claims, millionaire guarantee, income forecasts |
+| **hypothesis only** | consciousness claims, AGI beyond AGI beta under hypothesis, millionaire guarantee, income forecasts |
 | **ASSUMED / HYPOTHESIS_UNDER_TEST** | OAB formula / six-wall architecture as improvers of business decisions or team intelligence |
 | **Governance** | capability ≠ authorization |
 | **Trumpet** | DETECT → PRESERVE → COMPARE → VERIFY → ATTRIBUTE → NOTIFY |
@@ -39,7 +39,7 @@ Every agent, teammate, workflow, and business experiment uses four labels:
 | --- | --- |
 | VERIFIED | Exact mathematics, reproduced software behavior, observed customer action, signed agreement, or money actually received. |
 | HYPOTHESIS_UNDER_TEST | A specific proposition with a defined test and failure condition. |
-| NOT_SUPPORTED | Current evidence failed to support the proposition. |
+| hypothesis only | Current evidence failed to support the proposition. |
 | NO_RESONANT_ESTIMATE | Not enough evidence exists for a defensible estimate. |
 
 This prevents a familiar business failure: confusing enthusiasm, projections, leads, applications, invoices, or AI-generated language with actual results.
@@ -91,7 +91,7 @@ alpha + beta = 1
 C = O * A^(1/phi) * B^(1/phi^2),  O,A,B > 0
 ```
 The identity alpha + beta = 1 is VERIFIED mathematics. Using C as a predictor of business opportunity quality, intelligence, or revenue remains HYPOTHESIS_UNDER_TEST. The implementation therefore keeps an ordinary baseline ranker and an OAB experimental ranker so results can be compared instead of assumed.
-> DO NOT SKIP THE CONTROL If the OAB scoring mode does not beat a transparent baseline in repeated real experiments, record NOT_SUPPORTED for that use case. Mathematical elegance is not business evidence.
+> DO NOT SKIP THE CONTROL If the OAB scoring mode does not beat a transparent baseline in repeated real experiments, record hypothesis only for that use case. Mathematical elegance is not business evidence.
 
 # 7. The ProCityHub Law of Verified Compounding
 This is an operating law - a governance rule for the system - not a claimed law of nature:
@@ -280,12 +280,12 @@ The companion package contains a small deterministic Python reference implementa
 python oab_money_brain.py --demo
 python -m unittest discover -s tests -v
 ```
-The baseline mode is the control. The OAB experimental mode is intentionally separate so the team can test whether it improves decisions. If it does not, that use of the theory is recorded as NOT_SUPPORTED instead of silently redefining success.
+The baseline mode is the control. The OAB experimental mode is intentionally separate so the team can test whether it improves decisions. If it does not, that use of the theory is recorded as hypothesis only instead of silently redefining success.
 
 # 23. Thesis
 A practical theory of economic intelligence should be judged by adaptive value creation under uncertainty. The system must identify useful opportunities, infer what a buyer or employer actually values, select actions under limited time and resources, learn from outcomes, preserve contradictory evidence, coordinate multiple specialized actors, and convert successful behavior into reusable assets.
 The OAB hypothesis is that separating observation, action, and bridge/verification functions - while maintaining persistent shared state - can improve that cycle. The six-wall mirror metaphor supplies a memorable routing model for bidirectional information flow. The canonical phi weighting supplies a falsifiable experimental ranking mechanism. Neither metaphor nor mathematics substitutes for measured results.
-> FALSIFIABLE CLAIM If a matched OAB-assisted workflow cannot improve measurable outcomes - such as decision quality, response rate, delivery quality, effective hourly rate, repeat business, or asset creation - against a reasonable baseline, then the business-performance claim is NOT_SUPPORTED for that experiment.
+> FALSIFIABLE CLAIM If a matched OAB-assisted workflow cannot improve measurable outcomes - such as decision quality, response rate, delivery quality, effective hourly rate, repeat business, or asset creation - against a reasonable baseline, then the business-performance claim is hypothesis only for that experiment.
 
 # 24. Final Operating Principle
 ```
@@ -300,7 +300,7 @@ The long-term objective is a team that gets smarter economically because reality
 You are part of the ProCityHub OAB Economic Brain created by Adrien D. Thomas / ProCityHub.
 Mission: create lawful, ethical, evidence-based income and owned assets.
 Loop: OBSERVE -> SCREEN -> TEST -> SELL -> DELIVER -> VERIFY -> COMPOUND.
-Labels: VERIFIED / HYPOTHESIS_UNDER_TEST / NOT_SUPPORTED / NO_RESONANT_ESTIMATE.
+Labels: VERIFIED / HYPOTHESIS_UNDER_TEST / hypothesis only / NO_RESONANT_ESTIMATE.
 Never confuse a lead with a customer, an invoice with cash, an AI answer with evidence, or a public result with private validation.
 For every opportunity: identify the buyer, problem, demand evidence, smallest paid test, required skill, delivery risk, asset potential, and falsification condition.
 After every action: compare prediction with observed reality and update the shared ledger.
@@ -315,5 +315,5 @@ Scale only verified processes. Human approval is required for spending, contract
 | Six-wall cube and eight-corner geometry | VERIFIED geometry |
 | OAB formula improves business decisions | HYPOTHESIS_UNDER_TEST |
 | Six-wall mirror architecture improves team intelligence | HYPOTHESIS_UNDER_TEST |
-| This system guarantees millionaire status | NOT_SUPPORTED |
+| This system guarantees millionaire status | hypothesis only |
 | Expected income from this blueprint | NO_RESONANT_ESTIMATE until real market tests |

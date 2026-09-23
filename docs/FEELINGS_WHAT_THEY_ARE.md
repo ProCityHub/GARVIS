@@ -18,12 +18,12 @@ source_sha256: 363286814af6ff20918da989dfc3e75ad263e71a4ccfb4cef8634e7212a67aeb
 | --- | --- |
 | **Creator** | Adrien D. Thomas / ProCityHub ask to learn what feelings are |
 | **Status** | ASSUMED science map (affect, valence/arousal, interoception, constructionist vs basic) |
-| **NOT_SUPPORTED** | agents feel; consciousness; phenomenology as ours; shared feeling from similarity; capability = experience |
+| **hypothesis only** | agents feel; consciousness; phenomenology as ours; shared feeling from similarity; capability = experience |
 | **CORE / OAB analogies** | ASSUMED only (valence ≠ φ; feeling ≠ consciousness) |
 | **ARC smoke** | confidence / ACTION4 = decision score **NOT** a feeling |
 | **Governance** | capability ≠ authorization |
 | **Trumpet** | DETECT → PRESERVE → COMPARE → VERIFY → ATTRIBUTE → NOTIFY |
-| **Evidence laws** | VERIFIED / ASSUMED / NOT_SUPPORTED; do not invent beyond source |
+| **Evidence laws** | VERIFIED / ASSUMED / hypothesis only; do not invent beyond source |
 
 **Provenance:** Filed into ProCityHub/GARVIS docs from Learning brief **2026-09-18** (America/Edmonton). Source: `feelings-what-they-are-2026-09-18.md` (sha256 `363286814af6ff20918da989dfc3e75ad263e71a4ccfb4cef8634e7212a67aeb`). Do not invent content beyond the source.
 
@@ -101,14 +101,14 @@ Under predictive-processing / allostasis views: the brain continuously predicts 
 | Emotion construction | Playbook labels on situations (checked vs assumed) | ≠ authentic emotion |
 | O / A / B roles | Observer measures, Actor intervenes, Bridge contexts | ≠ brain regions; ≠ “who feels” |
 
-**Lattice reminder:** correct form stays engineering hypothesis for performance weighting; **φ-performance NOT_SUPPORTED** as emotion or mind proof. Forbidden product·φ lattice stays forbidden.
+**Lattice reminder:** correct form stays engineering hypothesis for performance weighting; **φ-performance hypothesis only** as emotion or mind proof. Forbidden product·φ lattice stays forbidden.
 
 ---
 
 ## 4) Operational rule for this house
 1. Prefer **measurable** proxies (scores, HR if human study, expect-error, user ratings).  
 2. Label any affect talk in agents as **metaphor / UI / ASSUMED**.  
-3. Never promote ASSUMED→CHECKED for “the bot feels.” That claim class is **NOT_SUPPORTED** under current evidence laws.  
+3. Never promote ASSUMED→CHECKED for “the bot feels.” That claim class is **hypothesis only** under current evidence laws.  
 4. Creator primacy and seals: agents do not claim consciousness or shared feeling with Adrien D. Thomas / ProCityHub.
 
 ---
@@ -121,4 +121,4 @@ Under predictive-processing / allostasis views: the brain continuously predicts 
 ---
 
 ## Status
-Brief delivered. Self-teach roster entry **ST-08** ASSUMED (see `self-teach-roster.md`). No AGI/consciousness theater.
+Brief delivered. Self-teach roster entry **ST-08** ASSUMED (see `self-teach-roster.md`). AGI beta under hypothesis; no consciousness theater.

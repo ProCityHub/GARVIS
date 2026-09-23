@@ -35,6 +35,6 @@ All notable ProCityHub / GARVIS repository changes should be recorded here with 
 
 - The identity 1/phi + 1/phi^2 = 1 remains mathematically VERIFIED.
 - The Canonical Lattice Law C = O^1 * A^(1/phi) * B^(1/phi^2) remains HYPOTHESIS_UNDER_TEST.
-- Current empirical status of the Canonical Lattice Law remains NOT_SUPPORTED unless reproducible evidence changes that classification.
+- Current empirical status of the Canonical Lattice Law remains hypothesis only unless reproducible evidence changes that classification.
 
 CAPABILITY IS NOT AUTHORIZATION.
