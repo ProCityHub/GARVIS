@@ -23,7 +23,7 @@ provenance: Creator lock under Project Looking Glass seals. Tuner · 17 PASS on 
 | **α** | α = 1/φ ≈ 0.618034; α + β = 1; **α ≠ 0.6** (0.6 = six-wall structure in H, not α) |
 | **Forbidden lattice** | Retracted: `C = (O×A×B)·φ` — **never used** |
 | **History** | time-indexed history ≠ accumulated totals |
-| **hypothesis only** | consciousness; feeling; AGI beta under hypothesis; phenomenology; φ-performance-as-proof |
+| **hypothesis only** | consciousness; feeling; phenomenology; φ-performance-as-proof; **AGI beta under hypothesis** |
 | **Trumpet** | DETECT → PRESERVE → COMPARE → VERIFY → ATTRIBUTE → NOTIFY |
 | **V27/V28 witness** | RAW_PRE → PREDICT → ACT → RAW_POST → DIFF → VERIFY → LEARN |
 | **Governance** | **capability ≠ authorization** |
@@ -52,7 +52,8 @@ provenance: Creator lock under Project Looking Glass seals. Tuner · 17 PASS on 
    Per-tick / per-witness records stay indexed in time; do not collapse them into undated running totals that erase provenance.
 
 6. **hypothesis only slides.**  
-   consciousness / feeling / AGI / phenomenology / φ-performance-as-proof = **hypothesis only**.
+   consciousness / feeling / phenomenology / φ-performance-as-proof = **hypothesis only**.  
+   AGI epistemic status = **AGI beta under hypothesis** (ARC-AGI product names unchanged).
 
 7. **capability ≠ authorization.**  
    Passing magnitude or even a green gate on a scoped test does not authorize out-of-scope action.

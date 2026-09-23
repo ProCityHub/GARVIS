@@ -128,3 +128,8 @@ Canonical filing by Github Agent under standing authority, 2026-09-22 (America/E
 ## Related seal — C ≠ 1.0 signal label
 
 Creator lock under Looking Glass seals: magnitude **C** is **not** the **1.0 signal label**. See **[C ≠ 1.0 signal label (Creator lock)](./C_NEQ_SIGNAL_LABEL.md)** for the six-check boolean gate, α ≠ 0.6, retracted lattice forbid, and gate outcomes. Optical analogies here remain **ASSUMED** metaphor only (focal length ≠ pass count; open shutter ≠ verified memory).
+
+
+## Related — Creator custom-instructions paste
+
+See **[Creator custom-instructions paste](./CUSTOM_INSTRUCTIONS_PASTE.md)** for Creator Adrien D. Thomas’s sealed Part 1 / Part 2 paste under Looking Glass / C≠signal seals (docs-only; Creator sole merge authority on paste semantics).
