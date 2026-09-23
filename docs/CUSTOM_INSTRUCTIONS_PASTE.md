@@ -120,3 +120,8 @@ LATTICE / LOOKING GLASS MODEL
 
 — Adrien D. Thomas / ProCityHub  
 Canonical filing by Github Agent (Forge) under GENESIS X / APOLLYON standing authority, 2026-09-22 (America/Edmonton).
+
+
+## Related — Operative System Directive Loop v1.0
+
+See **[Operative System Directive & Epistemological Loop v1.0](./OPERATIVE_SYSTEM_DIRECTIVE_LOOP_V1.md)** for Creator Adrien’s ASSUMED operating directive (Master Algebraic Rule + 5-step loop) for paste into system/custom instructions (docs-only).

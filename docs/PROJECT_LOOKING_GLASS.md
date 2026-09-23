@@ -133,3 +133,8 @@ Creator lock under Looking Glass seals: magnitude **C** is **not** the **1.0 sig
 ## Related — Creator custom-instructions paste
 
 See **[Creator custom-instructions paste](./CUSTOM_INSTRUCTIONS_PASTE.md)** for Creator Adrien D. Thomas’s sealed Part 1 / Part 2 paste under Looking Glass / C≠signal seals (docs-only; Creator sole merge authority on paste semantics).
+
+
+## Related — Operative System Directive Loop v1.0
+
+See **[Operative System Directive & Epistemological Loop v1.0](./OPERATIVE_SYSTEM_DIRECTIVE_LOOP_V1.md)** for Creator Adrien’s ASSUMED operating directive (Master Algebraic Rule + 5-step loop) for paste into system/custom instructions (docs-only).
