@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, Mapping, Optional
 
 from .creator_authority import CreatorAuthority
+from .brain_binding import HeartbeatBrainBinding
 from .self_authority import GarvisSelfAuthority, InternalAction, require_self_authority
 from .heartbeat_kernel import (
     CycleStatus,
@@ -58,6 +59,7 @@ class AutomaticHeartbeatService:
                 InternalAction.HEARTBEAT,
             )
 
+        self.brain = HeartbeatBrainBinding(self._read_state().get("brain_checkpoint"))
         self.predictions = PredictionWitnessLedger(
             self.root / "heartbeat_predictions.sqlite3"
         )
@@ -122,6 +124,9 @@ class AutomaticHeartbeatService:
                 state.provenance.get("internal_dialogue", {}),
             ),
             "phi_status": "HYPOTHESIS_UNDER_TEST",
+            "brain": raw_post.get("brain", state.prediction.get("brain", {})),
+            "brain_checkpoint": self.brain.checkpoint(),
+            "contradictions": list(state.contradictions),
         }
 
         temporary = self.state_path.with_suffix(".tmp")
@@ -171,6 +176,7 @@ class AutomaticHeartbeatService:
 
         def predict(pre: Mapping[str, Any]) -> Mapping[str, Any]:
             system = dict(pre.get("system", {}))
+            brain = self.brain.assess(system)
             needs_attention = bool(
                 not system.get("repository_available", False)
                 or system.get("dirty_paths")
@@ -185,6 +191,7 @@ class AutomaticHeartbeatService:
                 "heartbeat_should_continue": True,
                 "system_attention_expected": needs_attention,
                 "expected_return_phase": "RECEIVE",
+                "brain": brain,
             }
 
         def propose(
@@ -201,6 +208,7 @@ class AutomaticHeartbeatService:
                 "next_sequence": int(pred["next_sequence"]),
                 "internal_dialogue": dialogue,
                 "observed_system": dict(pre.get("system", {})),
+                "brain": dict(pred["brain"]),
             }
 
         def plan(
@@ -236,6 +244,7 @@ class AutomaticHeartbeatService:
                     proposal["internal_dialogue"]
                 ),
                 "next_phase": next_phase,
+                "brain": dict(proposal["brain"]),
                 "phi_baseline": benchmark_phi(
                     observer=1.0,
                     actor=0.8,
@@ -285,6 +294,13 @@ class AutomaticHeartbeatService:
                 self.self_authority,
                 InternalAction.LEARN,
             )
+            if (
+                state.status is CycleStatus.COMPLETED
+                and state.verification.get("sequence_verified") is True
+                and state.verification.get("omega_to_alpha_verified") is True
+                and not state.contradictions
+            ):
+                self.brain.learn_verified_cycle()
             self._persist_state(state)
             if isinstance(state.raw_post, Mapping):
                 dialogue = state.raw_post.get("internal_dialogue", {})
@@ -373,6 +389,7 @@ class AutomaticHeartbeatService:
             running
             and state.get("last_cycle_status")
             == CycleStatus.COMPLETED.value
+            and not state.get("contradictions")
         )
 
         state["heartbeat_running"] = running
