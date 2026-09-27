@@ -4,6 +4,7 @@ import pytest
 
 from garvis.brain_binding import HeartbeatBrainBinding
 from garvis.heartbeat_service import AutomaticHeartbeatService
+from garvis.self_authority import InternalAction, require_self_authority
 
 
 def test_live_brain_predicts_from_verified_cycles_after_restart(tmp_path):
@@ -36,10 +37,10 @@ def test_failed_execution_does_not_train_brain(tmp_path, monkeypatch):
     import garvis.heartbeat_service as module
 
     service = AutomaticHeartbeatService(tmp_path)
-    original = module.require_self_authority
+    original = require_self_authority
 
     def deny_consolidation(authority, action):
-        if action is module.InternalAction.CONSOLIDATE:
+        if action is InternalAction.CONSOLIDATE:
             raise PermissionError("test execution failure")
         return original(authority, action)
 
