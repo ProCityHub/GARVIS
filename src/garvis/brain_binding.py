@@ -19,6 +19,7 @@ class HeartbeatBrainBinding:
     HISTORY_LIMIT = 89
 
     def __init__(self, checkpoint: Mapping[str, Any] | None = None) -> None:
+        """Restore validated assessment and verified-outcome counters, if supplied."""
         self.engine = HypercubeBrainEngine()
         if checkpoint:
             if checkpoint.get("version") != 1:
@@ -38,6 +39,7 @@ class HeartbeatBrainBinding:
                 )
 
     def assess(self, system: Mapping[str, Any]) -> dict[str, Any]:
+        """Return an advisory assessment from a single repository evidence source."""
         # One Git observation is one source. Repeated heartbeats must not be
         # counted as independent corroboration or verification of the whole repo.
         available = system.get("repository_available") is True
@@ -61,16 +63,19 @@ class HeartbeatBrainBinding:
         return payload
 
     def learn_verified_cycle(self) -> None:
+        """Record one caller-verified internal outcome and bound memory history."""
         self.engine.learn_action_effect(
             action=self.ACTION, observed_outcome=self.OUTCOME, verified=True
         )
         self._trim()
 
     def _trim(self) -> None:
+        """Keep only the configured number of recent episodes and events."""
         del self.engine.episodes[:-self.HISTORY_LIMIT]
         del self.engine.events[:-self.HISTORY_LIMIT]
 
     def checkpoint(self) -> dict[str, Any]:
+        """Return versioned counters sufficient to reconstruct narrow outcome memory."""
         return {
             "version": 1,
             "cycle_id": self.engine.cycle_id,

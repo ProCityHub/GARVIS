@@ -16,7 +16,25 @@ The `brain` field in heartbeat health exposes the latest assessment. The
 in the existing atomic heartbeat-state file. Restart reconstructs this narrow
 action-effect memory. Working memory, episodes, and events are bounded in RAM;
 they are not full durable conversational memory. Existing heartbeat state files
-without a checkpoint start a fresh brain binding and retain their sequence.
+without brain history start a fresh brain binding and retain their sequence.
+
+The SQLite prediction/result ledger is the durable recovery source. The atomic
+JSON checkpoint stores `brain_result_rowid` alongside the learning counters.
+On startup and before a new cycle, results after that cursor are reconciled in
+commit order. A committed, verified sequence restores sequence progress; only
+completed results with both verification flags and no contradictions train the
+brain, and recovery still requires `LEARN` authority. Frozen predictions without
+a committed result never train it. Older checkpoints use `last_cycle_id` to find
+their ledger position, preventing previously learned cycles from being counted
+again.
+
+An interruption after SQLite commit or before checkpoint replacement therefore
+replays the pending result on restart without executing its action again.
+Counters and cursor are replaced together, so repeated restarts do not duplicate
+learning. Recovery retains the result's original timestamp rather than reporting
+old work as a fresh heartbeat. Keep the ledger and checkpoint together; ledger
+deletion/replacement and concurrent services sharing one state directory are not
+supported. This recovery covers process interruption, not storage corruption.
 
 From the repository, after installing the project:
 
