@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, Mapping, Optional
 
 from .creator_authority import CreatorAuthority
+from .brain_binding import HeartbeatBrainBinding
 from .self_authority import GarvisSelfAuthority, InternalAction, require_self_authority
 from .heartbeat_kernel import (
     CycleStatus,
@@ -40,6 +41,7 @@ class AutomaticHeartbeatService:
         repository_root: Optional[Path] = None,
         speak: bool = False,
     ) -> None:
+        """Open local ledgers, restore the checkpoint, and reconcile committed results."""
         self.root = Path(root)
         self.root.mkdir(parents=True, exist_ok=True)
         self.interval_seconds = max(0.0, float(interval_seconds))
@@ -58,6 +60,7 @@ class AutomaticHeartbeatService:
                 InternalAction.HEARTBEAT,
             )
 
+        self.brain = HeartbeatBrainBinding(self._read_state().get("brain_checkpoint"))
         self.predictions = PredictionWitnessLedger(
             self.root / "heartbeat_predictions.sqlite3"
         )
@@ -70,12 +73,27 @@ class AutomaticHeartbeatService:
         )
         self.sequence = self._load_sequence()
         self.rebound_count = self._load_rebound_count()
+        saved = self._read_state()
+        # Older checkpoints identify their last incorporated cycle by UUID.
+        anchor = self.predictions.db.execute(
+            "SELECT MAX(r.rowid) FROM results r JOIN frozen_predictions p "
+            "ON p.prediction_id = r.prediction_id WHERE p.cycle_id = ?",
+            (saved.get("last_cycle_id"),),
+        ).fetchone()[0]
+        self._brain_result_rowid = int(saved.get("brain_result_rowid", anchor or 0))
+        try:
+            self._recover_brain_results()
+        except BaseException:
+            self.close()
+            raise
 
     @property
     def state_path(self) -> Path:
+        """Return the atomic heartbeat checkpoint path."""
         return self.root / "heartbeat_state.json"
 
     def _read_state(self) -> Mapping[str, Any]:
+        """Read the checkpoint, treating missing or unreadable JSON as empty state."""
         try:
             raw = json.loads(
                 self.state_path.read_text(encoding="utf-8")
@@ -85,18 +103,21 @@ class AutomaticHeartbeatService:
             return {}
 
     def _load_sequence(self) -> int:
+        """Restore the saved heartbeat sequence or start at zero."""
         try:
             return int(self._read_state().get("sequence", 0))
         except (TypeError, ValueError):
             return 0
 
     def _load_rebound_count(self) -> int:
+        """Restore the recorded retry count or start at zero."""
         try:
             return int(self._read_state().get("rebound_count", 0))
         except (TypeError, ValueError):
             return 0
 
     def _persist_state(self, state: OABState) -> None:
+        """Save cycle health, learning counters, and the consumed-result cursor together."""
         raw_pre = state.raw_pre if isinstance(state.raw_pre, Mapping) else {}
         raw_post = state.raw_post if isinstance(state.raw_post, Mapping) else {}
 
@@ -122,8 +143,16 @@ class AutomaticHeartbeatService:
                 state.provenance.get("internal_dialogue", {}),
             ),
             "phi_status": "HYPOTHESIS_UNDER_TEST",
+            "brain": raw_post.get("brain", state.prediction.get("brain", {})),
+            "brain_checkpoint": self.brain.checkpoint(),
+            "brain_result_rowid": self._brain_result_rowid,
+            "contradictions": list(state.contradictions),
         }
 
+        self._write_state(payload)
+
+    def _write_state(self, payload: Mapping[str, Any]) -> None:
+        """Atomically replace the checkpoint and its incorporated-result cursor."""
         temporary = self.state_path.with_suffix(".tmp")
         temporary.write_text(
             json.dumps(payload, indent=2, sort_keys=True),
@@ -131,7 +160,64 @@ class AutomaticHeartbeatService:
         )
         temporary.replace(self.state_path)
 
+    def _recover_brain_results(self, persist: bool = True) -> None:
+        """Replay committed results after the checkpoint without repeating actions.
+
+        Result row IDs and the brain counters are saved together. Interrupted
+        replay is safe to repeat from the prior checkpoint. Frozen predictions
+        without a committed result cannot train the brain. One service owns a
+        state directory; concurrent writers are not supported.
+        """
+        saved = dict(self._read_state())
+        changed = False
+        rows = self.predictions.db.execute(
+            "SELECT r.rowid, p.cycle_id, p.payload_json, r.payload_json, r.recorded_at "
+            "FROM results r JOIN frozen_predictions p "
+            "ON p.prediction_id = r.prediction_id WHERE r.rowid > ? ORDER BY r.rowid",
+            (self._brain_result_rowid,),
+        )
+        for rowid, cycle_id, prediction_json, result_json, recorded_at in rows:
+            prediction = json.loads(prediction_json)
+            result = json.loads(result_json)
+            brain = prediction.get("brain")
+            if not isinstance(brain, dict):
+                self._brain_result_rowid = rowid
+                continue
+            verification = result.get("verification", {})
+            eligible = (
+                result.get("status") == CycleStatus.COMPLETED.value
+                and verification.get("sequence_verified") is True
+                and verification.get("omega_to_alpha_verified") is True
+                and not result.get("contradictions")
+            )
+            if eligible:
+                require_self_authority(self.self_authority, InternalAction.LEARN)
+            self.brain.engine.cycle_id = max(
+                self.brain.engine.cycle_id, int(brain["cycle_id"])
+            )
+            if eligible:
+                self.brain.learn_verified_cycle()
+            if verification.get("sequence_verified") is True:
+                self.sequence = max(self.sequence, int(prediction["next_sequence"]))
+            self._brain_result_rowid = rowid
+            saved.update({
+                "sequence": self.sequence,
+                "last_cycle_id": cycle_id,
+                "last_cycle_status": result["status"],
+                "last_artifact_sha256": result.get("artifact_sha256"),
+                "brain": brain,
+                "brain_checkpoint": self.brain.checkpoint(),
+                "brain_result_rowid": rowid,
+                "contradictions": result.get("contradictions", []),
+                # Recovery must not make an old cycle appear freshly executed.
+                "updated_at": recorded_at,
+            })
+            changed = True
+        if changed and persist:
+            self._write_state(saved)
+
     def _speak_dialogue(self, dialogue: Mapping[str, Any]) -> None:
+        """Print changed internal dialogue only when speech output is enabled."""
         if not self.speak or not dialogue:
             return
 
@@ -155,7 +241,11 @@ class AutomaticHeartbeatService:
         )
 
     def run_once(self) -> OABState:
+        """Reconcile durable results and run one governed heartbeat cycle."""
+        self._recover_brain_results()
+
         def observe() -> Mapping[str, Any]:
+            """Capture the current sequence and read-only repository evidence."""
             snapshot = observe_system(
                 self.repository_root,
                 self.side_effects.pending_count(),
@@ -170,7 +260,9 @@ class AutomaticHeartbeatService:
             }
 
         def predict(pre: Mapping[str, Any]) -> Mapping[str, Any]:
+            """Assess repository availability and predict the next internal sequence."""
             system = dict(pre.get("system", {}))
+            brain = self.brain.assess(system)
             needs_attention = bool(
                 not system.get("repository_available", False)
                 or system.get("dirty_paths")
@@ -185,12 +277,14 @@ class AutomaticHeartbeatService:
                 "heartbeat_should_continue": True,
                 "system_attention_expected": needs_attention,
                 "expected_return_phase": "RECEIVE",
+                "brain": brain,
             }
 
         def propose(
             pre: Mapping[str, Any],
             pred: Mapping[str, Any],
         ) -> Mapping[str, Any]:
+            """Prepare an internal observation with its frozen brain assessment."""
             snapshot = observe_system(
                 self.repository_root,
                 self.side_effects.pending_count(),
@@ -201,6 +295,7 @@ class AutomaticHeartbeatService:
                 "next_sequence": int(pred["next_sequence"]),
                 "internal_dialogue": dialogue,
                 "observed_system": dict(pre.get("system", {})),
+                "brain": dict(pred["brain"]),
             }
 
         def plan(
@@ -208,6 +303,7 @@ class AutomaticHeartbeatService:
             _pred: Mapping[str, Any],
             proposal: Mapping[str, Any],
         ) -> Mapping[str, Any]:
+            """Describe phase progression without authorizing a repair."""
             dialogue = dict(proposal["internal_dialogue"])
             return {
                 "steps": PHASE_NAMES + ("RECEIVE",),
@@ -222,6 +318,7 @@ class AutomaticHeartbeatService:
         def execute_internal(
             proposal: Mapping[str, Any],
         ) -> Mapping[str, Any]:
+            """Advance the sequence only after the consolidation authority check."""
             require_self_authority(
                 self.self_authority,
                 InternalAction.CONSOLIDATE,
@@ -236,6 +333,7 @@ class AutomaticHeartbeatService:
                     proposal["internal_dialogue"]
                 ),
                 "next_phase": next_phase,
+                "brain": dict(proposal["brain"]),
                 "phi_baseline": benchmark_phi(
                     observer=1.0,
                     actor=0.8,
@@ -249,6 +347,7 @@ class AutomaticHeartbeatService:
             post: Mapping[str, Any],
             pred: Mapping[str, Any],
         ) -> Mapping[str, Any]:
+            """Compare sequence and return phase with the frozen prediction."""
             expected = int(pred["next_sequence"])
             observed = int(post["sequence"])
             contradictions = []
@@ -281,10 +380,12 @@ class AutomaticHeartbeatService:
             }
 
         def learn(state: OABState) -> None:
+            """Reconcile eligible committed results and persist the completed cycle state."""
             require_self_authority(
                 self.self_authority,
                 InternalAction.LEARN,
             )
+            self._recover_brain_results(persist=False)
             self._persist_state(state)
             if isinstance(state.raw_post, Mapping):
                 dialogue = state.raw_post.get("internal_dialogue", {})
@@ -326,6 +427,7 @@ class AutomaticHeartbeatService:
         )
 
     def run_forever(self) -> None:
+        """Run heartbeat cycles with bounded backoff after failures."""
         backoff = max(0.1, self.interval_seconds or 0.1)
 
         while True:
@@ -353,6 +455,7 @@ class AutomaticHeartbeatService:
             time.sleep(max(0.0, wait_seconds))
 
     def health(self) -> Mapping[str, Any]:
+        """Report persisted cycle health with freshness and contradiction checks."""
         state = dict(self._read_state())
         updated_at = float(state.get("updated_at", 0.0) or 0.0)
         age_seconds = (
@@ -373,6 +476,7 @@ class AutomaticHeartbeatService:
             running
             and state.get("last_cycle_status")
             == CycleStatus.COMPLETED.value
+            and not state.get("contradictions")
         )
 
         state["heartbeat_running"] = running
@@ -393,5 +497,6 @@ class AutomaticHeartbeatService:
         return state
 
     def close(self) -> None:
+        """Close the prediction and side-effect ledger connections."""
         self.predictions.close()
         self.side_effects.close()
