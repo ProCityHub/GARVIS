@@ -9,7 +9,7 @@ from unittest.mock import patch
 try:
     from PIL import Image
 except ImportError:
-    raise unittest.SkipTest("Install requirements-local-eyes.txt to test optional vision")
+    raise unittest.SkipTest("Install requirements-local-eyes.txt to test optional vision") from None
 from hypercube_brain.local_eyes import LocalEyes, main, read_image
 
 
@@ -40,7 +40,8 @@ class LocalEyesTests(unittest.TestCase):
         self.assertEqual(first["frame_sha256"], same["frame_sha256"])
         self.assertTrue(all(c["pixel_change"] == 0 for c in same["cells"]))
         self.assertEqual(eyes.observe(image, source="b")["comparison_status"], "BASELINE")
-        self.assertEqual(eyes.observe(image.resize((24, 24)), source="b")["comparison_status"], "BASELINE")
+        resized = eyes.observe(image.resize((24, 24)), source="b")
+        self.assertEqual(resized["comparison_status"], "BASELINE")
 
     def test_invalid_image_and_local_file_decoding(self):
         with self.assertRaises(ValueError):
