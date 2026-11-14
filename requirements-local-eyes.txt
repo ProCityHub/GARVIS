@@ -1,0 +1,3 @@
+# Optional local image bridge. Core GARVIS does not need this dependency.
+Pillow>=10.4,<13
+# Desktop webcam capture additionally needs: opencv-python>=4.10,<5
