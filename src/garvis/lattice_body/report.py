@@ -97,6 +97,7 @@ class CycleReport:
     opening_quant: str | None = None
     opening_seed: int | None = None
     opening_temperature: float | None = None
+    opening_status: str = "none"
 
     def as_dict(self) -> dict[str, object]:
         return {
@@ -146,4 +147,5 @@ class CycleReport:
             "opening_quant": self.opening_quant,
             "opening_seed": self.opening_seed,
             "opening_temperature": self.opening_temperature,
+            "opening_status": self.opening_status,
         }

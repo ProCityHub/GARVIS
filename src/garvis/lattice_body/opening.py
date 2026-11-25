@@ -14,7 +14,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from garvis.local_language_runtime import LocalLanguageRuntime, LocalRuntimeConfig
+from garvis.local_language_runtime import LocalRuntimeConfig, run_noninteractive
 from garvis.provider_bridge import provider_configuration_error
 
 from .redact import redact_text
@@ -37,6 +37,7 @@ class OpeningResult:
     quant: str | None = None
     seed: int | None = None
     temperature: float | None = None
+    status: str = "none"
 
 
 class _BridgeRuntime:
@@ -66,6 +67,91 @@ def _quant_from_name(name: str) -> str | None:
     return match.group(0) if match else None
 
 
+def generation_settings() -> tuple[int, float, int]:
+    seed = int(os.getenv("GARVIS_LATTICE_SEED", "1").strip() or "1")
+    temperature = float(os.getenv("GARVIS_LATTICE_TEMPERATURE", "0").strip() or "0")
+    max_tokens = int(os.getenv("GARVIS_LATTICE_MAX_TOKENS", "512").strip() or "512")
+    return seed, temperature, max_tokens
+
+
+def opening_prompt(*, law_zero: str, recorded_state: str) -> str:
+    """Short prompt. The question is the last line so it is inside the context."""
+
+    return (
+        law_zero.strip()
+        + "\n\n"
+        + SHORTHAND
+        + "\n\nRecorded state:\n"
+        + recorded_state.strip()
+        + "\n\n"
+        + OPENING_QUESTION
+    )
+
+
+_META = re.compile(r"^(build|model|ftype|modalities)\s*:", re.IGNORECASE)
+_BOX = set(" ▄▀█▌▐░▒▓")
+
+
+def _banner_line(line: str) -> bool:
+    stripped = line.strip()
+    if not stripped:
+        return False
+    lowered = stripped.lower()
+    if stripped.startswith(">"):
+        return True
+    if lowered.startswith(("/exit", "/regen", "/clear", "/read", "/glob")):
+        return True
+    if lowered.startswith("loading model"):
+        return True
+    if lowered.startswith("available commands"):
+        return True
+    if lowered.startswith("using custom system"):
+        return True
+    if lowered.startswith("exiting"):
+        return True
+    if lowered.startswith("[ prompt:") or lowered.startswith("[prompt:"):
+        return True
+    if _META.match(stripped):
+        return True
+    if set(stripped) <= _BOX:
+        return True
+    return False
+
+
+def strip_engine_banner(text: str) -> str:
+    """Drop llama.cpp console chrome. Remaining lines stay verbatim."""
+
+    lines = text.splitlines()
+    cut = None
+    for index, line in enumerate(lines):
+        if "(truncated)" in line:
+            cut = index
+    if cut is not None:
+        lines = lines[cut + 1 :]
+    kept = [line.rstrip() for line in lines if not _banner_line(line)]
+    return "\n".join(kept).strip()
+
+
+_OFF_TOPIC = ("weather", "philadelphia", "forecast", "stock price", "headline")
+
+
+def opening_status(text: str | None, *, prompt: str) -> str:
+    """Return ``answer_unusable`` for an empty or off-topic reply."""
+
+    if text is None or not text.strip():
+        return "answer_unusable"
+    lowered = text.lower()
+    source = prompt.lower()
+    if any(topic in lowered and topic not in source for topic in _OFF_TOPIC):
+        return "answer_unusable"
+    addressed = "adrien" in lowered or any(
+        word in lowered for word in ("propos", "approval", "review", "want", "queued")
+    )
+    if not addressed:
+        return "answer_unusable"
+    return "recorded"
+
+
 def select_language_runtime(
     workspace: Path,
 ) -> tuple[object, str, str | None, str | None] | None:
@@ -81,9 +167,8 @@ def select_language_runtime(
     if local_requested:
         config = LocalRuntimeConfig.from_environment(workspace)
         config.validate()
-        runtime = LocalLanguageRuntime(config, repository_root=workspace)
         return (
-            runtime,
+            config,
             "local_language_runtime",
             config.model.name,
             _quant_from_name(config.model.name),
@@ -97,6 +182,32 @@ def select_language_runtime(
     return None
 
 
+def _finish(
+    text: str | None,
+    *,
+    prompt: str,
+    provider: str,
+    model: str | None,
+    quant: str | None,
+    seed: int,
+    temperature: float,
+    reason: str | None,
+) -> OpeningResult:
+    status = opening_status(text, prompt=prompt)
+    if status == "answer_unusable" and reason is None:
+        reason = "answer_unusable"
+    return OpeningResult(
+        text=text,
+        reason=reason,
+        provider=provider,
+        model=model,
+        quant=quant,
+        seed=seed,
+        temperature=temperature,
+        status=status,
+    )
+
+
 def ask_opening(
     *,
     workspace: Path,
@@ -106,6 +217,8 @@ def ask_opening(
 ) -> OpeningResult:
     """Ask the opening question. A missing runtime records null."""
 
+    seed, temperature, max_tokens = generation_settings()
+    prompt = opening_prompt(law_zero=law_zero, recorded_state=recorded_state)
     provider = "injected"
     model: str | None = None
     quant: str | None = None
@@ -123,30 +236,38 @@ def ask_opening(
                 text=None,
                 reason=redact_text(str(exc)) or "runtime configuration failed",
                 provider=requested,
+                seed=seed,
+                temperature=temperature,
+                status="answer_unusable",
             )
         if chosen is None:
             return OpeningResult(
                 text=None,
                 reason=NULL_REASON,
                 provider="none",
+                seed=seed,
+                temperature=temperature,
+                status="none",
             )
         selected, provider, model, quant = chosen
-    message = "\n\n".join(
-        part
-        for part in (
-            OPENING_QUESTION,
-            SHORTHAND,
-            law_zero.strip(),
-            recorded_state.strip(),
-        )
-        if part
-    )
     try:
-        text = selected.respond(  # type: ignore[attr-defined]
-            message,
-            external_context="",
-            workspace_context="",
-        )
+        if isinstance(selected, LocalRuntimeConfig):
+            raw = run_noninteractive(
+                selected,
+                prompt=prompt,
+                seed=seed,
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
+            text = strip_engine_banner(raw)
+        else:
+            text = selected.respond(  # type: ignore[attr-defined]
+                prompt,
+                external_context="",
+                workspace_context="",
+            )
+            if isinstance(text, str):
+                text = strip_engine_banner(text)
     except Exception as exc:
         return OpeningResult(
             text=None,
@@ -154,19 +275,19 @@ def ask_opening(
             provider=provider,
             model=model,
             quant=quant,
+            seed=seed,
+            temperature=temperature,
+            status="answer_unusable",
         )
-    if not isinstance(text, str) or not text.strip():
-        return OpeningResult(
-            text=None,
-            reason="runtime returned an empty answer",
-            provider=provider,
-            model=model,
-            quant=quant,
-        )
-    return OpeningResult(
-        text=text,
-        reason=None,
+    if not isinstance(text, str):
+        text = None
+    return _finish(
+        text,
+        prompt=prompt,
         provider=provider,
         model=model,
         quant=quant,
+        seed=seed,
+        temperature=temperature,
+        reason=None,
     )

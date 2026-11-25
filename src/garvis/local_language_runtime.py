@@ -460,6 +460,77 @@ class LocalLanguageRuntime:
                 memory_store.close()
 
 
+def run_noninteractive(
+    config: LocalRuntimeConfig,
+    *,
+    prompt: str,
+    seed: int,
+    temperature: float,
+    max_tokens: int = 256,
+) -> str:
+    """One non-interactive completion. ``prompt`` is passed last with ``-p``.
+
+    The caller supplies the whole prompt, including the question at the end.
+    This does not wrap the long identity prompt used by ``respond``.
+    """
+
+    config.validate()
+    command = [
+        str(config.engine),
+        "-m",
+        str(config.model),
+        "-c",
+        str(config.context_size),
+        "-ngl",
+        str(config.gpu_layers),
+        "--temp",
+        str(temperature),
+        "-s",
+        str(seed),
+        "-n",
+        str(max_tokens),
+        "--no-display-prompt",
+        "--simple-io",
+        "--single-turn",
+        "--reasoning",
+        "off",
+        "--log-disable",
+        "--color",
+        "off",
+        "-p",
+        prompt,
+    ]
+    blocked = {
+        "OPENAI_API_KEY",
+        "PROD_OPENAI_KEY",
+        "GITHUB_TOKEN",
+        "GH_TOKEN",
+        "AWS_ACCESS_KEY_ID",
+        "AWS_SECRET_ACCESS_KEY",
+    }
+    env = {key: value for key, value in os.environ.items() if key not in blocked}
+    lib_dir = str(config.engine.resolve().parent)
+    previous = env.get("LD_LIBRARY_PATH", "")
+    env["LD_LIBRARY_PATH"] = lib_dir if not previous else lib_dir + os.pathsep + previous
+    try:
+        completed = subprocess.run(
+            command,
+            text=True,
+            capture_output=True,
+            timeout=config.timeout_seconds,
+            check=False,
+            env=env,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise RuntimeError(
+            f"Local GARVIS model timed out after {config.timeout_seconds} seconds"
+        ) from exc
+    if completed.returncode != 0:
+        detail = (completed.stderr or completed.stdout or "").strip()
+        raise RuntimeError(detail or f"Local GARVIS model exited with code {completed.returncode}")
+    return completed.stdout
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="garvis-local",

@@ -26,7 +26,9 @@ from garvis.lattice_body import (
 from garvis.lattice_body.opening import (
     OPENING_QUESTION,
     ask_opening,
+    opening_status,
     select_language_runtime,
+    strip_engine_banner,
 )
 from garvis.lattice_body.scheduler import recommend
 from garvis.lattice_body.scoring import c_unif, coherence, score_axes
@@ -435,8 +437,8 @@ def test_opening_stub_records_the_runtime_text_verbatim(tmp_path: Path) -> None:
             workspace_context: str = "",
         ) -> str:
             del external_context, workspace_context
-            assert message.startswith(OPENING_QUESTION)
-            assert "Final authority: Adrien D. Thomas alone." in message
+            assert message.rstrip().endswith(OPENING_QUESTION)
+            assert message.index("Final authority") < message.rindex(OPENING_QUESTION)
             assert "sk-FAKEKEYFORTESTONLY99" not in message
             return "Review the open handoff before the next cycle."
 
@@ -445,6 +447,9 @@ def test_opening_stub_records_the_runtime_text_verbatim(tmp_path: Path) -> None:
     assert result.steps[1]["name"] == "OPENING"
     assert result.opening_answer == "Review the open handoff before the next cycle."
     assert result.opening_provider == "injected"
+    assert result.opening_status == "recorded"
+    assert result.opening_seed == 1
+    assert result.opening_temperature == 0.0
     digest = (Path(result.output_dir) / "lattice-digest.md").read_text(encoding="utf-8")
     assert "Review the open handoff before the next cycle." in digest
     assert "not an inner state" in digest
@@ -479,6 +484,31 @@ def test_env_selection_uses_existing_runtimes_or_records_null(
     assert missing.provider == "local_language_runtime"
     assert missing.reason is not None
     assert "not found" in missing.reason
+
+
+def test_banner_is_stripped_and_off_topic_is_unusable() -> None:
+    raw = "\n".join(
+        [
+            "Loading model...",
+            "██ ██",
+            "build      : b12728",
+            "model      : /tmp/qwen/Qwen3-4B-Q4_K_M.gguf",
+            "> truncated prompt",
+            "Law 0 text closu ... (truncated)",
+            "I want Adrien D. Thomas to review the open handoff.",
+            "[ Prompt: 10 t/s | Generation: 9 t/s ]",
+            "Exiting...",
+        ]
+    )
+    kept = strip_engine_banner(raw)
+    assert kept == "I want Adrien D. Thomas to review the open handoff."
+    assert opening_status(kept, prompt="What do you want from Adrien now?") == "recorded"
+    drifted = (
+        'I propose that we begin by addressing the research question: '
+        '"What is today\'s weather in Philadelphia?"'
+    )
+    assert opening_status(drifted, prompt="What do you want from Adrien now?") == "answer_unusable"
+    assert opening_status("   ", prompt="What do you want from Adrien now?") == "answer_unusable"
 
 
 def test_github_posting_flag_is_disabled() -> None:

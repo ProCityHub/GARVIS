@@ -536,8 +536,16 @@ def run_lattice_cycle(cycle_input: LatticeCycleInput) -> CycleReport:
         opening_quant=opening.quant,
         opening_seed=opening.seed,
         opening_temperature=opening.temperature,
+        opening_status=opening.status,
     )
     return _publish(report)
+
+
+def _clip(text: str, limit: int = 140) -> str:
+    cleaned = " ".join(redact_text(text).split())
+    if len(cleaned) <= limit:
+        return cleaned
+    return cleaned[: limit - 3] + "..."
 
 
 def _recorded_opening_state(cycle_input: LatticeCycleInput, task: str) -> str:
@@ -546,26 +554,18 @@ def _recorded_opening_state(cycle_input: LatticeCycleInput, task: str) -> str:
         f"creator: {CREATOR}",
         "final_authority: Adrien D. Thomas",
         "body_proposes_only: true",
-        f"task: {task}",
+        f"task: {_clip(task)}",
         f"prior_entry_count: {cycle_input.prior_entry_count}",
+        f"contradiction_count: {len(cycle_input.contradictions)}",
+        f"handoff_count: {len(cycle_input.handoffs)}",
+        f"lesson_count: {len(cycle_input.lessons)}",
     ]
-    if cycle_input.contradictions:
-        lines.append("contradictions:")
-        lines.extend(f"- {redact_text(item)}" for item in cycle_input.contradictions)
-    else:
-        lines.append("contradictions: none")
-    if cycle_input.handoffs:
-        lines.append("handoffs:")
-        for handoff in cycle_input.handoffs:
-            lines.append(f"- to {handoff.to}: {redact_text(handoff.text)}")
-    else:
-        lines.append("handoffs: none")
-    if cycle_input.lessons:
-        lines.append("lessons:")
-        for lesson in cycle_input.lessons:
-            lines.append(f"- {redact_text(lesson.text)}")
-    else:
-        lines.append("lessons: none")
+    for item in cycle_input.contradictions[:3]:
+        lines.append(f"contradiction: {_clip(item)}")
+    for handoff in cycle_input.handoffs[:3]:
+        lines.append(f"handoff to {handoff.to}: {_clip(handoff.text)}")
+    for lesson in cycle_input.lessons[:3]:
+        lines.append(f"lesson: {_clip(lesson.text)}")
     return "\n".join(lines)
 
 

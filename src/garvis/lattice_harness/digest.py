@@ -77,6 +77,7 @@ def render_markdown(report: CycleReport) -> str:
         f"quant: {report.opening_quant or ''}",
         f"seed: {_blank_number(report.opening_seed)}",
         f"temperature: {_blank_number(report.opening_temperature)}",
+        f"status: {report.opening_status}",
         "",
         "## Lattice",
         f"- O: {scores.get('o', 0)}",
