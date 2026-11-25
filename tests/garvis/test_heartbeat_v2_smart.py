@@ -120,3 +120,52 @@ def test_remote_automation_is_observe_by_default():
     square = (root / ".github/workflows/town-square.yml").read_text(encoding="utf-8")
     assert "contents: read" in square
     assert "agent_bus.py route" not in square
+
+
+def test_failed_wrap_does_not_claim_alpha_omega_closure(tmp_path, monkeypatch):
+    """A wrong omega wrap must not be persisted as CONSOLIDATE->RECEIVE."""
+    import garvis.heartbeat_service as module
+    from garvis.prime_oab_reciprocal import PHASE_NAMES
+
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _init_repo(repo)
+
+    monkeypatch.setattr(module, "oab_wrap_phase_index", lambda _: 1)
+    service = AutomaticHeartbeatService(
+        tmp_path / "state",
+        interval_seconds=0.0,
+        repository_root=repo,
+    )
+    try:
+        state = service.run_once()
+        health = service.health()
+        expected_phase = PHASE_NAMES[1]
+
+        assert state.verification["omega_to_alpha_verified"] is False
+        assert state.contradictions
+        assert health["current_phase"] == expected_phase
+        assert health["alpha_omega_closure"] == f"CONSOLIDATE->{expected_phase}"
+        assert health["alpha_omega_closure"] != "CONSOLIDATE->RECEIVE"
+        assert health["heartbeat_healthy"] is False
+    finally:
+        service.close()
+
+
+def test_alpha_omega_helper_uses_observed_phase():
+    from garvis.heartbeat_service import alpha_omega_closure
+    from garvis.prime_oab_reciprocal import PHASE_NAMES, oab_wrap_phase_index
+
+    omega = PHASE_NAMES.index("CONSOLIDATE")
+    assert PHASE_NAMES[oab_wrap_phase_index(omega)] == "RECEIVE"
+    assert alpha_omega_closure("RECEIVE") == (
+        "RECEIVE",
+        "CONSOLIDATE->RECEIVE",
+    )
+    assert alpha_omega_closure("SEGMENT") == (
+        "SEGMENT",
+        "CONSOLIDATE->SEGMENT",
+    )
+    # Missing observation falls back to the mathematical wrap.
+    assert alpha_omega_closure(None) == ("RECEIVE", "CONSOLIDATE->RECEIVE")
+    assert alpha_omega_closure("") == ("RECEIVE", "CONSOLIDATE->RECEIVE")

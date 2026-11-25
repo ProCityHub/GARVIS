@@ -25,10 +25,23 @@ from .heartbeat_self_dialogue import (
     observe_system,
 )
 from .prime_oab_reciprocal import (
-    HEARTBEAT_PHASE_COUNT,
     PHASE_NAMES,
     oab_wrap_phase_index,
 )
+
+
+def alpha_omega_closure(next_phase: str | None) -> tuple[str, str]:
+    """Return the actual current phase and CONSOLIDATE->phase closure label.
+
+    Omega is CONSOLIDATE (end of the nine-phase heartbeat). Alpha is
+    whatever ``oab_wrap_phase_index`` maps that omega index to. The
+    checkpoint records the observed next phase, not a hardcoded success.
+    """
+    omega = "CONSOLIDATE"
+    observed = next_phase if isinstance(next_phase, str) and next_phase else ""
+    if not observed:
+        observed = PHASE_NAMES[oab_wrap_phase_index(PHASE_NAMES.index(omega))]
+    return observed, f"{omega}->{observed}"
 
 
 class AutomaticHeartbeatService:
@@ -120,6 +133,9 @@ class AutomaticHeartbeatService:
         """Save cycle health, learning counters, and the consumed-result cursor together."""
         raw_pre = state.raw_pre if isinstance(state.raw_pre, Mapping) else {}
         raw_post = state.raw_post if isinstance(state.raw_post, Mapping) else {}
+        current_phase, closure = alpha_omega_closure(
+            raw_post.get("next_phase") if isinstance(raw_post, Mapping) else None
+        )
 
         payload = {
             "sequence": self.sequence,
@@ -132,9 +148,9 @@ class AutomaticHeartbeatService:
             "pid": os.getpid(),
             "updated_at": time.time(),
             "heartbeat_version": "v2-smart",
-            "current_phase": "RECEIVE",
-            "phase_flow": list(PHASE_NAMES) + ["RECEIVE"],
-            "alpha_omega_closure": "CONSOLIDATE->RECEIVE",
+            "current_phase": current_phase,
+            "phase_flow": list(PHASE_NAMES) + [current_phase],
+            "alpha_omega_closure": closure,
             "witness_capture": "automatic_non_blocking",
             "rebound_count": self.rebound_count,
             "system_observation": raw_pre.get("system", {}),
@@ -324,9 +340,13 @@ class AutomaticHeartbeatService:
                 InternalAction.CONSOLIDATE,
             )
             self.sequence = int(proposal["next_sequence"])
-            next_phase = PHASE_NAMES[
-                oab_wrap_phase_index(HEARTBEAT_PHASE_COUNT - 1)
-            ]
+            next_phase, _closure = alpha_omega_closure(
+                PHASE_NAMES[
+                    oab_wrap_phase_index(
+                        PHASE_NAMES.index("CONSOLIDATE")
+                    )
+                ]
+            )
             return {
                 "sequence": self.sequence,
                 "internal_dialogue": dict(
