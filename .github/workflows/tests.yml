@@ -28,6 +28,7 @@ jobs:
       - name: Setup uv
         uses: astral-sh/setup-uv@v5
         with:
+          python-version: "3.13"
           enable-cache: true
       - name: Install dependencies
         run: make sync
@@ -50,6 +51,7 @@ jobs:
       - name: Setup uv
         uses: astral-sh/setup-uv@v5
         with:
+          python-version: "3.13"
           enable-cache: true
       - name: Install dependencies
         run: make sync
@@ -64,6 +66,7 @@ jobs:
       - name: Setup uv
         uses: astral-sh/setup-uv@v5
         with:
+          python-version: "3.13"
           enable-cache: true
       - name: Install dependencies
         run: make sync
@@ -82,6 +85,7 @@ jobs:
       - name: Setup uv
         uses: astral-sh/setup-uv@v5
         with:
+          python-version: "3.13"
           enable-cache: true
       - name: Install dependencies
         run: make sync
@@ -99,6 +103,8 @@ jobs:
           persist-credentials: false
       - name: Setup uv
         uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
       - name: Build GARVIS wheel
         run: uv build --wheel
       - name: Verify installed GARVIS import
@@ -115,6 +121,7 @@ jobs:
       - name: Setup uv
         uses: astral-sh/setup-uv@v5
         with:
+          python-version: "3.13"
           enable-cache: true
       - name: Install dependencies
         run: make sync
@@ -136,6 +143,7 @@ jobs:
       - name: Setup uv
         uses: astral-sh/setup-uv@v5
         with:
+          python-version: "3.13"
           enable-cache: true
       - name: Install dependencies
         run: make sync
