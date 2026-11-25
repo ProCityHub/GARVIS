@@ -9,6 +9,8 @@ stopped: this dry-run performs no network I/O.
 
 from __future__ import annotations
 
+import sqlite3
+import uuid
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Callable
@@ -108,17 +110,17 @@ class ToolRegistry:
                 output="",
             )
         privilege, handler = registered
-        if privilege == NETWORK:
-            return self._network(name, str(kwargs.get("message") or ""))
         try:
+            if privilege == NETWORK:
+                return self._network(name, str(kwargs.get("message") or ""))
             output = handler(**kwargs)
-        except (OSError, ValueError, LocalAccessError) as exc:
+        except (OSError, ValueError, LocalAccessError, sqlite3.Error) as exc:
             return ToolResult(
                 name=name,
                 ok=False,
-                refused=False,
+                refused=privilege == NETWORK,
                 privilege=privilege,
-                reason=redact_text(str(exc)),
+                reason=redact_text(str(exc)) or "tool failed",
                 output="",
             )
         return ToolResult(
@@ -204,6 +206,7 @@ def build_tool_registry(root: Path) -> ToolRegistry:
 
     def file_read(path: str = "", **_kwargs: object) -> str:
         target = _contained(root, path)
+        session_id = "lattice-body-" + uuid.uuid4().hex
         store = LocalFileAccessStore(db_path=root / ".lattice-local-access.sqlite")
         try:
             store.create(
@@ -211,9 +214,9 @@ def build_tool_registry(root: Path) -> ToolRegistry:
                 str(target),
                 "read",
                 "",
-                session_id="lattice-body",
+                session_id=session_id,
             )
-            resolution = store.resolve("approve", session_id="lattice-body")
+            resolution = store.resolve("approve", session_id=session_id)
             if resolution is None or not resolution.approved:
                 raise LocalAccessError("local file access was not approved")
             report = execute_local_access(resolution.request, root)

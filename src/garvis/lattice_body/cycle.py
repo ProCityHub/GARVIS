@@ -297,27 +297,33 @@ def run_lattice_cycle(cycle_input: LatticeCycleInput) -> CycleReport:
     hint_verified = False
     hint_refs: list[str] = []
     for row in hint_rows:
-        evidence = str(row.get("evidence") or "")
-        if evidence and not hint_evidence:
-            hint_evidence = evidence
         for ref in row.get("refs") or []:
             hint_refs.append(str(ref))
-        if row.get("verified") is True and evidence:
-            checked = verify_claim(str(row.get("text") or ""), evidence, root=workspace)
-            if checked.method == "unopened":
-                row.pop("verified", None)
-                contradictions.append(
-                    "A memory hint claimed verified but its evidence cannot be opened."
-                )
-            elif checked.ok:
-                hint_opened = True
-                hint_verified = True
-                row["verified"] = True
-            else:
+        evidence = str(row.get("evidence") or "")
+        if not evidence:
+            continue
+        checked = verify_claim(str(row.get("text") or ""), evidence, root=workspace)
+        opened = checked.method != "unopened"
+        claimed = row.get("verified") is True
+        if claimed and not opened:
+            row.pop("verified", None)
+            contradictions.append(
+                "A memory hint claimed verified but its evidence cannot be opened."
+            )
+            verified = False
+        elif claimed and opened and checked.ok:
+            verified = True
+            row["verified"] = True
+        else:
+            if claimed:
                 row["verified"] = False
-        elif evidence:
-            checked = verify_claim(str(row.get("text") or ""), evidence, root=workspace)
-            hint_opened = hint_opened or checked.method != "unopened"
+            verified = False
+        if not opened:
+            continue
+        if not hint_opened or (verified and not hint_verified):
+            hint_evidence = evidence
+            hint_opened = True
+            hint_verified = verified
     if hint_rows:
         journal.append(
             _item(

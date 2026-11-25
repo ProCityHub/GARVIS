@@ -84,6 +84,8 @@ class InMemoryHintProvider:
             ranked.append((overlap, memory.source_id or "", memory))
         ranked.sort(key=lambda item: (-item[0], item[1]))
         self.last_withheld = withheld
+        if limit == 0:
+            return []
         hints: list[MemoryHint] = []
         for _overlap, _source, memory in ranked:
             text = redact_text(memory.text).strip()

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from hashlib import sha256
 from pathlib import Path
 from typing import cast
@@ -65,6 +66,10 @@ def _clear_model_env(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("GARVIS_LLAMA_CHAT", raising=False)
     monkeypatch.delenv("GARVIS_REMOTE_MODEL", raising=False)
     monkeypatch.delenv("GARVIS_LATTICE_PROVIDER", raising=False)
+    monkeypatch.delenv("GROQ_API_KEY", raising=False)
+    monkeypatch.delenv("XAI_API_KEY", raising=False)
+    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+    monkeypatch.delenv("GARVIS_COMPAT_API_KEY", raising=False)
 
 
 def _journal_names(steps: list[dict[str, str]]) -> list[str]:
@@ -199,6 +204,12 @@ def test_dry_run_cycle_on_fixture_state(tmp_path: Path) -> None:
     payload_path = Path(result.output_dir) / "lattice-digest.json"
     digest = digest_path.read_text(encoding="utf-8")
     payload = payload_path.read_text(encoding="utf-8")
+    parsed = json.loads(payload)
+    assert isinstance(parsed, dict)
+    journal = (Path(result.output_dir) / "journal.jsonl").read_text(encoding="utf-8")
+    for line in journal.splitlines():
+        json.loads(line)
+    assert "s3cret-value" not in payload
     assert "C_unif" in digest
     assert "Final authority: Adrien D. Thomas alone." in payload
     assert "s3cret-value" not in digest
@@ -376,6 +387,7 @@ def test_memory_hints_omit_empty_fields_and_cap_at_four() -> None:
     provider = InMemoryHintProvider(memories)
     hints = provider.retrieve("lattice fixture memory", max_hints=10)
     assert len(hints) == 4
+    assert provider.retrieve("lattice fixture memory", max_hints=0) == []
     assert all("evidence" not in hint.as_dict() for hint in hints)
 
     contradicted = InMemoryHintProvider(

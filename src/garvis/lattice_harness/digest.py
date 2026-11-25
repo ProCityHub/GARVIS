@@ -168,17 +168,34 @@ def render_markdown(report: CycleReport) -> str:
     return "\n".join(lines)
 
 
+def _redact_strings(value: object) -> object:
+    """Redact credential-shaped text inside values, before JSON quoting."""
+
+    if isinstance(value, str):
+        return redact_text(value)
+    if isinstance(value, dict):
+        return {key: _redact_strings(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_redact_strings(item) for item in value]
+    if isinstance(value, tuple):
+        return [_redact_strings(item) for item in value]
+    return value
+
+
 def emit_digest(report: CycleReport) -> dict[str, object]:
     """Write markdown, JSON, and a local journal. Do not post."""
 
     directory = Path(report.output_dir)
     directory.mkdir(parents=True, exist_ok=True)
     markdown = redact_text(render_markdown(report))
-    payload = redact_text(
-        json.dumps(report.as_dict(), sort_keys=True, indent=2, ensure_ascii=True)
+    payload = json.dumps(
+        _redact_strings(report.as_dict()),
+        sort_keys=True,
+        indent=2,
+        ensure_ascii=True,
     )
     journal_lines = [
-        redact_text(json.dumps(item, sort_keys=True, ensure_ascii=True))
+        json.dumps(_redact_strings(item), sort_keys=True, ensure_ascii=True)
         for item in report.journal_items
     ]
     (directory / "lattice-digest.md").write_text(markdown, encoding="utf-8")

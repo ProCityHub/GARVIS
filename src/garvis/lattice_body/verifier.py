@@ -67,9 +67,11 @@ def verify_claim(
     if not evidence_ptr:
         return _undetermined(None)
     path = _resolve(evidence_ptr, root)
-    if path is None or not path.is_file():
+    if path is None:
         return _undetermined(evidence_ptr)
     try:
+        if not path.is_file():
+            return _undetermined(evidence_ptr)
         data = path.read_bytes()
     except OSError:
         return _undetermined(evidence_ptr)
