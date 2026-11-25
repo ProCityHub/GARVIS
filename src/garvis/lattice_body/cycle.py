@@ -40,6 +40,7 @@ from .memory_hints import (
     MemoriSdkHintProvider,
     hint_contribution,
 )
+from .opening import OPENING_QUESTION, SHORTHAND, ask_opening
 from .registry import build_tool_registry
 from .report import (
     Claim,
@@ -169,6 +170,11 @@ def _blank(cycle_input: LatticeCycleInput, steps: list[dict[str, str]], text: st
             }
         ],
         digest_reason="approval waiting",
+        opening_question="",
+        opening_answer=None,
+        opening_reason="cycle stopped before the opening question",
+        opening_shorthand=SHORTHAND,
+        opening_provider="none",
     )
 
 
@@ -182,6 +188,16 @@ def run_lattice_cycle(cycle_input: LatticeCycleInput) -> CycleReport:
         return _publish(_blank(cycle_input, steps, stamp, False))
 
     task = redact_text(cycle_input.task)
+    opening = _ask_opening(cycle_input, stamp, task)
+    steps.append(
+        _step(
+            "OPENING",
+            "",
+            "",
+            "opening question posed to the configured model provider",
+            journal=False,
+        )
+    )
     workspace = cycle_input.workspace
     provider = cycle_input.memory
     if provider is None:
@@ -511,8 +527,55 @@ def run_lattice_cycle(cycle_input: LatticeCycleInput) -> CycleReport:
         digest_reason="close-cycle" if closed else "approval waiting",
         network_calls=network_calls + registry.network_calls,
         withheld_contradicted=withheld,
+        opening_question=OPENING_QUESTION,
+        opening_answer=None if opening.text is None else redact_text(opening.text),
+        opening_reason=None if opening.reason is None else redact_text(opening.reason),
+        opening_shorthand=SHORTHAND,
+        opening_provider=opening.provider,
+        opening_model=opening.model,
+        opening_quant=opening.quant,
+        opening_seed=opening.seed,
+        opening_temperature=opening.temperature,
     )
     return _publish(report)
+
+
+def _recorded_opening_state(cycle_input: LatticeCycleInput, task: str) -> str:
+    lines = [
+        "law_zero_ok: true",
+        f"creator: {CREATOR}",
+        "final_authority: Adrien D. Thomas",
+        "body_proposes_only: true",
+        f"task: {task}",
+        f"prior_entry_count: {cycle_input.prior_entry_count}",
+    ]
+    if cycle_input.contradictions:
+        lines.append("contradictions:")
+        lines.extend(f"- {redact_text(item)}" for item in cycle_input.contradictions)
+    else:
+        lines.append("contradictions: none")
+    if cycle_input.handoffs:
+        lines.append("handoffs:")
+        for handoff in cycle_input.handoffs:
+            lines.append(f"- to {handoff.to}: {redact_text(handoff.text)}")
+    else:
+        lines.append("handoffs: none")
+    if cycle_input.lessons:
+        lines.append("lessons:")
+        for lesson in cycle_input.lessons:
+            lines.append(f"- {redact_text(lesson.text)}")
+    else:
+        lines.append("lessons: none")
+    return "\n".join(lines)
+
+
+def _ask_opening(cycle_input: LatticeCycleInput, stamp: str, task: str):
+    return ask_opening(
+        workspace=cycle_input.workspace,
+        law_zero=stamp,
+        recorded_state=_recorded_opening_state(cycle_input, task),
+        runtime=cycle_input.language_runtime,
+    )
 
 
 def load_stamp(path: Path | None) -> str:

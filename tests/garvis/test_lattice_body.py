@@ -23,6 +23,11 @@ from garvis.lattice_body import (
     validate_law_zero,
     verify_claim,
 )
+from garvis.lattice_body.opening import (
+    OPENING_QUESTION,
+    ask_opening,
+    select_language_runtime,
+)
 from garvis.lattice_body.scheduler import recommend
 from garvis.lattice_body.scoring import c_unif, coherence, score_axes
 from garvis.lattice_harness import GITHUB_POSTING_ENABLED, post_to_github
@@ -50,6 +55,14 @@ _JOURNAL = [
     "CLOSE_CYCLE",
     "SLEEP",
 ]
+
+
+@pytest.fixture(autouse=True)
+def _clear_model_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("GARVIS_LOCAL_MODEL", raising=False)
+    monkeypatch.delenv("GARVIS_LLAMA_CHAT", raising=False)
+    monkeypatch.delenv("GARVIS_REMOTE_MODEL", raising=False)
+    monkeypatch.delenv("GARVIS_LATTICE_PROVIDER", raising=False)
 
 
 def _journal_names(steps: list[dict[str, str]]) -> list[str]:
@@ -155,6 +168,11 @@ def test_dry_run_cycle_on_fixture_state(tmp_path: Path) -> None:
 
     assert result.law_zero_ok is True
     assert names[0] == "LAW_ZERO"
+    assert names[1] == "OPENING"
+    assert result.opening_question == OPENING_QUESTION
+    assert result.opening_answer is None
+    assert result.opening_reason == "no answering component wired"
+    assert result.opening_provider == "none"
     assert _journal_names(result.steps) == _JOURNAL
     assert names.index("AUTHORIZE") < names.index("ACT")
     assert result.heartbeat_consulted is True
@@ -191,6 +209,9 @@ def test_dry_run_cycle_on_fixture_state(tmp_path: Path) -> None:
     assert "I feel" not in digest
     assert "I want" not in digest
     assert "GitHub posting is disabled" in digest
+    assert "answer: null" in digest
+    assert "no answering component wired" in digest
+    assert "not an inner state" in digest
     assert result.github_posted is False
     assert result.github_posting_enabled is False
     assert result.proposed_next_steps[0]["executes"] is False
@@ -402,6 +423,62 @@ def test_scheduler_stops_permanent_failures_and_does_not_adopt_fibonacci() -> No
     )
     assert stopped.action == "stop"
     assert stopped.delay_units == 0
+
+
+def test_opening_stub_records_the_runtime_text_verbatim(tmp_path: Path) -> None:
+    class Stub:
+        def respond(
+            self,
+            message: str,
+            *,
+            external_context: str = "",
+            workspace_context: str = "",
+        ) -> str:
+            del external_context, workspace_context
+            assert message.startswith(OPENING_QUESTION)
+            assert "Final authority: Adrien D. Thomas alone." in message
+            assert "sk-FAKEKEYFORTESTONLY99" not in message
+            return "Review the open handoff before the next cycle."
+
+    result = run_lattice_cycle(_input(tmp_path, language_runtime=Stub()))
+    assert result.steps[0]["name"] == "LAW_ZERO"
+    assert result.steps[1]["name"] == "OPENING"
+    assert result.opening_answer == "Review the open handoff before the next cycle."
+    assert result.opening_provider == "injected"
+    digest = (Path(result.output_dir) / "lattice-digest.md").read_text(encoding="utf-8")
+    assert "Review the open handoff before the next cycle." in digest
+    assert "not an inner state" in digest
+
+
+def test_env_selection_uses_existing_runtimes_or_records_null(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    assert select_language_runtime(tmp_path) is None
+    quiet = ask_opening(workspace=tmp_path, law_zero="Law 0", recorded_state="none")
+    assert quiet.text is None
+    assert quiet.reason == "no answering component wired"
+    assert quiet.provider == "none"
+
+    monkeypatch.setenv("OPENAI_API_KEY", "test_key")
+    still_off = ask_opening(workspace=tmp_path, law_zero="Law 0", recorded_state="none")
+    assert still_off.text is None
+    assert still_off.reason == "no answering component wired"
+
+    monkeypatch.setenv("GARVIS_REMOTE_MODEL", "groq/llama-3.1-8b-instant")
+    remote = ask_opening(workspace=tmp_path, law_zero="Law 0", recorded_state="none")
+    assert remote.text is None
+    assert remote.provider == "provider_bridge"
+    assert remote.reason is not None
+    assert "GROQ_API_KEY" in remote.reason
+
+    monkeypatch.delenv("GARVIS_REMOTE_MODEL")
+    monkeypatch.setenv("GARVIS_LOCAL_MODEL", str(tmp_path / "missing.gguf"))
+    missing = ask_opening(workspace=tmp_path, law_zero="Law 0", recorded_state="none")
+    assert missing.text is None
+    assert missing.provider == "local_language_runtime"
+    assert missing.reason is not None
+    assert "not found" in missing.reason
 
 
 def test_github_posting_flag_is_disabled() -> None:

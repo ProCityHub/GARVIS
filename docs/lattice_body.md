@@ -7,14 +7,17 @@ Law 0 is loaded and checked before the heartbeat is consulted. A cycle whose sta
 ## What one cycle does
 
 1. Read Law 0.
-2. WAKE on heartbeat `RECEIVE` / action `OBSERVE`, and retrieve at most four `memoryHints`.
-3. ORIENT on heartbeat `SEGMENT`: take handoffs addressed to GARVIS and list the rest.
-4. AUTHORIZE with creator authority, the THANOS merge gate, and an input guardrail. Council `approved` stays advisory.
-5. ACT only through the tool registry.
-6. VERIFY with file existence, a substring, or a SHA-256. If the evidence cannot be opened, the result is `cannot determine`.
-7. RECORD, LEARN, and HAND OFF into a local journal file.
-8. CLOSE CYCLE when the entry count reaches a Fibonacci cadence (`3, 5, 8, …, 144`).
-9. SLEEP by writing a local digest.
+2. OPENING, immediately after Law 0: ask `What do you want from Adrien now?` The digest records the raw reply verbatim. A want in that reply is a queued proposal for Adrien D. Thomas, not an inner state. With no provider configured the answer is null and the reason is `no answering component wired`.
+3. WAKE on heartbeat `RECEIVE` / action `OBSERVE`, and retrieve at most four `memoryHints`.
+4. ORIENT on heartbeat `SEGMENT`: take handoffs addressed to GARVIS and list the rest.
+5. AUTHORIZE with creator authority, the THANOS merge gate, and an input guardrail. Council `approved` stays advisory.
+6. ACT only through the tool registry.
+7. VERIFY with file existence, a substring, or a SHA-256. If the evidence cannot be opened, the result is `cannot determine`.
+8. RECORD, LEARN, and HAND OFF into a local journal file.
+9. CLOSE CYCLE when the entry count reaches a Fibonacci cadence (`3, 5, 8, …, 144`).
+10. SLEEP by writing a local digest.
+
+The opening question is asked through `local_language_runtime` when `GARVIS_LOCAL_MODEL` or `GARVIS_LLAMA_CHAT` is set, and through `provider_bridge` plus the existing assistant when `GARVIS_REMOTE_MODEL` is set. Otherwise the answer is null and the reason is `no answering component wired`. Tests pass a runtime double with the same `respond` method. They do not download weights or call a model service. The message includes Law 0 and the recorded opening state. Tool calls are a deny-by-default view over `capability_broker` and `local_file_access`; merge, delete, close, force-push, and send stay refused. Model weights stay out of git (`models/*.gguf`).
 
 The canonical score is imported from `hypercube_brain.core.coherence` and is not redefined:
 

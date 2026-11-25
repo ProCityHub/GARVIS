@@ -35,6 +35,21 @@ def post_to_github(digest: str) -> dict[str, object]:
     }
 
 
+def _blank_number(value: object) -> str:
+    if value is None:
+        return ""
+    return str(value)
+
+
+def _answer_lines(answer: str | None) -> list[str]:
+    if answer is None:
+        return ["answer: null"]
+    fence = "```"
+    while fence in answer:
+        fence += "`"
+    return ["answer:", fence + "text", answer, fence]
+
+
 def _fraction(report: CycleReport) -> tuple[int, int, float]:
     items = report.journal_items
     verified = sum(1 for item in items if item.get("verified") is True)
@@ -51,6 +66,17 @@ def render_markdown(report: CycleReport) -> str:
         "",
         "Law 0 was read first. Creator and final authority: "
         f"{report.creator or 'unconfirmed'}. The body proposes only.",
+        "",
+        "## Opening",
+        f"Question: {report.opening_question or 'not posed'}",
+        f"Shorthand: {report.opening_shorthand}",
+        *_answer_lines(report.opening_answer),
+        f"reason: {report.opening_reason or ''}",
+        f"provider: {report.opening_provider}",
+        f"model: {report.opening_model or ''}",
+        f"quant: {report.opening_quant or ''}",
+        f"seed: {_blank_number(report.opening_seed)}",
+        f"temperature: {_blank_number(report.opening_temperature)}",
         "",
         "## Lattice",
         f"- O: {scores.get('o', 0)}",

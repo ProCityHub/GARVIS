@@ -13,10 +13,19 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Callable
 
-from garvis.capability_broker import has_explicit_network_authorization
+from garvis.capability_broker import (
+    ApprovalStore,
+    extract_research_query,
+    has_explicit_network_authorization,
+)
 from garvis.github_maintenance import (
     GitHubMaintenanceAdapter,
     MaintenancePolicyError,
+)
+from garvis.local_file_access import (
+    LocalAccessError,
+    LocalFileAccessStore,
+    execute_local_access,
 )
 from .redact import redact_text
 
@@ -103,7 +112,7 @@ class ToolRegistry:
             return self._network(name, str(kwargs.get("message") or ""))
         try:
             output = handler(**kwargs)
-        except (OSError, ValueError) as exc:
+        except (OSError, ValueError, LocalAccessError) as exc:
             return ToolResult(
                 name=name,
                 ok=False,
@@ -122,18 +131,29 @@ class ToolRegistry:
         )
 
     def _network(self, name: str, message: str) -> ToolResult:
-        # Phrase check only. network_calls stays 0: no socket is opened.
-        authorized = has_explicit_network_authorization(message)
-        if not authorized:
-            reason = (
-                "refused: network research requires capability-broker "
-                "approval; no request was made"
+        """Record the broker decision and do not call internet research."""
+
+        store = ApprovalStore(db_path=self.root / ".lattice-capability-broker.sqlite")
+        try:
+            store.create(
+                message,
+                extract_research_query(message),
+                session_id="lattice-body",
             )
-        else:
-            reason = (
-                "refused: capability broker recognized an approval phrase; "
-                "dry-run made no network request"
-            )
+            authorized = has_explicit_network_authorization(message)
+            if authorized:
+                store.resolve("approve", session_id="lattice-body")
+                reason = (
+                    "refused: capability broker recorded approval; "
+                    "dry-run does not perform network research"
+                )
+            else:
+                reason = (
+                    "refused: network research requires capability-broker "
+                    "approval; no request was made"
+                )
+        finally:
+            store.close()
         return ToolResult(
             name=name,
             ok=False,
@@ -184,9 +204,22 @@ def build_tool_registry(root: Path) -> ToolRegistry:
 
     def file_read(path: str = "", **_kwargs: object) -> str:
         target = _contained(root, path)
-        if not target.is_file():
-            raise ValueError("cannot determine")
-        return target.read_text(encoding="utf-8", errors="replace")[:4000]
+        store = LocalFileAccessStore(db_path=root / ".lattice-local-access.sqlite")
+        try:
+            store.create(
+                f'read "{target}"',
+                str(target),
+                "read",
+                "",
+                session_id="lattice-body",
+            )
+            resolution = store.resolve("approve", session_id="lattice-body")
+            if resolution is None or not resolution.approved:
+                raise LocalAccessError("local file access was not approved")
+            report = execute_local_access(resolution.request, root)
+        finally:
+            store.close()
+        return report.content
 
     def repo_status(**_kwargs: object) -> str:
         return f"local workspace {root.name}; no remote call"

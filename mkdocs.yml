@@ -86,6 +86,7 @@ plugins:
                     - GARVIS_MEMORY_LIFECYCLE_DIRECTIVE.md
                     - GARVIS_PHONE_CAPABILITY_RESEARCH_DIRECTIVE.md
                     - lattice_body.md
+                    - lattice_opening_run.md
                 - Voice agents:
                     - voice/quickstart.md
                     - voice/pipeline.md

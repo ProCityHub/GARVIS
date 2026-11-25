@@ -46,6 +46,7 @@ class LatticeCycleInput:
     act_tool: str = "file_read"
     act_path: str = ""
     memory: object | None = None
+    language_runtime: object | None = None
 
 
 @dataclass
@@ -87,6 +88,15 @@ class CycleReport:
     digest_reason: str = "approval waiting"
     network_calls: int = 0
     withheld_contradicted: int = 0
+    opening_question: str = ""
+    opening_answer: str | None = None
+    opening_reason: str | None = None
+    opening_shorthand: str = ""
+    opening_provider: str = "none"
+    opening_model: str | None = None
+    opening_quant: str | None = None
+    opening_seed: int | None = None
+    opening_temperature: float | None = None
 
     def as_dict(self) -> dict[str, object]:
         return {
@@ -127,4 +137,13 @@ class CycleReport:
             "network_calls": self.network_calls,
             "withheld_contradicted": self.withheld_contradicted,
             "law_zero_text": self.law_zero_text,
+            "opening_question": self.opening_question,
+            "opening_answer": self.opening_answer,
+            "opening_reason": self.opening_reason,
+            "opening_shorthand": self.opening_shorthand,
+            "opening_provider": self.opening_provider,
+            "opening_model": self.opening_model,
+            "opening_quant": self.opening_quant,
+            "opening_seed": self.opening_seed,
+            "opening_temperature": self.opening_temperature,
         }
