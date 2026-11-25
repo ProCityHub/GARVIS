@@ -1,5 +1,4 @@
 from dataclasses import replace as _security_replace
-from typing import cast
 
 import pytest as _security_pytest
 
@@ -130,13 +129,14 @@ def test_security_repair_redacts_extended_secret_matrix(
     assert replacements >= 1
 
 
-class _SecurityRecordingBrain:
+class _SecurityRecordingBrain(HypercubeBrainEngine):
     def __init__(self):
+        super().__init__()
         self.calls = []
 
     def heartbeat(self, **kwargs):
         self.calls.append(kwargs)
-        return None
+        return super().heartbeat(**kwargs)
 
 
 def test_request_body_never_enters_brain_observations(tmp_path):
@@ -145,7 +145,7 @@ def test_request_body_never_enters_brain_observations(tmp_path):
 
     registry[0] = _security_replace(
         registry[0],
-        brain=cast(HypercubeBrainEngine, recording_brain),
+        brain=recording_brain,
     )
 
     supervisor = FullAgentHeartbeatSupervisor(
@@ -273,3 +273,38 @@ def test_approved_is_advisory_and_never_operational_authority(tmp_path):
     assert denied.approved is False
     assert denied.operational_authorization is False
     assert "deny pattern" in denied.reasoning
+
+
+def test_redaction_handles_escaped_quotes_and_trailing_backslashes():
+    escaped = r'client_secret:"value-with-\"quote\"-11223"'
+    sanitized, count = _security_redact(escaped)
+    assert "value-with-" not in sanitized
+    assert "11223" not in sanitized
+    assert count >= 1
+    assert "[REDACTED_CREDENTIAL]" in sanitized
+
+    trailing = r'password="edge-trailing-backslash-99887\\"'
+    sanitized, count = _security_redact(trailing)
+    assert "edge-trailing-backslash-99887" not in sanitized
+    assert count >= 1
+
+
+def test_redaction_bounds_long_backslash_runs():
+    import time
+
+    secret = "long-backslash-payload-44556"
+    closed = 'client_secret="' + ("\\" * 48) + secret + "\\" * 2 + '"'
+    unclosed = 'password="' + ("\\" * 48) + secret
+
+    started = time.perf_counter()
+    closed_text, closed_count = _security_redact(closed)
+    unclosed_text, unclosed_count = _security_redact(unclosed)
+    elapsed = time.perf_counter() - started
+
+    assert elapsed < 0.05
+    assert closed_count >= 1
+    assert unclosed_count >= 1
+    assert secret not in closed_text
+    assert secret not in unclosed_text
+    assert "[REDACTED_CREDENTIAL]" in closed_text
+    assert "[REDACTED_CREDENTIAL]" in unclosed_text
