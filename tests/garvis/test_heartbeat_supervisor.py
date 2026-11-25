@@ -1,4 +1,5 @@
 from dataclasses import replace as _security_replace
+from typing import cast
 
 import pytest as _security_pytest
 
@@ -12,6 +13,7 @@ from garvis.heartbeat_supervisor import (
     MirrorState,
     redact_request_text as _security_redact,
 )
+from hypercube_brain import HypercubeBrainEngine
 
 
 def test_supervisor_owns_one_eighteen_brain_registry(tmp_path):
@@ -143,7 +145,7 @@ def test_request_body_never_enters_brain_observations(tmp_path):
 
     registry[0] = _security_replace(
         registry[0],
-        brain=recording_brain,
+        brain=cast(HypercubeBrainEngine, recording_brain),
     )
 
     supervisor = FullAgentHeartbeatSupervisor(
