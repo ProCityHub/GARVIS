@@ -47,7 +47,7 @@ viz = ["graphviz>=0.17"]
 litellm = ["litellm>=1.67.4.post1, <2"]
 realtime = ["websockets>=15.0, <16"]
 sqlalchemy = ["SQLAlchemy>=2.0", "asyncpg>=0.29.0"]
-encrypt = ["cryptography>=45.0, <46"]
+encrypt = ["cryptography>=50.0.2, <51"]
 
 [dependency-groups]
 dev = [
@@ -60,7 +60,7 @@ dev = [
     "mkdocs>=1.6.0",
     "mkdocs-material>=9.6.0",
     "mkdocstrings[python]>=0.28.0",
-    "pymdown-extensions>=10.21.2,<11",
+    "pymdown-extensions>=12.1,<12.2",
     "mkdocs-static-i18n",
     "coverage>=7.6.12",
     "playwright==1.50.0",
@@ -75,7 +75,7 @@ dev = [
     "eval-type-backport>=0.2.2",
     "fastapi >= 0.110.0, <1",
     "aiosqlite>=0.21.0",
-    "cryptography>=45.0, <46",
+    "cryptography>=50.0.2, <51",
 ]
 
 [tool.uv.workspace]

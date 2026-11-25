@@ -95,7 +95,26 @@ def _visible(fragment: str) -> str:
 
 
 def _domain(url: str) -> str:
-    return (urlparse(url).hostname or "").casefold()
+    return _normalized_hostname(url)
+
+
+def _normalized_hostname(url: str) -> str:
+    """Parsed hostname: lowercase, with userinfo, port, and a trailing dot removed."""
+    return (urlparse(url).hostname or "").casefold().rstrip(".")
+
+
+def _host_is_or_subdomain(url: str, allowed_host: str) -> bool:
+    """True when the URL host is exactly allowed_host or a dotted subdomain of it.
+
+    Compare the parsed hostname. A bare suffix check such as
+    ``endswith("duckduckgo.com")`` also matches lookalikes like
+    ``evilduckduckgo.com``.
+    """
+    host = _normalized_hostname(url)
+    allowed = allowed_host.strip().casefold().rstrip(".")
+    if not host or not allowed:
+        return False
+    return host == allowed or host.endswith("." + allowed)
 
 
 def _unpack_ddg(url: str) -> str:
@@ -346,7 +365,7 @@ class InternetResearchClient:
 
             if (
                 not domain
-                or domain.endswith("duckduckgo.com")
+                or _host_is_or_subdomain(url, "duckduckgo.com")
                 or url in seen
             ):
                 continue

@@ -1,3 +1,5 @@
 # Optional local image bridge. Core GARVIS does not need this dependency.
-Pillow>=10.4,<13
+# Pillow 13.0.0 is the first release outside the current advisory range.
+# It requires Python >=3.11. The GARVIS package itself stays on >=3.10.
+Pillow>=13.0.0,<14
 # Desktop webcam capture additionally needs: opencv-python>=4.10,<5
