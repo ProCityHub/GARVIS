@@ -11,7 +11,7 @@ Realtime エージェントはベータ版です。実装の改善に伴い、�
 
 ## 前提条件
 
-- Python 3.9 以上
+- Python 3.10 以上
 - OpenAI API キー
 - OpenAI Agents SDK の基本的な理解
 

@@ -18,7 +18,7 @@ prepare work without accidentally sending, deleting, publishing, or transacting.
 
 ## Setup
 
-Use Python 3.9 or newer for the current repository codebase. Install the project with `uv`, then set
+Use Python 3.10 or newer for the current repository codebase. Install the project with `uv`, then set
 an API key in the environment. Never commit API keys.
 
 ```bash
