@@ -37,7 +37,9 @@ HYPOTHESIS_UNDER_TEST. This bridge adds no phi-based performance claim.
 - Synthetic demo clearly marked SYNTHETIC_TEST.
 
 ## Run
-From the repository root, install the optional image dependency:
+The optional Local Eyes image dependency requires Python 3.11 or later.
+Core GARVIS still supports Python 3.10. From the repository root, install
+the optional image dependency:
 
 ```sh
 python -m pip install -r requirements-local-eyes.txt

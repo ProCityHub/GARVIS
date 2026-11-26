@@ -4,8 +4,7 @@ This module demonstrates distributed pattern storage and bounded recall.
 It does not establish consciousness, identity persistence, or biological memory.
 """
 
-# Ruff's PEP 604 suggestions require Python 3.10 syntax.
-# GARVIS supports Python 3.9, so Optional and Union remain intentional.
+# Retain the existing annotation forms; GARVIS requires Python 3.10 or later.
 # ruff: noqa: UP007, UP045
 
 from __future__ import annotations
